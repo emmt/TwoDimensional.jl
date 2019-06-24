@@ -61,6 +61,24 @@ Base.round(::Type{BoundingBox{T}}, b::BoundingBox) where {T<:Real} =
     BoundingBox(round(T, b.xmin), round(T, b.xmax),
                 round(T, b.ymin), round(T, b.ymax))
 
+# Lower left and upper right corners of a bounding box.
+Base.first(b::BoundingBox) = Point(b.xmin, b.ymin)
+Base.last(b::BoundingBox) = Point(b.xmax, b.ymax)
+
+Base.size(b::BoundingBox{Int}) = (max(b.xmax - b.xmin + 1, 0),
+                                  max(b.ymax - b.ymin + 1, 0))
+Base.size(b::BoundingBox{Int}, k::Integer) =
+    (k == 1 ? max(b.xmax - b.xmin + 1, 0) :
+     k == 2 ? max(b.ymax - b.ymin + 1, 0) :
+     k > 2 ? 1 : error("invalid dimension index"))
+
+Base.size(b::BoundingBox{<:Integer}) = (max(Int(b.xmax) - Int(b.xmin) + 1, 0),
+                                        max(Int(b.ymax) - Int(b.ymin) + 1, 0))
+Base.size(b::BoundingBox{<:Integer}, k::Integer) =
+    (k == 1 ? max(Int(b.xmax) - Int(b.xmin) + 1, 0) :
+     k == 2 ? max(Int(b.ymax) - Int(b.ymin) + 1, 0) :
+     k > 2 ? 1 : error("invalid dimension index"))
+
 # Union of bounding boxes:
 Base.:(∪)(a::BoundingBox, b::BoundingBox) =
     BoundingBox(min(a.xmin, b.xmin), max(a.xmax, b.xmax),
@@ -105,10 +123,6 @@ exterior(::Type{BoundingBox{T}}, b::BoundingBox) where {T<:Real} =
 exterior(::Type{BoundingBox{T}}, b::BoundingBox{<:Integer}) where {T<:Real} =
     convert(BoundingBox{T}, b)
 
-# Lower left and upper right corners of a bounding box.
-Base.first(b::BoundingBox) = Point(b.xmin, b.ymin)
-Base.last(b::BoundingBox) = Point(b.xmax, b.ymax)
-
 """
 
 ```julia
@@ -138,6 +152,10 @@ Base.:(*)(p::Point, α::Real) = α*p
 Base.:(*)(α::Real, p::Point) = Point(α*p.x, α*p.y)
 Base.:(/)(p::Point, α::Real) = Point(p.x/α, p.y/α)
 Base.:(\)(α::Real, p::Point) = p/α
+
+# Unary minus applied to point negate coordinates.
+Base.:(-)(P::Point{<:Union{AbstractFloat,Signed,Irrational}}) =
+    Point(-P.x, -P.y)
 
 # Addition and subtraction of point coordinates.
 Base.:(+)(a::Point, b::Point) = Point(a.x + b.x, a.y + b.y)
