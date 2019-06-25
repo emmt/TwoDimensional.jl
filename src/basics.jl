@@ -29,23 +29,41 @@ end
 # POINTS AND BOUNDING BOXES
 
 # Constructors of points and conversion to/from a Cartesian index.
+Point(P::Point) = P
+Point{T}(P::Point{T}) where {T} = P
+Point{T}(P::Point) where {T} = Point{T}(P.x, P.y)
+Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} =
+    Point{promote_type{Tx,Ty}}(x, y)
 Point(I::CartesianIndex{2}) = Point(I[1], I[2])
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
 Base.convert(::Type{CartesianIndex}, P::Point{<:Integer}) = CartesianIndex(P)
 Base.convert(::Type{CartesianIndex{2}}, P::Point{<:Integer}) = CartesianIndex(P)
 
 # Conversion of points and rounding to nearest integer coordinates.
-Base.convert(::Type{Point{T}}, p::Point{T}) where {T<:Real} = p
-Base.convert(::Type{Point{T}}, p::Point) where {T<:Real} =
-    Point(T(p.x), T(p.y))
-Base.round(::Type{Point{T}}, p::Point) where {T<:Real} =
-    Point(round(T, p.x), round(T, p.y))
+Base.convert(::Type{T}, P::Point) where {T<:Point} = Point(P)
+Base.round(::Type{Point{T}}, P::Point) where {T<:Real} =
+    Point(round(T, P.x), round(T, P.y))
 
-# Constructors of bounding boxes and conversion to/from Cartesian indices.
+# Constructors of bounding boxes and conversion.
+function BoundingBox(xmin::Txmin, xmax::Txmax,
+                     ymin::Tymin, ymax::Tymax) where {Txmin,Txmax,Tymin,Tymax}
+    T = promote_type(Txmin, Txmax, Tymin, Tymax)
+    return BoundingBox{T}(xmin, xmax, ymin, ymax)
+end
+BoundingBox(B::BoundingBox) = B
+BoundingBox{T}(B::BoundingBox{T}) where {T} = B
+BoundingBox{T}(B::BoundingBox) where {T} =
+    BoundingBox{T}(B.xmin, B.xmax, B.ymin, B.ymax)
 BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
     BoundingBox(I0[1], I1[1], I0[2], I1[2])
 BoundingBox(P0::Point, P1::Point) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
+
+# Empty bounding box.
+BoundingBox{T}(::Nothing) where {T<:Real} =
+    BoundingBox(typemax(T), typemin(T), typemax(T), typemin(T))
+
+# Conversion of bounding boxes to/from Cartesian indices.
 Base.CartesianIndices(B::BoundingBox{<:Integer}) =
     CartesianIndices((Int(B.xmin):Int(B.xmax), Int(B.ymin):Int(B.ymax)))
 Base.convert(::Type{CartesianIndices}, B::BoundingBox{<:Integer}) =
@@ -54,127 +72,126 @@ Base.convert(::Type{CartesianIndices{2}}, B::BoundingBox{<:Integer}) =
     CartesianIndices(B)
 
 # Conversion of bounding boxes and rounding to nearest integer coordinates.
-Base.convert(::Type{BoundingBox{T}}, b::BoundingBox{T}) where {T<:Real} = b
-Base.convert(::Type{BoundingBox{T}}, b::BoundingBox) where {T<:Real} =
-    BoundingBox(T(b.xmin), T(b.ymin), T(b.xmax), T(b.ymax))
-Base.round(::Type{BoundingBox{T}}, b::BoundingBox) where {T<:Real} =
-    BoundingBox(round(T, b.xmin), round(T, b.xmax),
-                round(T, b.ymin), round(T, b.ymax))
+Base.convert(::Type{T}, B::BoundingBox) where {T<:BoundingBox} =
+    BoundingBox(B)
+Base.round(::Type{BoundingBox{T}}, B::BoundingBox) where {T<:Real} =
+    BoundingBox(round(T, B.xmin), round(T, B.xmax),
+                round(T, B.ymin), round(T, B.ymax))
 
 # Lower left and upper right corners of a bounding box.
-Base.first(b::BoundingBox) = Point(b.xmin, b.ymin)
-Base.last(b::BoundingBox) = Point(b.xmax, b.ymax)
+Base.first(B::BoundingBox) = Point(B.xmin, B.ymin)
+Base.last(B::BoundingBox) = Point(B.xmax, B.ymax)
 
-Base.size(b::BoundingBox{Int}) = (max(b.xmax - b.xmin + 1, 0),
-                                  max(b.ymax - b.ymin + 1, 0))
-Base.size(b::BoundingBox{Int}, k::Integer) =
-    (k == 1 ? max(b.xmax - b.xmin + 1, 0) :
-     k == 2 ? max(b.ymax - b.ymin + 1, 0) :
+Base.size(B::BoundingBox{Int}) = (max(B.xmax - B.xmin + 1, 0),
+                                  max(B.ymax - B.ymin + 1, 0))
+Base.size(B::BoundingBox{Int}, k::Integer) =
+    (k == 1 ? max(B.xmax - B.xmin + 1, 0) :
+     k == 2 ? max(B.ymax - B.ymin + 1, 0) :
      k > 2 ? 1 : error("invalid dimension index"))
 
-Base.size(b::BoundingBox{<:Integer}) = (max(Int(b.xmax) - Int(b.xmin) + 1, 0),
-                                        max(Int(b.ymax) - Int(b.ymin) + 1, 0))
-Base.size(b::BoundingBox{<:Integer}, k::Integer) =
-    (k == 1 ? max(Int(b.xmax) - Int(b.xmin) + 1, 0) :
-     k == 2 ? max(Int(b.ymax) - Int(b.ymin) + 1, 0) :
+Base.size(B::BoundingBox{<:Integer}) = (max(Int(B.xmax) - Int(B.xmin) + 1, 0),
+                                        max(Int(B.ymax) - Int(B.ymin) + 1, 0))
+Base.size(B::BoundingBox{<:Integer}, k::Integer) =
+    (k == 1 ? max(Int(B.xmax) - Int(B.xmin) + 1, 0) :
+     k == 2 ? max(Int(B.ymax) - Int(B.ymin) + 1, 0) :
      k > 2 ? 1 : error("invalid dimension index"))
 
 # Union of bounding boxes:
-Base.:(∪)(a::BoundingBox, b::BoundingBox) =
-    BoundingBox(min(a.xmin, b.xmin), max(a.xmax, b.xmax),
-                min(a.ymin, b.ymin), max(a.ymax, b.ymax))
+Base.:(∪)(A::BoundingBox, B::BoundingBox) =
+    BoundingBox(min(A.xmin, B.xmin), max(A.xmax, B.xmax),
+                min(A.ymin, B.ymin), max(A.ymax, B.ymax))
 
 # Intersection of bounding boxes:
-Base.:(∩)(a::BoundingBox, b::BoundingBox) =
-    BoundingBox(max(a.xmin, b.xmin), min(a.xmax, b.xmax),
-                max(a.ymin, b.ymin), min(a.ymax, b.ymax))
+Base.:(∩)(A::BoundingBox, B::BoundingBox) =
+    BoundingBox(max(A.xmin, B.xmin), min(A.xmax, B.xmax),
+                max(A.ymin, B.ymin), min(A.ymax, B.ymax))
 
 """
 
-`interior([BoundingBox{T},] b::BoundingBox)` yields the largest bounding box
-with integer valued bounds which is contained by box `b`.  Optional first
-argument is to specify the type of the result which is that of `b` by default.
+`interior([BoundingBox{T},] B::BoundingBox)` yields the largest bounding box
+with integer valued bounds which is contained by box `B`.  Optional first
+argument is to specify the type of the result which is that of `B` by default.
 
 """
-interior(b::BoundingBox{<:Integer}) = b
-interior(b::BoundingBox{T}) where {T<:Real} =
-    BoundingBox(ceil(T, b.xmin), floor(T, b.xmax),
-                ceil(T, b.ymin), floor(T, b.ymax))
-interior(::Type{BoundingBox{T}}, b::BoundingBox) where {T<:Real} =
-    BoundingBox(ceil(T, b.xmin), floor(T, b.xmax),
-                ceil(T, b.ymin), floor(T, b.ymax))
-interior(::Type{BoundingBox{T}}, b::BoundingBox{<:Integer}) where {T<:Real} =
-    convert(BoundingBox{T}, b)
+interior(B::BoundingBox{<:Integer}) = B
+interior(B::BoundingBox{<:AbstractFloat}) =
+    BoundingBox(ceil(B.xmin), floor(B.xmax),
+                ceil(B.ymin), floor(B.ymax))
+interior(::Type{BoundingBox{T}}, B::BoundingBox{<:AbstractFloat}) where {T<:Integer} =
+    BoundingBox(ceil(T, B.xmin), floor(T, B.xmax),
+                ceil(T, B.ymin), floor(T, B.ymax))
+interior(::Type{BoundingBox{T}}, B::BoundingBox) where {T} =
+    BoundingBox{T}(interior(B))
 
 """
 
-`exterior([BoundingBox{T},] b::BoundingBox)` yields the smallest boundingbox
-box with integer valued bounds which contains box `b`.  Optional first argument
-is to specify the type of the result which is that of `b` by default.
+`exterior([BoundingBox{T},] B::BoundingBox)` yields the smallest boundingbox
+box with integer valued bounds which contains box `B`.  Optional first argument
+is to specify the type of the result which is that of `B` by default.
 
 """
-exterior(b::BoundingBox{<:Integer}) = b
-exterior(b::BoundingBox{T}) where {T<:Real} =
-    BoundingBox(floor(T, b.xmin), ceil(T, b.xmax),
-                floor(T, b.ymin), ceil(T, b.ymax))
-exterior(::Type{BoundingBox{T}}, b::BoundingBox) where {T<:Real} =
-    BoundingBox(floor(T, b.xmin), ceil(T, b.xmax),
-                floor(T, b.ymin), ceil(T, b.ymax))
-exterior(::Type{BoundingBox{T}}, b::BoundingBox{<:Integer}) where {T<:Real} =
-    convert(BoundingBox{T}, b)
+exterior(B::BoundingBox{<:Integer}) = B
+exterior(B::BoundingBox{<:AbstractFloat}) =
+    BoundingBox(floor(B.xmin), ceil(B.xmax),
+                floor(B.ymin), ceil(B.ymax))
+exterior(::Type{BoundingBox{T}}, B::BoundingBox{<:AbstractFloat}) where {T<:Integer} =
+    BoundingBox(floor(T, B.xmin), ceil(T, B.xmax),
+                floor(T, B.ymin), ceil(T, B.ymax))
+exterior(::Type{BoundingBox{T}}, B::BoundingBox) where {T} =
+    BoundingBox{T}(exterior(B))
 
 """
 
 ```julia
-center(b::BoundingBox) -> c::Point
+center(B::BoundingBox) -> c::Point
 ```
 
-yields the central point of the bounding box `b`.
+yields the central point of the bounding box `B`.
 
 """
-center(b::BoundingBox{<:Integer}) =
-    Point(0.5*(b.xmin + b.xmax), 0.5*(b.ymin + b.ymax))
-center(b::BoundingBox{T}) where {T<:AbstractFloat} =
-    Point(half(T)*(b.xmin + b.xmax), half(T)*(b.ymin + b.ymax))
+center(B::BoundingBox{<:Integer}) =
+    Point(0.5*(B.xmin + B.xmax), 0.5*(B.ymin + B.ymax))
+center(B::BoundingBox{T}) where {T<:AbstractFloat} =
+    Point(half(T)*(B.xmin + B.xmax), half(T)*(B.ymin + B.ymax))
 
 half(::Type{T}) where {T<:AbstractFloat} = one(T)/convert(T, 2)
 
 """
 
-`area(b)` yields the area of the bounding box `b`.
+`area(B)` yields the area of the bounding box `B`.
 
 """
-area(b::BoundingBox{T}) where {T<:Real} =
-    max(b.xmax - b.xmin, zero(T))*max(b.ymax - b.ymin, zero(T))
+area(B::BoundingBox{T}) where {T<:Real} =
+    max(B.xmax - B.xmin, zero(T))*max(B.ymax - B.ymin, zero(T))
 
 # Scaling of a point coordinates.
-Base.:(*)(p::Point, α::Real) = α*p
-Base.:(*)(α::Real, p::Point) = Point(α*p.x, α*p.y)
-Base.:(/)(p::Point, α::Real) = Point(p.x/α, p.y/α)
-Base.:(\)(α::Real, p::Point) = p/α
+Base.:(*)(P::Point, α::Real) = α*P
+Base.:(*)(α::Real, P::Point) = Point(α*P.x, α*P.y)
+Base.:(/)(P::Point, α::Real) = Point(P.x/α, P.y/α)
+Base.:(\)(α::Real, P::Point) = P/α
 
 # Unary minus applied to point negate coordinates.
 Base.:(-)(P::Point{<:Union{AbstractFloat,Signed,Irrational}}) =
     Point(-P.x, -P.y)
 
 # Addition and subtraction of point coordinates.
-Base.:(+)(a::Point, b::Point) = Point(a.x + b.x, a.y + b.y)
-Base.:(-)(a::Point, b::Point) = Point(a.x - b.x, a.y - b.y)
+Base.:(+)(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
+Base.:(-)(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
 
-# Add or remove a margin δ to a bounding box b.
-Base.:(+)(b::BoundingBox, δ::Real) =
-    BoundingBox(b.xmin - δ, b.xmax + δ,
-                b.ymin - δ, b.ymax + δ)
-Base.:(-)(b::BoundingBox, δ::Real) =
-    BoundingBox(b.xmin + δ, b.xmax - δ,
-                b.ymin + δ, b.ymax - δ)
+# Add or remove a margin δ to a bounding box B.
+Base.:(+)(B::BoundingBox, δ::Real) =
+    BoundingBox(B.xmin - δ, B.xmax + δ,
+                B.ymin - δ, B.ymax + δ)
+Base.:(-)(B::BoundingBox, δ::Real) =
+    BoundingBox(B.xmin + δ, B.xmax - δ,
+                B.ymin + δ, B.ymax - δ)
 
 # Translate a bounding box.
-Base.:(+)(b::BoundingBox, p::Point) =
-    BoundingBox(b.xmin + p.x, b.xmax + p.x,
-                b.ymin + p.y, b.ymax + p.y)
-Base.:(-)(b::BoundingBox, p::Point) =
-    BoundingBox(b.xmin - p.x, b.xmax - p.x,
-                b.ymin - p.y, b.ymax - p.y)
+Base.:(+)(B::BoundingBox, P::Point) =
+    BoundingBox(B.xmin + P.x, B.xmax + P.x,
+                B.ymin + P.y, B.ymax + P.y)
+Base.:(-)(B::BoundingBox, P::Point) =
+    BoundingBox(B.xmin - P.x, B.xmax - P.x,
+                B.ymin - P.y, B.ymax - P.y)
 
 #------------------------------------------------------------------------------
