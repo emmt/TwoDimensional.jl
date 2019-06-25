@@ -178,6 +178,13 @@ Base.:(-)(P::Point{<:Union{AbstractFloat,Signed,Irrational}}) =
 Base.:(+)(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
 Base.:(-)(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
 
+# Scaling of bounding box bounds (e.g. to change units).
+Base.:(*)(B::BoundingBox, α::Real) = α*B
+Base.:(*)(α::Real, B::BoundingBox) = BoundingBox(α*B.xmin, α*B.xmax,
+                                                 α*B.ymin, α*B.ymax)
+Base.:(/)(B::BoundingBox{T}, α::Real) where {T} = (one(T)/α)*B
+Base.:(\)(α::Real, B::BoundingBox) = B/α
+
 # Add or remove a margin δ to a bounding box B.
 Base.:(+)(B::BoundingBox, δ::Real) =
     BoundingBox(B.xmin - δ, B.xmax + δ,
