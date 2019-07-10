@@ -59,7 +59,7 @@ BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
 BoundingBox(P0::Point, P1::Point) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
 
-# Empty bounding and unlilited boxes.
+# Empty bounding and unlimited boxes.
 BoundingBox{T}(::Nothing) where {T<:Real} = typemin(BoundingBox{T})
 Base.typemin(::Type{BoundingBox{T}}) where {T<:Real} =
     BoundingBox(typemax(T), typemin(T), typemax(T), typemin(T))
@@ -107,6 +107,17 @@ Base.:(∪)(A::BoundingBox, B::BoundingBox) =
 Base.:(∩)(A::BoundingBox, B::BoundingBox) =
     BoundingBox(max(A.xmin, B.xmin), min(A.xmax, B.xmax),
                 max(A.ymin, B.ymin), min(A.ymax, B.ymax))
+
+# Use bounding boxes to extract a sub-array or a view.
+Base.getindex(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
+    A[B.xmin:B.xmax, B.ymin:B.ymax]
+Base.getindex(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
+    WeightedMatrix(weights(A)[B], values(A)[B])
+
+Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
+    view(A, B.xmin:B.xmax, B.ymin:B.ymax)
+Base.view(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
+    WeightedMatrix(view(weights(A), B), view(values(A), B))
 
 """
 
