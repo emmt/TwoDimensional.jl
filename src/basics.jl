@@ -26,6 +26,33 @@ function dimensions(A::AbstractArray{<:Any,N}) where {N}
 end
 
 #------------------------------------------------------------------------------
+# WEIGHTED ARRAYS
+
+"""
+```julia
+weights(A)
+```
+
+yields the array of weights of the weighted array `A`.
+
+Also see [`WeightedArray`](@ref), [`values`](@ref).
+
+"""
+weights(A::WeightedArray) = A.wgt
+
+"""
+```julia
+values(A)
+```
+
+yields the array of values of the weighted array `A`.
+
+Also see [`WeightedArray`](@ref), [`weights`](@ref).
+
+"""
+values(A::WeightedArray) = A.dat
+
+#------------------------------------------------------------------------------
 # POINTS AND BOUNDING BOXES
 
 # Constructors of points and conversion to/from a Cartesian index.
