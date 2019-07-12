@@ -27,21 +27,15 @@ end
 
 """
 ```julia
-isfastarray()
+isfastarray(A)
 ```
 
 yields whether array `A` has standard indices and is efficiently indexed by
 linear indices.
 
 """
-function isfastarray(A::AbstractArray{T,N}) where {T,N}
-    flag = (IndexStyle(A) === IndexLinear())
-    inds = axes(A)
-    @inbounds for d in 1:N
-        flag &= (first(inds[d]) == 1)
-    end
-    return flag
-end
+isfastarray(A::AbstractArray) =
+    (IndexStyle(A) === IndexLinear()) && LazyAlgebra.has_standard_indexing(A)
 
 @noinline throw_non_standard_indexing() =
     error("array have non-standard indices")
