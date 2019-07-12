@@ -38,6 +38,8 @@ Point(I::CartesianIndex{2}) = Point(I[1], I[2])
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
 Base.convert(::Type{CartesianIndex}, P::Point{<:Integer}) = CartesianIndex(P)
 Base.convert(::Type{CartesianIndex{2}}, P::Point{<:Integer}) = CartesianIndex(P)
+Base.convert(::Type{T}, P::Point) where {T<:Tuple} = convert(T, Tuple(P))
+Base.Tuple(P::Point) = (P.x, P.y)
 
 # Conversion of points and rounding to nearest integer coordinates.
 Base.convert(::Type{T}, P::Point) where {T<:Point} = T(P)
@@ -58,6 +60,8 @@ BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
     BoundingBox(I0[1], I1[1], I0[2], I1[2])
 BoundingBox(P0::Point, P1::Point) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
+Base.convert(::Type{T}, B::BoundingBox) where {T<:Tuple} = convert(T, Tuple(B))
+Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
 
 # Empty bounding and unlimited boxes.
 BoundingBox{T}(::Nothing) where {T<:Real} = typemin(BoundingBox{T})
