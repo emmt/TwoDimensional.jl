@@ -116,14 +116,30 @@ Base.size(B::BoundingBox{Int}) = (max(B.xmax - B.xmin + 1, 0),
 Base.size(B::BoundingBox{Int}, k::Integer) =
     (k == 1 ? max(B.xmax - B.xmin + 1, 0) :
      k == 2 ? max(B.ymax - B.ymin + 1, 0) :
-     k > 2 ? 1 : error("invalid dimension index"))
+     k > 2 ? 1 : throw_bad_dimension_index())
 
 Base.size(B::BoundingBox{<:Integer}) = (max(Int(B.xmax) - Int(B.xmin) + 1, 0),
                                         max(Int(B.ymax) - Int(B.ymin) + 1, 0))
 Base.size(B::BoundingBox{<:Integer}, k::Integer) =
     (k == 1 ? max(Int(B.xmax) - Int(B.xmin) + 1, 0) :
      k == 2 ? max(Int(B.ymax) - Int(B.ymin) + 1, 0) :
-     k > 2 ? 1 : error("invalid dimension index"))
+     k > 2 ? 1 : throw_bad_dimension_index())
+
+Base.axes(B::BoundingBox{Int}) = (B.xmin:B.xmax, B.ymin:B.ymax)
+Base.axes(B::BoundingBox{Int}, k::Integer) =
+    (k == 1 ? (B.xmin:B.xmax) :
+     k == 2 ? (B.ymin:B.ymax) :
+     k > 2 ? Base.OneTo(1) : throw_bad_dimension_index())
+
+Base.axes(B::BoundingBox{<:Integer}) = (Int(B.xmin):Int(B.xmax),
+                                        Int(B.ymin):Int(B.ymax))
+Base.axes(B::BoundingBox{<:Integer}, k::Integer) =
+    (k == 1 ? (Int(B.xmin):Int(B.xmax)) :
+     k == 2 ? (Int(B.ymin):Int(B.ymax)) :
+     k > 2 ? Base.OneTo(1) : throw_bad_dimension_index())
+
+@noinline throw_bad_dimension_index() =
+    error("invalid dimension index")
 
 # Union of bounding boxes:
 Base.:(∪)(A::BoundingBox, B::BoundingBox) =
