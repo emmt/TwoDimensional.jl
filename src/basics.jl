@@ -103,6 +103,8 @@ Base.round(::Type{BoundingBox{T}}, B::BoundingBox) where {T<:Real} =
 Base.first(B::BoundingBox) = Point(B.xmin, B.ymin)
 Base.last(B::BoundingBox) = Point(B.xmax, B.ymax)
 
+Base.isempty(B::BoundingBox{<:Integer}) = ((B.xmin > B.xmax)|(B.ymin > B.ymax))
+
 Base.size(B::BoundingBox{Int}) = (max(B.xmax - B.xmin + 1, 0),
                                   max(B.ymax - B.ymin + 1, 0))
 Base.size(B::BoundingBox{Int}, k::Integer) =
