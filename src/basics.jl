@@ -61,6 +61,10 @@ Base.convert(::Type{T}, P::Point) where {T<:Point} = T(P)
 Base.round(::Type{Point{T}}, P::Point) where {T<:Real} =
     Point(round(T, P.x), round(T, P.y))
 
+# Methods hypot() and atan() yield the polar coordinates of a point.
+Base.hypot(P::Point) = hypot(P.x, P.y)
+Base.atan(P::Point) = atan(P.y, P.x)
+
 # Constructors of bounding boxes and conversion.
 function BoundingBox(xmin::Txmin, xmax::Txmax,
                      ymin::Tymin, ymax::Tymax) where {Txmin,Txmax,Tymin,Tymax}
