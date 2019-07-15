@@ -77,6 +77,11 @@ BoundingBox(P0::Point, P1::Point) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
 Base.convert(::Type{T}, B::BoundingBox) where {T<:Tuple} = convert(T, Tuple(B))
 Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
+BoundingBox(A::AbstractMatrix) = BoundingBox(axes(A))
+BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
+    BoundingBox(inds[1], inds[2])
+BoundingBox(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) =
+    BoundingBox(Int(first(X)), Int(last(X)), Int(first(Y)), Int(last(Y)))
 
 # Empty bounding and unlimited boxes.
 BoundingBox{T}(::Nothing) where {T<:Real} = typemin(BoundingBox{T})
