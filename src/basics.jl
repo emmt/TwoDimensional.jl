@@ -47,8 +47,8 @@ isfastarray(A::AbstractArray) =
 Point(P::Point) = P
 Point{T}(P::Point{T}) where {T} = P
 Point{T}(P::Point) where {T} = Point{T}(P.x, P.y)
-Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} =
-    Point{promote_type{Tx,Ty}}(x, y)
+Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} = Point{promote_type(Tx,Ty)}(x, y)
+Point(;x::Real, y::Real) = Point(x, y)
 Point(I::CartesianIndex{2}) = Point(I[1], I[2])
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
 Base.convert(::Type{CartesianIndex}, P::Point{<:Integer}) = CartesianIndex(P)
@@ -71,6 +71,8 @@ function BoundingBox(xmin::Txmin, xmax::Txmax,
     T = promote_type(Txmin, Txmax, Tymin, Tymax)
     return BoundingBox{T}(xmin, xmax, ymin, ymax)
 end
+BoundingBox(; xmin::Real, xmax::Real, ymin::Real, ymax::Real) =
+    BoundingBox(xmin, xmax, ymin, ymax)
 BoundingBox(B::BoundingBox) = B
 BoundingBox{T}(B::BoundingBox{T}) where {T} = B
 BoundingBox{T}(B::BoundingBox) where {T} =
