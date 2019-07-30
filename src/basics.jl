@@ -69,6 +69,103 @@ fastarray(::Type{T}, A::AbstractArray{<:Any,N}) where {T,N} =
     convert(Array{T,N}, A)
 
 #------------------------------------------------------------------------------
+# INDEXED LAYOUT
+
+"""
+
+```julia
+indexedlayout(inds) -> cnt, xinds
+indexedlayout(msk, dir=0) -> cnt, xinds
+```
+
+yield a 2D array of indices related to the layout of some device with a finite
+number `cnt` of inputs or outputs (e.g. the sub-pupils of a wave-front sensor
+or the actuators of a deformable mirror).  The result `xinds` is a fresh array
+of integers set to zero for unused positions and otherwise set with an index in
+the range `1:cnt` corresponding to a specific input or output of the device.
+
+- `inds` is a 2D array of indices whose elements are set following the same
+  rules as for `xinds`.  In that case, the reason to call `indexedlayout`
+  is to get a new array (independent from `inds`) with checked contents.
+
+- `msk` is a 2D array of booleans whose elements are true (resp. false) at used
+  (resp. unused) locations and `dir` is an integer which specifies how the used
+  should be numbered.  The 1st bit of `dir` should be set if the numbering
+  decreases along the horizontal axis.  The 2nd bit of `dir` should be set if
+  the numbering decreases along the vertical axis.  The 3rd bit of `dir` should
+  be set if the numbering varies along the vertical axis and then along the
+  horizontal axis.
+
+"""
+function indexedlayout(msk::AbstractMatrix{Bool},
+                       dir::Integer = 0)
+    Base.has_offset_axes(msk) && error("mask array has non-standard indexing")
+
+    # What is the direction of the numbering?
+    reverse_x = (dir & 1) != 0
+    reverse_y = (dir & 2) != 0
+    transpose = (dir & 4) != 0
+
+    # Fill array of indices according to direction of numbering.
+    ncols, nrows = size(msk)
+    xinds = Array{Int,2}(undef, nrows, ncols)
+    cnt = 0
+    if transpose
+        @inbounds for x in 1:ncols
+            xm =  (reverse_x ? ncols+1-x : x)
+            for y in 1:nrows
+                ym = (reverse_y ? nrows+1-y : y)
+                if msk[x,y]
+                    cnt += 1
+                    xinds[xm,ym] = cnt
+                else
+                    xinds[xm,ym] = 0
+                end
+            end
+        end
+    else
+        @inbounds for y in 1:nrows
+            ym = (reverse_y ? nrows+1-y : y)
+            for x in 1:ncols
+                xm =  (reverse_x ? ncols+1-x : x)
+                if msk[x,y]
+                    cnt += 1
+                    xinds[xm,ym] = cnt
+                else
+                    xinds[xm,ym] = 0
+                end
+            end
+        end
+    end
+    return cnt, xinds
+end
+
+# Make a private copy with checked contents.
+# FIXME: Check unicity of numbering.
+# FIXME: Provide means for changing orientation.
+function indexedlayout(inds::AbstractMatrix{<:Integer})
+    Base.has_offset_axes(inds) &&
+        error("array of indices has non-standard indexing")
+    xinds = Array{Int,2}(undef, size(inds))
+    cnt = 0
+    jmin = typemax(Int)
+    jmax = typemin(Int)
+    @inbounds for i in eachindex(xinds, inds)
+        j = Int(inds[i])
+        jmax = max(jmax, j)
+        jmin = min(jmin, j)
+        if j > 0
+            cnt += 1
+            xinds[i] = j
+        else
+            xinds[i] = 0
+        end
+    end
+    (jmin ≥ 0 && jmax == cnt) || error("invalid indices")
+    return cnt, xinds
+end
+
+#------------------------------------------------------------------------------
 # POINTS AND BOUNDING BOXES
 
 # Constructors of points and conversion to/from a Cartesian index.
