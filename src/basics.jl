@@ -11,63 +11,6 @@
 # Copyright (C) 2019, Éric Thiébaut.
 #
 
-"""
-
-`dimensions(A)` yields the list of dimensions of array `A`.  The result is the
-same as `size(A)` but it is also checked that `A` has standard indices
-(starting at 1).
-
-"""
-function dimensions(A::AbstractArray{<:Any,N}) where {N}
-    # The fastest code is LazyAlgebra.has_standard_indexing(A)
-    LazyAlgebra.has_standard_indexing(A) ||
-        throw_non_standard_indexing()
-    return size(A)
-end
-
-"""
-```julia
-isfastarray(A)
-```
-
-yields whether array `A` has standard indices and is efficiently indexed by
-linear indices.
-
-See also: [`Tao.FastArray`](@ref), [`Tao.fastarray`](@ref).
-
-"""
-isfastarray(A::AbstractArray) =
-    (IndexStyle(A) === IndexLinear()) && LazyAlgebra.has_standard_indexing(A)
-
-@noinline throw_non_standard_indexing() =
-    error("array have non-standard indices")
-
-"""
-
-`FastArray{T,N}` is the union of known fast array types.
-
-See also: [`Tao.isfastarray`](@ref), [`Tao.fastarray`](@ref).
-
-"""
-const FastArray{T,N} = Union{Array{T,N},ResizableArray{T,N},SharedArray{T,N}}
-
-"""
-
-```julia
-fastarray([T=eltype(A),] A)
-```
-
-yields a fast array equivalent to `A` with element type `T`.  If `A` is already
-a fast array with element type `T`, A is returned.
-
-See also: [`Tao.isfastarray`](@ref), [`Tao.FastArray`](@ref).
-
-"""
-fastarray(A::AbstractArray{T,N}) where {T,N} = fastarray(T, A)
-fastarray(::Type{T}, A::FastArray{T,N}) where {T,N} = A
-fastarray(::Type{T}, A::AbstractArray{<:Any,N}) where {T,N} =
-    convert(Array{T,N}, A)
-
 #------------------------------------------------------------------------------
 # INDEXED LAYOUT
 
