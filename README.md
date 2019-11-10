@@ -24,6 +24,12 @@ To avoid conflicts with other packages, you may use/import
 `TwoDimensional.Suffixed` which gives you types `AffineTransform2D{T}`,
 `Point2D{T}` and `BoundingBox2D{T}` instead, that is with suffix `2D`.
 
+You can also fine tune what you want.  For instance:
+
+```julia
+using TwoDimensional: AffineTransform, Point2D
+```
+
 
 ## Installation
 
