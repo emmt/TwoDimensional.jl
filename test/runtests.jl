@@ -1,8 +1,6 @@
-#isdefined(:LinearInterpolators) || include("../src/LinearInterpolators.jl")
+module TwoDimensionalTests
 
-module LinearInterpolatorsAffineTransformsTests
-
-using LinearInterpolators.AffineTransforms
+using TwoDimensional
 
 # Deal with compatibility issues.
 using Compat
@@ -17,16 +15,16 @@ distance(a::Real, b::Real) = abs(a - b)
 distance(a::NTuple{2,Real}, b::NTuple{2,Real}) =
     hypot(a[1] - b[1], a[2] - b[2])
 
-distance(A::AffineTransform2D, B::AffineTransform2D) =
+distance(A::AffineTransform, B::AffineTransform) =
     max(abs(A.xx - B.xx), abs(A.xy - B.xy), abs(A.x - B.x),
         abs(A.yx - B.yx), abs(A.yy - B.yy), abs(A.y - B.y))
 
 @testset "AffineTransforms" begin
     tol = 1e-14
-    I = AffineTransform2D()
-    A = AffineTransform2D(1, 0, -3, 0.1, 1, +2)
-    B = AffineTransform2D(-0.4,  0.1, -4.2, -0.3,  0.7,  1.1)
-    C = AffineTransform2D( 2.3, -0.9, -6.1,  0.7, -3.1, -5.2)
+    I = AffineTransform()
+    A = AffineTransform(1, 0, -3, 0.1, 1, +2)
+    B = AffineTransform(-0.4,  0.1, -4.2, -0.3,  0.7,  1.1)
+    C = AffineTransform( 2.3, -0.9, -6.1,  0.7, -3.1, -5.2)
     vectors = ((0.2,1.3), (-1,π), (-sqrt(2),3//4))
     scales = (2, 0.1, φ)
     angles = (-2π/11, π/7, 0.1)
@@ -37,9 +35,9 @@ distance(A::AffineTransform2D, B::AffineTransform2D) =
         for G in (I, A, B)
             @test eltype(G) == Float64
             for T in types
-                @test typeof(convert(AffineTransform2D{T}, G)) == AffineTransform2D{T}
-                @test typeof(T(G)) == AffineTransform2D{T}
-                @test eltype(convert(AffineTransform2D{T}, G)) == T
+                @test typeof(convert(AffineTransform{T}, G)) == AffineTransform{T}
+                @test typeof(T(G)) == AffineTransform{T}
+                @test eltype(convert(AffineTransform{T}, G)) == T
                 @test eltype(T(G)) == T
             end
         end
@@ -179,7 +177,7 @@ distance(A::AffineTransform2D, B::AffineTransform2D) =
 
     @testset "show" begin
         for M in (I, A, B, C)
-            @test occursin(r"AffineTransform2D{Float64}", string(M))
+            @test occursin(r"AffineTransform{Float64}", string(M))
         end
     end
 end
