@@ -23,7 +23,7 @@ export
     scale,
     translate
 
-# Imports for extension (at least * must be imported for deprecation).
+# Imports for extension.
 import Base: +, *, ∘, /, \, inv, eltype
 import LinearAlgebra: ⋅, det
 
@@ -57,7 +57,9 @@ Many operations are available to manage or apply affine transforms:
 
 ```julia
 (xp, yp) = A(x,y)       # idem
+(xp, yp) = A*(x,y)      # idem
 (xp, yp) = A(v)         # idem, with v = (x,y)
+(xp, yp) = A*v          # idem
 
 B = T(A)  # convert coefficients of transform A to be of type T
 B = convert(AffineTransform{T}, A)  # idem
@@ -126,19 +128,10 @@ eltype(::AffineTransform{T}) where {T} = T
 
 # Use Float64 type by default.
 AffineTransform() = AffineTransform{Float64}()
-AffineTransform(a11::Real, a12::Real, a13::Real,
-                a21::Real, a22::Real, a23::Real) =
-                    AffineTransform{Float64}(a11,a12,a13, a21,a22,a23)
-
-@deprecate(
-    AffineTransform(::Type{T}) where {T<:AbstractFloat},
-    AffineTransform{T}())
-
-@deprecate(
-    AffineTransform(::Type{T},
-                    a11::Real, a12::Real, a13::Real,
-                    a21::Real, a22::Real, a23::Real) where {T<:AbstractFloat},
-    AffineTransform{T}(a11,a12,a13, a21,a22,a23))
+function AffineTransform(a11::Real, a12::Real, a13::Real,
+                         a21::Real, a22::Real, a23::Real)
+    return AffineTransform{Float64}(a11,a12,a13, a21,a22,a23)
+end
 
 # The following is a no-op when the destination type matches that of the
 # source.
@@ -489,7 +482,7 @@ for op in (:∘, :*, :⋅)
     end
 end
 
-@deprecate(*(A::AffineTransform, v::Tuple{Real,Real}), A(v))
+*(A::AffineTransform, v::Tuple{Real,Real}) = A(v)
 
 *(ρ::Real, A::AffineTransform) = scale(ρ, A)
 
@@ -507,8 +500,5 @@ Base.show(io::IO, ::MIME"text/plain", A::AffineTransform) =
 Base.show(io::IO, A::AffineTransform) = show(io, MIME"text/plain"(), A)
 
 Base.print(io::IOBuffer, A::AffineTransform) = show(io, A)
-
-@deprecate combine compose
-@deprecate multiply compose
 
 end # module
