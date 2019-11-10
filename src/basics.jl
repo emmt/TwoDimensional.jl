@@ -1,115 +1,110 @@
 #
 # basics.jl --
 #
-# Utilities for Julia interface to TAO.
+# Basic types.
 #
 #-------------------------------------------------------------------------------
 #
-# This file if part of the TAO software (https://github.com/emmt/TAO) licensed
-# under the MIT license.
+# This file if part of the TwoDimensional Julia package licensed under the MIT
+# license (https://github.com/emmt/TwoDimensional.jl).
 #
 # Copyright (C) 2019, Éric Thiébaut.
 #
 
-#------------------------------------------------------------------------------
-# INDEXED LAYOUT
+using Base: @propagate_inbounds
 
 """
 
 ```julia
-indexedlayout(inds) -> cnt, xinds
-indexedlayout(msk, dir=0) -> cnt, xinds
+Point(x,y)
 ```
 
-yield a 2D array of indices related to the layout of some device with a finite
-number `cnt` of inputs or outputs (e.g. the sub-pupils of a wave-front sensor
-or the actuators of a deformable mirror).  The result `xinds` is a fresh array
-of integers set to zero for unused positions and otherwise set with an index in
-the range `1:cnt` corresponding to a specific input or output of the device.
+yields an instance of a 2D point of coordinates `(x,y)`.
 
-- `inds` is a 2D array of indices whose elements are set following the same
-  rules as for `xinds`.  In that case, the reason to call `indexedlayout`
-  is to get a new array (independent from `inds`) with checked contents.
+A point may be multiplied or divided by a scalar to scale its coordinates.  The
+addition (resp. subtraction) of two points adds (resp. subtracts) their
+coordinates.
 
-- `msk` is a 2D array of booleans whose elements are true (resp. false) at used
-  (resp. unused) locations and `dir` is an integer which specifies how the used
-  should be numbered.  The 1st bit of `dir` should be set if the numbering
-  decreases along the horizontal axis.  The 2nd bit of `dir` should be set if
-  the numbering decreases along the vertical axis.  The 3rd bit of `dir` should
-  be set if the numbering varies along the vertical axis and then along the
-  horizontal axis.
+Coordinates can be specified by keywords:
+
+```julia
+Point(x=xval, y=yval)
+```
+
+There are no default values for keywords `x` and `y` so both must be specified.
 
 """
-function indexedlayout(msk::AbstractMatrix{Bool},
-                       dir::Integer = 0)
-    Base.has_offset_axes(msk) && error("mask array has non-standard indexing")
-
-    # What is the direction of the numbering?
-    reverse_x = (dir & 1) != 0
-    reverse_y = (dir & 2) != 0
-    transpose = (dir & 4) != 0
-
-    # Fill array of indices according to direction of numbering.
-    ncols, nrows = size(msk)
-    xinds = Array{Int,2}(undef, nrows, ncols)
-    cnt = 0
-    if transpose
-        @inbounds for x in 1:ncols
-            xm =  (reverse_x ? ncols+1-x : x)
-            for y in 1:nrows
-                ym = (reverse_y ? nrows+1-y : y)
-                if msk[x,y]
-                    cnt += 1
-                    xinds[xm,ym] = cnt
-                else
-                    xinds[xm,ym] = 0
-                end
-            end
-        end
-    else
-        @inbounds for y in 1:nrows
-            ym = (reverse_y ? nrows+1-y : y)
-            for x in 1:ncols
-                xm =  (reverse_x ? ncols+1-x : x)
-                if msk[x,y]
-                    cnt += 1
-                    xinds[xm,ym] = cnt
-                else
-                    xinds[xm,ym] = 0
-                end
-            end
-        end
-    end
-    return cnt, xinds
+struct Point{T<:Real}
+    x::T
+    y::T
 end
 
-# Make a private copy with checked contents.
-# FIXME: Check unicity of numbering.
-# FIXME: Provide means for changing orientation.
-function indexedlayout(inds::AbstractMatrix{<:Integer})
-    Base.has_offset_axes(inds) &&
-        error("array of indices has non-standard indexing")
-    xinds = Array{Int,2}(undef, size(inds))
-    cnt = 0
-    jmin = typemax(Int)
-    jmax = typemin(Int)
-    @inbounds for i in eachindex(xinds, inds)
-        j = Int(inds[i])
-        jmax = max(jmax, j)
-        jmin = min(jmin, j)
-        if j > 0
-            cnt += 1
-            xinds[i] = j
-        else
-            xinds[i] = 0
-        end
-    end
-    (jmin ≥ 0 && jmax == cnt) || error("invalid indices")
-    return cnt, xinds
-end
+"""
 
-#------------------------------------------------------------------------------
-# POINTS AND BOUNDING BOXES
+`BoundingBox(xmin,xmax,ymin,ymax)` yields an instance of a 2D rectangular
+bounding box whose sides are aligned with the coordinate axes and containing
+points of coordinates `(x,y)` such that `xmin ≤ x ≤ xmax` and `ymin ≤ y ≤
+ymax`.  The box is *empty* if `xmin > xmax` or `ymin > ymax`.
+
+A bounding box can be constructed from the first and last points (i.e. at the
+lower-left and upper right opposite corners) of the box:
+
+```julia
+BoundingBox(P0::Point, P1::point)
+BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})
+```
+
+Coordinates can be specified by keywords:
+
+```julia
+BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
+```
+
+There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
+all must be specified.
+
+The union of bounding boxes `b1`, `b2`, ... is given by one of:
+
+```julia
+b1 ∪ b2 ∪ ...
+union(b1, b2, ...)
+```
+
+and is the smallest bounding box containing the bounding boxes `b1`, `b2`, ...
+
+The intersection of bounding boxes `b1`, `b2`, ... is given by one of:
+
+```julia
+b1 ∩ b2 ∩ ...
+intersect(b1, b2, ...)
+```
+
+and is the largest bounding box contained into the bounding boxes `b1`, `b2`,
+...
+
+The `round` method can be applied to a bounding box to round its limits to the
+nearest integer values.  Methods [`interior`](@ref) and [`exterior`](@ref) can
+be applied to a bounding box to respectively yield the largest interior and
+smallest exterior bounding boxes with integer bounds.
+
+Adding or subtracting a scalar `δ` to a bounding box `b` can be used to add or
+remove a margin `δ` to the bounding box `b`.
+
+Adding or subtracting a point `p` to a bounding box `b` can be used to shift
+the bounding box `b`.
+
+`first(b)` and `last(b)` respectively yield the lower left and upper right
+corners of a bounding box (as a `Point` instance).
+
+See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
+
+"""
+struct BoundingBox{T<:Real}
+    xmin::T
+    xmax::T
+    ymin::T
+    ymax::T
+end
 
 # Constructors of points and conversion to/from a Cartesian index.
 Point(P::Point) = P
@@ -227,13 +222,13 @@ Base.:(∩)(A::BoundingBox, B::BoundingBox) =
 # Use bounding boxes to extract a sub-array or a view.
 @propagate_inbounds Base.getindex(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     A[B.xmin:B.xmax, B.ymin:B.ymax]
-@propagate_inbounds Base.getindex(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
-    WeightedMatrix(weights(A)[B], values(A)[B])
+#@propagate_inbounds Base.getindex(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
+#    WeightedMatrix(weights(A)[B], values(A)[B])
 
 Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     view(A, B.xmin:B.xmax, B.ymin:B.ymax)
-Base.view(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
-    WeightedMatrix(view(weights(A), B), view(values(A), B))
+#Base.view(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
+#    WeightedMatrix(view(weights(A), B), view(values(A), B))
 
 """
 
