@@ -90,6 +90,16 @@ BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
 There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
 all must be specified.
 
+A bounding box may also be constructed by applying a predicate function to the
+elements of a 2-dimensional array:
+
+```julia
+BoundingBox(f, A)
+```
+
+yields the bounding box of all integer coordinates `(x,y)` such that
+`f(A[x,y])` yields `true`.
+
 The union of bounding boxes `b1`, `b2`, ... is given by one of:
 
 ```julia
@@ -189,6 +199,24 @@ BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
 BoundingBox(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) =
     BoundingBox(Int(first(X)), Int(last(X)), Int(first(Y)), Int(last(Y)))
 
+# FIXME: speed-up stupid algorithm!
+function BoundingBox(f::Function, A::AbstractMatrix)
+    inds = axes(A)
+    imin = typemax(Int)
+    imax = typemin(Int)
+    jmin = typemax(Int)
+    jmax = typemin(Int)
+    for j in inds[2], i in inds[1]
+        if f(A[i,j])
+            imin = min(imin, i)
+            imax = max(imax, i)
+            jmin = min(jmin, j)
+            jmax = max(jmax, j)
+        end
+    end
+    return BoundingBox(imin, imax, jmin, jmax)
+end
+
 # Empty bounding and unlimited boxes.
 BoundingBox{T}(::Nothing) where {T<:Real} = typemin(BoundingBox{T})
 Base.typemin(::Type{BoundingBox{T}}) where {T<:Real} =
@@ -216,18 +244,23 @@ Base.last(B::BoundingBox) = Point(B.xmax, B.ymax)
 
 Base.isempty(B::BoundingBox{<:Integer}) = ((B.xmin > B.xmax)|(B.ymin > B.ymax))
 
-Base.size(B::BoundingBox{Int}) = (max(B.xmax - B.xmin + 1, 0),
-                                  max(B.ymax - B.ymin + 1, 0))
+Base.size(B::BoundingBox{Int}) =
+    (isempty(B) ? (0, 0) : (B.xmax - B.xmin + 1,
+                            B.ymax - B.ymin + 1))
 Base.size(B::BoundingBox{Int}, k::Integer) =
-    (k == 1 ? max(B.xmax - B.xmin + 1, 0) :
-     k == 2 ? max(B.ymax - B.ymin + 1, 0) :
+    (isempty(B) ? (k ≥ 1 ? 0 : throw_bad_dimension_index()) :
+     k == 1 ? B.xmax - B.xmin + 1 :
+     k == 2 ? B.ymax - B.ymin + 1 :
      k > 2 ? 1 : throw_bad_dimension_index())
 
-Base.size(B::BoundingBox{<:Integer}) = (max(Int(B.xmax) - Int(B.xmin) + 1, 0),
-                                        max(Int(B.ymax) - Int(B.ymin) + 1, 0))
+Base.size(B::BoundingBox{<:Integer}) =
+    (isempty(B) ? (0, 0) : (Int(B.xmax) - Int(B.xmin) + 1,
+                            Int(B.ymax) - Int(B.ymin) + 1))
+
 Base.size(B::BoundingBox{<:Integer}, k::Integer) =
-    (k == 1 ? max(Int(B.xmax) - Int(B.xmin) + 1, 0) :
-     k == 2 ? max(Int(B.ymax) - Int(B.ymin) + 1, 0) :
+    (isempty(B) ? (k ≥ 1 ? 0 : throw_bad_dimension_index()) :
+     k == 1 ? Int(B.xmax) - Int(B.xmin) + 1 :
+     k == 2 ? Int(B.ymax) - Int(B.ymin) + 1 :
      k > 2 ? 1 : throw_bad_dimension_index())
 
 Base.axes(B::BoundingBox{Int}) = (B.xmin:B.xmax, B.ymin:B.ymax)
