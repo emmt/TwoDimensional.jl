@@ -14,7 +14,6 @@ julia:
 # (tests will run but not make your overall status red)
 matrix:
   allow_failures:
-    - julia: 1.2
     - julia: nightly
 
 notifications:

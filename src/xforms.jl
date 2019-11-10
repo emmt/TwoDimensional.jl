@@ -506,6 +506,8 @@ Base.show(io::IO, ::MIME"text/plain", A::AffineTransform) =
 
 Base.show(io::IO, A::AffineTransform) = show(io, MIME"text/plain"(), A)
 
+Base.print(io::IOBuffer, A::AffineTransform) = show(io, A)
+
 @deprecate combine compose
 @deprecate multiply compose
 
