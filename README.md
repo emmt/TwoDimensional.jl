@@ -11,6 +11,7 @@ affine coordinate transforms.
 Other related packages:
 - [CoordinateTransformations](https://github.com/FugroRoames/CoordinateTransformations.jl)
 
+
 ## Usage
 
 ```julia
@@ -38,18 +39,17 @@ have to clone the repository.  In Julia, hit the `]` key to switch to the
 package manager REPL (you should get a `... pkg>` prompt) and type:
 
 ```julia
-pkg> add https://github.com/emmt/TwoDimensional.jl.git
+pkg> add https://github.com/emmt/TwoDimensional.jl
 ```
 
 if you use HTTPS, or:
 
 ```julia
-pkg> add git@github.com:emmt/TwoDimensional.jl.git
+pkg> add git@github.com:emmt/TwoDimensional.jl
 ```
 
 if you use SSH.
 
-I you want to follow the master version, append `#master` to the URLs above.
 
 [doc-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [doc-stable-url]: https://emmt.github.io/TwoDimensional.jl/stable
