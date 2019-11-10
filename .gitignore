@@ -5,6 +5,6 @@ build/
 devel/
 work/
 temp/
-devel.jl
-work.jl
-temp.jl
+devel.*
+work.*
+temp.*
