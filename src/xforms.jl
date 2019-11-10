@@ -23,6 +23,8 @@ export
     scale,
     translate
 
+using ..TwoDimensional: Point
+
 # Imports for extension.
 import Base: +, *, ∘, /, \, inv, eltype
 import LinearAlgebra: ⋅, det
@@ -60,6 +62,9 @@ Many operations are available to manage or apply affine transforms:
 (xp, yp) = A*(x,y)      # idem
 (xp, yp) = A(v)         # idem, with v = (x,y)
 (xp, yp) = A*v          # idem
+
+A(Point(x,y)) -> Point(xp, yp)
+A*Point(x,y)  -> Point(xp, yp)
 
 B = T(A)  # convert coefficients of transform A to be of type T
 B = convert(AffineTransform{T}, A)  # idem
@@ -177,6 +182,8 @@ Base.MPFR.BigFloat(A::AffineTransform) =
 
 (A::AffineTransform)(v::Tuple{Real,Real}) = A(v[1], v[2])
 
+(A::AffineTransform)(v::Point) = Point(A(v.x, v.y)...)
+
 #------------------------------------------------------------------------------
 # Combine a translation with an affine transform.
 
@@ -239,6 +246,9 @@ translate(A::AffineTransform{T}, x::Real, y::Real) where {T<:AbstractFloat} =
 
 translate(A::AffineTransform, v::Tuple{Real,Real}) =
     translate(A, v[1], v[2])
+
+translate(A::AffineTransform, v::Point) =
+    translate(A, v.x, v.y)
 
 #------------------------------------------------------------------------------
 """
@@ -471,10 +481,11 @@ function intercept(A::AffineTransform{T}) where {T<:AbstractFloat}
     return ((A.xy*A.y - A.yy*A.x)/d, (A.yx*A.x - A.xx*A.y)/d)
 end
 
+intercept(T::Type{<:Point}, A::AffineTransform) = T(intercept(A)...)
 
-+(v::Tuple{Real,Real}, A::AffineTransform) = translate(v, A)
++(v::Union{Point,Tuple{Real,Real}}, A::AffineTransform) = translate(v, A)
 
-+(A::AffineTransform, v::Tuple{Real,Real}) = translate(A, v)
++(A::AffineTransform, v::Union{Point,Tuple{Real,Real}}) = translate(A, v)
 
 for op in (:∘, :*, :⋅)
     @eval begin
@@ -482,7 +493,7 @@ for op in (:∘, :*, :⋅)
     end
 end
 
-*(A::AffineTransform, v::Tuple{Real,Real}) = A(v)
+*(A::AffineTransform, v::Union{Point,Tuple{Real,Real}}) = A(v)
 
 *(ρ::Real, A::AffineTransform) = scale(ρ, A)
 
