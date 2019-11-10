@@ -26,7 +26,7 @@ export
 using ..TwoDimensional: Point
 
 # Imports for extension.
-import Base: +, *, ∘, /, \, inv, eltype
+import Base: +, -, *, ∘, /, \, inv, eltype
 import LinearAlgebra: ⋅, det
 
 """
@@ -235,6 +235,9 @@ translate(x::Real, y::Real, A::AffineTransform{T}) where {T<:AbstractFloat} =
 
 translate(v::Tuple{Real,Real}, A::AffineTransform) =
     translate(v[1], v[2], A)
+
+translate(v::Point, A::AffineTransform) =
+    translate(v.x, v.y, A)
 
 # Right-translating results in translating the input of the transform.
 translate(A::AffineTransform{T}, x::T, y::T) where {T<:AbstractFloat} =
@@ -486,6 +489,9 @@ intercept(T::Type{<:Point}, A::AffineTransform) = T(intercept(A)...)
 +(v::Union{Point,Tuple{Real,Real}}, A::AffineTransform) = translate(v, A)
 
 +(A::AffineTransform, v::Union{Point,Tuple{Real,Real}}) = translate(A, v)
+
+-(A::AffineTransform, v::Tuple{Real,Real}) = A + (-v[1], -v[2])
+-(A::AffineTransform, v::Point) = A + (-v)
 
 for op in (:∘, :*, :⋅)
     @eval begin
