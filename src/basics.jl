@@ -15,6 +15,16 @@ using Base: @propagate_inbounds
 
 """
 
+Any object whose type is derived from `AbstractPoint{T}` has at least 2 fields:
+`x` its abscissa and `y` its ordinate, both of type `T`.
+
+See also: [`Point`](@ref), [`WeightedPoint`](@ref).
+
+"""
+abstract type AbstractPoint{T<:Real} end
+
+"""
+
 ```julia
 Point(x,y)
 ```
@@ -33,10 +43,27 @@ Point(x=xval, y=yval)
 
 There are no default values for keywords `x` and `y` so both must be specified.
 
+See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
+
 """
-struct Point{T<:Real}
+struct Point{T} <: AbstractPoint{T}
     x::T
     y::T
+end
+
+"""
+
+A `WeightedPoint{T}` has just 3 fields: `w` its weight, `x` its abscissa and
+`y` its ordinate, all of type `T`.  By convention `w ≥ 0` but this is not
+checked for efficiency reasons.
+
+See also: [`Point`](@ref), [`AbstractPoint`](@ref).
+
+"""
+struct WeightedPoint{T<:AbstractFloat}  <: AbstractPoint{T}
+    w::T # weight
+    x::T # abscissa
+    y::T # ordinate
 end
 
 """
@@ -108,19 +135,29 @@ end
 
 # Constructors of points and conversion to/from a Cartesian index.
 Point(P::Point) = P
-Point{T}(P::Point{T}) where {T} = P
+Point{T}(P::Point{T}) where {T} = P # OK because immutable
 Point{T}(P::Point) where {T} = Point{T}(P.x, P.y)
 Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} = Point{promote_type(Tx,Ty)}(x, y)
-Point(;x::Real, y::Real) = Point(x, y)
+Point(; x::Real, y::Real) = Point(x, y)
 Point(I::CartesianIndex{2}) = Point(I[1], I[2])
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
 Base.convert(::Type{CartesianIndex}, P::Point{<:Integer}) = CartesianIndex(P)
 Base.convert(::Type{CartesianIndex{2}}, P::Point{<:Integer}) = CartesianIndex(P)
 Base.convert(::Type{T}, P::Point) where {T<:Tuple} = convert(T, Tuple(P))
 Base.Tuple(P::Point) = (P.x, P.y)
+Base.eltype(::AbstractPoint{T}) where {T} = T
+
+# Constructors of weighted points.
+WeightedPoint{T}(P::WeightedPoint{T}) where {T} = P # OK because immutable
+WeightedPoint{T}(P::WeightedPoint) where {T} = WeightedPoint{T}(P.w, P.x, P.y)
+WeightedPoint(w::Tw, x::Tx, y::Ty) where {Tw<:Real,Tx<:Real,Ty<:Real} =
+    WeightedPoint{float(promote_type(Tw,Tx,Ty))}(w, x, y)
+WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
+WeightedPoint(P::Point{T}) where {T} = WeightedPoint(one(T), P.x, P.y)
 
 # Conversion of points and rounding to nearest integer coordinates.
-Base.convert(::Type{T}, P::Point) where {T<:Point} = T(P)
+Base.convert(::Type{T}, P::T) where {T<:AbstractPoint} = P
+Base.convert(::Type{T}, P::AbstractPoint) where {T<:AbstractPoint} = T(P)
 Base.round(::Type{Point{T}}, P::Point) where {T<:Real} =
     Point(round(T, P.x), round(T, P.y))
 
@@ -142,7 +179,7 @@ BoundingBox{T}(B::BoundingBox) where {T} =
     BoundingBox{T}(B.xmin, B.xmax, B.ymin, B.ymax)
 BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
     BoundingBox(I0[1], I1[1], I0[2], I1[2])
-BoundingBox(P0::Point, P1::Point) =
+BoundingBox(P0::AbstractPoint, P1::AbstractPoint) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
 Base.convert(::Type{T}, B::BoundingBox) where {T<:Tuple} = convert(T, Tuple(B))
 Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)

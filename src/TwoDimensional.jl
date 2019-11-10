@@ -12,7 +12,10 @@
 #
 module TwoDimensional
 
+# WeightedPoint is not exported by default because packages may implement a
+# different definition.
 export
+    AbstractPoint,
     AffineTransform,
     BoundingBox,
     Point,
@@ -38,8 +41,14 @@ import .AffineTransforms:
 #
 # Define some aliases with a 2D suffix to avoid conflicts with other packages.
 #
+const AbstractPoint2D{T} = AbstractPoint{T}
+@doc @doc(AbstractPoint) AbstractPoint2D
+
 const Point2D{T} = Point{T}
 @doc @doc(Point) Point2D
+
+const WeightedPoint2D{T} = WeightedPoint{T}
+@doc @doc(WeightedPoint) WeightedPoint2D
 
 const BoundingBox2D{T} = BoundingBox{T}
 @doc @doc(BoundingBox) BoundingBox2D
@@ -53,6 +62,7 @@ const AffineTransform2D{T} = AffineTransform{T}
 module Suffixed
 
 export
+    AbstractPoint2D,
     AffineTransform2D,
     BoundingBox2D,
     Point2D,

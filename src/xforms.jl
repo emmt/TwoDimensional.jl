@@ -23,7 +23,7 @@ export
     scale,
     translate
 
-using ..TwoDimensional: Point
+using ..TwoDimensional: AbstractPoint, Point
 
 # Imports for extension.
 import Base: +, -, *, ∘, /, \, inv, eltype
@@ -236,7 +236,7 @@ translate(x::Real, y::Real, A::AffineTransform{T}) where {T<:AbstractFloat} =
 translate(v::Tuple{Real,Real}, A::AffineTransform) =
     translate(v[1], v[2], A)
 
-translate(v::Point, A::AffineTransform) =
+translate(v::AbstractPoint, A::AffineTransform) =
     translate(v.x, v.y, A)
 
 # Right-translating results in translating the input of the transform.
@@ -250,7 +250,7 @@ translate(A::AffineTransform{T}, x::Real, y::Real) where {T<:AbstractFloat} =
 translate(A::AffineTransform, v::Tuple{Real,Real}) =
     translate(A, v[1], v[2])
 
-translate(A::AffineTransform, v::Point) =
+translate(A::AffineTransform, v::AbstractPoint) =
     translate(A, v.x, v.y)
 
 #------------------------------------------------------------------------------
@@ -486,12 +486,12 @@ end
 
 intercept(T::Type{<:Point}, A::AffineTransform) = T(intercept(A)...)
 
-+(v::Union{Point,Tuple{Real,Real}}, A::AffineTransform) = translate(v, A)
++(v::Union{AbstractPoint,Tuple{Real,Real}}, A::AffineTransform) = translate(v, A)
 
-+(A::AffineTransform, v::Union{Point,Tuple{Real,Real}}) = translate(A, v)
++(A::AffineTransform, v::Union{AbstractPoint,Tuple{Real,Real}}) = translate(A, v)
 
 -(A::AffineTransform, v::Tuple{Real,Real}) = A + (-v[1], -v[2])
--(A::AffineTransform, v::Point) = A + (-v)
+-(A::AffineTransform, v::AbstractPoint) = A + (-v.x, -v.y)
 
 for op in (:∘, :*, :⋅)
     @eval begin
