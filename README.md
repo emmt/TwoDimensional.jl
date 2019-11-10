@@ -43,6 +43,8 @@ pkg> add git@github.com:emmt/TwoDimensional.jl.git
 
 if you use SSH.
 
+I you want to follow the master version, append `#master` to the URLs above.
+
 [doc-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [doc-stable-url]: https://emmt.github.io/TwoDimensional.jl/stable
 
