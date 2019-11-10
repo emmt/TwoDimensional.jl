@@ -222,13 +222,9 @@ Base.:(∩)(A::BoundingBox, B::BoundingBox) =
 # Use bounding boxes to extract a sub-array or a view.
 @propagate_inbounds Base.getindex(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     A[B.xmin:B.xmax, B.ymin:B.ymax]
-#@propagate_inbounds Base.getindex(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
-#    WeightedMatrix(weights(A)[B], values(A)[B])
 
 Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     view(A, B.xmin:B.xmax, B.ymin:B.ymax)
-#Base.view(A::WeightedMatrix, B::BoundingBox{<:Integer}) =
-#    WeightedMatrix(view(weights(A), B), view(values(A), B))
 
 """
 
