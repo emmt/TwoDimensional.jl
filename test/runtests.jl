@@ -1,14 +1,8 @@
 module TwoDimensionalTests
 
 using TwoDimensional
-
-# Deal with compatibility issues.
-using Compat
-using Compat.Test
-using Compat.LinearAlgebra
-@static if isdefined(Base, :MathConstants)
-    import Base.MathConstants: φ
-end
+using Test, LinearAlgebra
+import Base.MathConstants: φ
 
 distance(a::Real, b::Real) = abs(a - b)
 

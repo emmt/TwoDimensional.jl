@@ -23,16 +23,9 @@ export
     scale,
     translate
 
-# Deal with compatibility issues.
-@static if isdefined(Base, :scale)
-    import Base.scale
-end
-using Compat
-import Compat: LinearAlgebra
-
 # Imports for extension (at least * must be imported for deprecation).
 import Base: +, *, ∘, /, \, inv, eltype
-import .LinearAlgebra: ⋅, det
+import LinearAlgebra: ⋅, det
 
 """
 # Affine 2D Transforms
