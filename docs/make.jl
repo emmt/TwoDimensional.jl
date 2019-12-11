@@ -16,6 +16,6 @@ makedocs(
 
 if DEPLOYDOCS
     deploydocs(
-        repo = "github.com/emmt/ResizableArrays.jl.git",
+        repo = "github.com/emmt/TwoDimensional.jl.git",
     )
 end
