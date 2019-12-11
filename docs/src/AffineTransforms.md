@@ -119,7 +119,13 @@ C = scale(A, ρ)    # C = scale by ρ then apply A
 C = A*ρ            # idem
 ```
 
-### Scaling of coordinates
+### Miscellaneous
+
+`det(A)` returns the determinant of the linear part of the affine transform
+`A`.
+
+`jacobian(A)` returns the Jacobian of the affine transform `A`, that is the
+absolute value of the determinant of its linear part.
 
 
 ## Type conversion
