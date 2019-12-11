@@ -166,10 +166,30 @@ WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
 WeightedPoint(P::Point{T}) where {T} = WeightedPoint(one(T), P.x, P.y)
 
 # Conversion of points and rounding to nearest integer coordinates.
-Base.convert(::Type{T}, P::T) where {T<:AbstractPoint} = P
-Base.convert(::Type{T}, P::AbstractPoint) where {T<:AbstractPoint} = T(P)
-Base.round(::Type{Point{T}}, P::Point) where {T<:Real} =
-    Point(round(T, P.x), round(T, P.y))
+Base.convert(::Type{T}, obj::T) where {T<:AbstractPoint} = obj
+Base.convert(::Type{T}, obj::AbstractPoint) where {T<:AbstractPoint} = T(obj)
+Base.round(::Type{T}, obj::AbstractPoint) where {T} = nearest(T, obj)
+
+"""
+
+```julia
+nearest(T, obj)
+```
+
+yields the object that is the nearest to `obj` by rounding its coordinates.
+Argument `T` can be the type of the result (a point or a bounding box) or the
+type of the coordinates of the result.
+
+"""
+nearest(::Type{T}, obj::Point{T}) where {T} = obj
+nearest(::Type{T}, obj::BoundingBox{T}) where {T} = obj
+nearest(::Type{Point{T}}, obj::Point) where {T<:Real} = nearest(T, obj)
+nearest(::Type{BoundingBox{T}}, obj::BoundingBox) where {T<:Real} = nearest(T, obj)
+nearest(::Type{T}, obj::Point) where {T<:Real} =
+    Point(round(T, obj.x), round(T, obj.y))
+nearest(::Type{T}, obj::BoundingBox) where {T<:Real} =
+    BoundingBox(round(T, obj.xmin), round(T, obj.xmax),
+                round(T, obj.ymin), round(T, obj.ymax))
 
 # Methods hypot() and atan() yield the polar coordinates of a point.
 Base.hypot(P::Point) = hypot(P.x, P.y)
@@ -233,10 +253,9 @@ Base.convert(::Type{CartesianIndices{2}}, B::BoundingBox{<:Integer}) =
     CartesianIndices(B)
 
 # Conversion of bounding boxes and rounding to nearest integer coordinates.
-Base.convert(::Type{T}, B::BoundingBox) where {T<:BoundingBox} = T(B)
-Base.round(::Type{BoundingBox{T}}, B::BoundingBox) where {T<:Real} =
-    BoundingBox(round(T, B.xmin), round(T, B.xmax),
-                round(T, B.ymin), round(T, B.ymax))
+Base.convert(::Type{T}, obj::T) where {T<:BoundingBox} = obj
+Base.convert(::Type{T}, obj::BoundingBox) where {T<:BoundingBox} = T(obj)
+Base.round(::Type{T}, obj::BoundingBox) where {T} = nearest(T, obj)
 
 # Lower left and upper right corners of a bounding box.
 Base.first(B::BoundingBox) = Point(B.xmin, B.ymin)

@@ -22,6 +22,7 @@ export
     compose,
     intercept,
     jacobian,
+    nearest,
     rotate,
     scale,
     translate
