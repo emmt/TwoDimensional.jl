@@ -23,16 +23,17 @@ distance(A::AffineTransform, B::AffineTransform) =
     scales = (2, 0.1, φ)
     angles = (-2π/11, π/7, 0.1)
     types = (BigFloat, Float64, Float32, Float16)
+    @test_deprecated BigFloat(A)
 
     @testset "conversion" begin
         @test_throws ErrorException compose()
         for G in (I, A, B)
             @test eltype(G) == Float64
             for T in types
+                @test typeof(AffineTransform{T}(G)) == AffineTransform{T}
                 @test typeof(convert(AffineTransform{T}, G)) == AffineTransform{T}
-                @test typeof(T(G)) == AffineTransform{T}
-                @test eltype(convert(AffineTransform{T}, G)) == T
-                @test eltype(T(G)) == T
+                @test typeof(T(G)) == AffineTransform{T} # FIXME: deprecated
+                @test eltype(AffineTransform{T}(G)) == T
             end
         end
     end

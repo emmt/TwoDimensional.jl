@@ -27,30 +27,32 @@ using ..TwoDimensional: AbstractPoint, Point
 
 # Imports for extension.
 import Base: +, -, *, ∘, /, \, inv, eltype
+import Base: Float16, Float32, Float64
+import Base.MPFR: BigFloat
 import LinearAlgebra: ⋅, det
 
 """
 # Affine 2D Transforms
 
-An affine 2D transform `C` is defined by 6 real coefficients, `Cxx`, `Cxy`,
-`Cx`, `Cyx`, `Cyy` and `Cy`.  Such a transform maps `(x,y)` as `(xp,yp)` given
+An affine 2D transform `A` is defined by 6 real coefficients, `Axx`, `Axy`,
+`Ax`, `Ayx`, `Ayy` and `Ay`.  Such a transform maps `(x,y)` as `(xp,yp)` given
 by:
 
 ```julia
-xp = Cxx*x + Cxy*y + Cx
-yp = Cyx*x + Cyy*y + Cy
+xp = Axx*x + Axy*y + Ax
+yp = Ayx*x + Ayy*y + Ay
 ```
 
 The immutable type `AffineTransform` is used to store an affine 2D transform
-`C`, it can be created by:
+`A`, it can be created by:
 
 ```julia
 I = AffineTransform{T}() # yields the identity with type T
-C = AffineTransform{T}(Cxx, Cxy, Cx, Cyx, Cyy, Cy)
+A = AffineTransform{T}(Axx, Axy, Ax, Ayx, Ayy, Ay)
 ```
 
-The `{T}` above is used to specify the floating-point type for the
-coefficients; if omitted, `T = Float64` is assumed.
+The parameter `T` above is used to specify the floating-point type for the
+coefficients; if omitted it is guessed from the types of the coefficients.
 
 
 ## Operations with affine 2D transforms
@@ -58,18 +60,13 @@ coefficients; if omitted, `T = Float64` is assumed.
 Many operations are available to manage or apply affine transforms:
 
 ```julia
-(xp, yp) = A(x,y)       # idem
+(xp, yp) = A(x,y)       # apply affine transform A to coordinates (x,y)
 (xp, yp) = A*(x,y)      # idem
 (xp, yp) = A(v)         # idem, with v = (x,y)
 (xp, yp) = A*v          # idem
 
 A(Point(x,y)) -> Point(xp, yp)
 A*Point(x,y)  -> Point(xp, yp)
-
-B = T(A)  # convert coefficients of transform A to be of type T
-B = convert(AffineTransform{T}, A)  # idem
-
-eltype(A)               # yields floating-point type of A
 
 C = compose(A, B, ...)  # compose 2 (or more) transforms, C = apply B then A
 C = A∘B                 # idem
@@ -107,12 +104,14 @@ imposed for all operations and for the result.  The floating-point type of the
 composition of several coordinate transforms is the promoted type of the
 transforms which have been composed.
 
-To change the floating-point type of a 2D affine transform can be changed as
-follows:
+Calling `eltype(A)` yields floating-point type of the coefficients of the 2D
+affine transform `A`.  To convert the floating-point type of the coefficients
+of `A` to be `T`, do one of:
 
 ```julia
-B = T(A)  # convert coefficients of transform A to be of type T
-B = convert(AffineTransform{T}, A)  # idem
+B = T.(A)
+B = AffineTransform{T}(A)
+B = convert(AffineTransform{T}, A)
 ```
 
 """
@@ -124,51 +123,44 @@ struct AffineTransform{T<:AbstractFloat} <: Function
     yy::T
     y ::T
     AffineTransform{T}() where T = new{T}(1,0,0, 0,1,0)
-    AffineTransform{T}(a11::Real, a12::Real, a13::Real,
-                       a21::Real, a22::Real, a23::Real) where T =
-                           new{T}(a11,a12,a13, a21,a22,a23)
+    function AffineTransform{T}(Axx::Real, Axy::Real, Ax::Real,
+                                Ayx::Real, Ayy::Real, Ay::Real) where T
+        new{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+    end
 end
 
 eltype(::AffineTransform{T}) where {T} = T
 
-# Use Float64 type by default.
 AffineTransform() = AffineTransform{Float64}()
-function AffineTransform(a11::Real, a12::Real, a13::Real,
-                         a21::Real, a22::Real, a23::Real)
-    return AffineTransform{Float64}(a11,a12,a13, a21,a22,a23)
+function AffineTransform(Axx::Txx, Axy::Txy, Ax::Tx,
+                         Ayx::Tyx, Ayy::Tyy, Ay::Ty
+                         ) where {Txx<:Real,Txy<:Real,Tx<:Real,
+                                  Tyx<:Real,Tyy<:Real,Ty<:Real}
+    T = float(promote_type(Txx, Txy, Tx, Tyx, Tyy, Ty))
+    AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
 end
 
-# The following is a no-op when the destination type matches that of the
-# source.
-#
-# The trick is to have a more restrictive signature than the general case
-# above.  So the template type T for the result must have the same
-# restrictions as in the general case.
-#
-# Another trick to remember: you can call a specific constructor, e.g.
-# AffineTransform{Float16}, but this is not allowed for methods for which
-# you must rely on Julia dispatching rules.
-#
-# When you make specialized versions of methods beware of infinite loops
-# resulting from recursively calling the same method.  The diagnostic is a
-# stack overflow.
-#
-function Base.convert(::Type{AffineTransform{T}},
-                      A::AffineTransform{T}) where {T<:AbstractFloat}
-    return A
+function AffineTransform(Axx::T, Axy::T, Ax::T,
+                         Ayx::T, Ayy::T, Ay::T) where {T<:AbstractFloat}
+    AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
 end
 
-function Base.convert(::Type{AffineTransform{T}},
-                      A::AffineTransform) where {T<:AbstractFloat}
-    return AffineTransform{T}(A.xx, A.xy, A.x, A.yx, A.yy, A.y)
-end
+AffineTransform(A::AffineTransform) = A
+AffineTransform{T}(A::AffineTransform{T}) where {T} = A
+AffineTransform{T}(A::AffineTransform) where {T<:AbstractFloat} =
+    AffineTransform{T}(A.xx, A.xy, A.x,
+                       A.yx, A.yy, A.y)
 
-for T in (:Float64, :Float32, :Float16)
-    @eval Base.$T(A::AffineTransform) =
-        convert(AffineTransform{$T}, A)
-end
-Base.MPFR.BigFloat(A::AffineTransform) =
-    convert(AffineTransform{Base.MPFR.BigFloat}, A)
+# Allow for `T.(obj)` to work with `T` a floating-point type.
+Broadcast.broadcasted(::Type{T}, A::AffineTransform) where {T<:AbstractFloat} =
+    AffineTransform{T}(A)
+
+Base.convert(::Type{T}, A::AffineTransform) where {T<:AffineTransform} = T(A)
+
+@deprecate(Float16(A::AffineTransform),  AffineTransform{Float16}(A))
+@deprecate(Float32(A::AffineTransform),  AffineTransform{Float32}(A))
+@deprecate(Float64(A::AffineTransform),  AffineTransform{Float64}(A))
+@deprecate(BigFloat(A::AffineTransform), AffineTransform{BigFloat}(A))
 
 #------------------------------------------------------------------------------
 # apply the transform to some coordinates:
