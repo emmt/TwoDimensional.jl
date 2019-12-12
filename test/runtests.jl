@@ -1,6 +1,7 @@
 module TwoDimensionalTests
 
 using TwoDimensional
+using TwoDimensional: WeightedPoint
 using Test, LinearAlgebra
 import Base.MathConstants: φ
 
@@ -12,6 +13,43 @@ distance(a::NTuple{2,Real}, b::NTuple{2,Real}) =
 distance(A::AffineTransform, B::AffineTransform) =
     max(abs(A.xx - B.xx), abs(A.xy - B.xy), abs(A.x - B.x),
         abs(A.yx - B.yx), abs(A.yy - B.yy), abs(A.y - B.y))
+
+@testset "Points and bounding-boxes" begin
+    @testset "Simple points" begin
+        P1 = Point(1, 1.3)
+        @test Point(P1) === P1
+        @test eltype(P1) == Float64
+        @test Point{eltype(P1)}(P1) === P1
+        @test eltype(Point(1,2)) == Int
+        @test Point(1,2) === Point(y=2, x=1)
+        @test Point(CartesianIndex(7,8)) === Point(7,8)
+        @test CartesianIndex(Point(2,3)) === CartesianIndex(2,3)
+        @test convert(CartesianIndex, Point(2,3)) === CartesianIndex(2,3)
+        @test convert(CartesianIndex{2}, Point(2,3)) === CartesianIndex(2,3)
+        @test convert(Tuple, Point(2,3)) === (2,3)
+        @test convert(Tuple{Float64,Int}, Point(2,3)) === (2.0,3)
+        @test Point(Tuple(P1)...) === P1
+        @test Point{Float32}(P1) === Float32.(P1)
+        @test Tuple(Point(0.0,1)) === (0.0,1.0)
+        @test nearest(Int, Point(1.2,-0.7)) === Point(1,-1)
+        @test nearest(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
+        @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
+        @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
+        @test hypot(P1) == hypot(P1.x, P1.y)
+        @test atan(P1) == atan(P1.y, P1.x)
+        @test 2*Point(3,4) === Point(6,8)
+        @test Point(3,4)*3 === Point(9,12)
+    end
+    @testset "Weighted points" begin
+        P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
+        @test WeightedPoint(P2.w, P2.x, P2.y) === P2
+        @test WeightedPoint(P2) === P2
+        @test eltype(P2) == Float64
+        @test WeightedPoint{eltype(P2)}(P2) === P2
+        @test WeightedPoint(Tuple(P2)...) === P2
+        @test WeightedPoint{Float32}(P2) === Float32.(P2)
+    end
+end
 
 @testset "AffineTransforms" begin
     tol = 1e-14
