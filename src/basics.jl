@@ -156,14 +156,20 @@ Base.convert(::Type{CartesianIndex{2}}, P::Point{<:Integer}) = CartesianIndex(P)
 Base.convert(::Type{T}, P::Point) where {T<:Tuple} = convert(T, Tuple(P))
 Base.Tuple(P::Point) = (P.x, P.y)
 Base.eltype(::AbstractPoint{T}) where {T} = T
+Broadcast.broadcasted(::Type{T}, obj::Point) where {T<:Real} =
+    Point{T}(obj)
 
 # Constructors of weighted points.
+WeightedPoint(P::WeightedPoint) = P
 WeightedPoint{T}(P::WeightedPoint{T}) where {T} = P # OK because immutable
 WeightedPoint{T}(P::WeightedPoint) where {T} = WeightedPoint{T}(P.w, P.x, P.y)
 WeightedPoint(w::Tw, x::Tx, y::Ty) where {Tw<:Real,Tx<:Real,Ty<:Real} =
     WeightedPoint{float(promote_type(Tw,Tx,Ty))}(w, x, y)
 WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
 WeightedPoint(P::Point{T}) where {T} = WeightedPoint(one(T), P.x, P.y)
+Base.Tuple(P::WeightedPoint) = (P.w, P.x, P.y)
+Broadcast.broadcasted(::Type{T}, obj::WeightedPoint) where {T<:Real} =
+    WeightedPoint{T}(obj)
 
 # Conversion of points and rounding to nearest integer coordinates.
 Base.convert(::Type{T}, obj::T) where {T<:AbstractPoint} = obj
