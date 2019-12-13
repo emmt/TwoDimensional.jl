@@ -5,7 +5,7 @@
 #
 #-------------------------------------------------------------------------------
 #
-# This file if part of the TwoDimensional Julia package licensed under the MIT
+# This file is part of the TwoDimensional Julia package licensed under the MIT
 # license (https://github.com/emmt/TwoDimensional.jl).
 #
 # Copyright (C) 2019, Éric Thiébaut.

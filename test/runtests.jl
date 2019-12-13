@@ -1,7 +1,7 @@
 module TwoDimensionalTests
 
 using TwoDimensional
-using TwoDimensional: WeightedPoint
+using TwoDimensional: WeightedPoint, center, half, exterior, interior
 using Test, LinearAlgebra
 import Base.MathConstants: φ
 
@@ -37,8 +37,6 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test hypot(P1) == hypot(P1.x, P1.y)
         @test atan(P1) == atan(P1.y, P1.x)
-        @test 2*Point(3,4) === Point(6,8)
-        @test Point(3,4)*3 === Point(9,12)
     end
     @testset "Weighted points" begin
         P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
@@ -46,8 +44,48 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test WeightedPoint(P2) === P2
         @test eltype(P2) == Float64
         @test WeightedPoint{eltype(P2)}(P2) === P2
+        @test WeightedPoint{Float64}(P2) === P2
         @test WeightedPoint(Tuple(P2)...) === P2
         @test WeightedPoint{Float32}(P2) === Float32.(P2)
+        @test WeightedPoint(Point(3.1,4.2)) === WeightedPoint(w=1, x=3.1, y=4.2)
+    end
+    @testset "Bounding boxes" begin
+        B = BoundingBox(2,3,4,5)
+        @test exterior(B) === B
+        @test exterior(B + 0.1) === B + 1.0
+
+        C = Point(x = 0.5*(B.xmin + B.xmax), y = 0.5*(B.ymin + B.ymax))
+        @test center(B) === C
+        @test center(BoundingBox{Float64}(B)) === C
+    end
+    @testset "Arithmetic" begin
+        @test 2*Point(3,4) === Point(6,8)
+        @test Point(3,4)*3 === Point(9,12)
+        @test 3\Point(3,4) === Point(3/3,4/3)
+        @test Point(3,4)/3 === Point(3/3,4/3)
+        @test -Point(2,-9) === Point(-2,9)
+        @test Point(2,-9) + Point(3,7) === Point(5,-2)
+        @test Point(2,-9) - Point(3,7) === Point(-1,-16)
+        α = 3
+        δ = 0.1
+        t = Point(-0.2,0.7)
+        B = BoundingBox(2,3,4,5)
+        @test α*B === BoundingBox(xmin = α*B.xmin, xmax = α*B.xmax,
+                                  ymin = α*B.ymin, ymax = α*B.ymax)
+        @test B*α === BoundingBox(xmin = α*B.xmin, xmax = α*B.xmax,
+                                  ymin = α*B.ymin, ymax = α*B.ymax)
+        @test α\B === BoundingBox(xmin = (1/α)*B.xmin, xmax = (1/α)*B.xmax,
+                                  ymin = (1/α)*B.ymin, ymax = (1/α)*B.ymax)
+        @test B/α === BoundingBox(xmin = (1/α)*B.xmin, xmax = (1/α)*B.xmax,
+                                  ymin = (1/α)*B.ymin, ymax = (1/α)*B.ymax)
+        @test B + δ === BoundingBox(xmin = B.xmin - δ, xmax = B.xmax + δ,
+                                    ymin = B.ymin - δ, ymax = B.ymax + δ)
+        @test B - δ === BoundingBox(xmin = B.xmin + δ, xmax = B.xmax - δ,
+                                    ymin = B.ymin + δ, ymax = B.ymax - δ)
+        @test B + t === BoundingBox(xmin = B.xmin + t.x, xmax = B.xmax + t.x,
+                                    ymin = B.ymin + t.y, ymax = B.ymax + t.y)
+        @test B - t === BoundingBox(xmin = B.xmin - t.x, xmax = B.xmax - t.x,
+                                    ymin = B.ymin - t.y, ymax = B.ymax - t.y)
     end
 end
 
