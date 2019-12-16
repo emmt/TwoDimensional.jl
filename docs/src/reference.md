@@ -7,21 +7,19 @@ REPL by typing `?` followed by the name of a method or a type.
 
 ## Affine 2D Coordinate Transforms
 
-```@doc
+```@docs
 AffineTransform
 scale
 rotate
 translate
 jacobian
 intercept
-rightdivide
-leftdivide
 compose
 ```
 
 ## Points
 
-```@doc
+```@docs
 AbstractPoint
 Point
 WeightedPoint
@@ -30,7 +28,7 @@ distance
 
 ## Bounding-Boxes
 
-```@doc
+```@docs
 BoundingBox
 area
 center
@@ -41,6 +39,6 @@ exterior
 
 ## Methods
 
-```@doc
+```@docs
 nearest
 ```

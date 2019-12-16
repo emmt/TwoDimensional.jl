@@ -2,6 +2,8 @@ using Documenter
 
 push!(LOAD_PATH, "../src/")
 using TwoDimensional
+using TwoDimensional: WeightedPoint
+using TwoDimensional.Suffixed
 
 DEPLOYDOCS = (get(ENV, "CI", nothing) == "true")
 
