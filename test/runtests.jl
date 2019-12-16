@@ -34,14 +34,21 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test Point(Tuple(P1)...) === P1
         @test Point(Tuple(P1)) === P1
         @test Point{Float32}(P1) === Float32.(P1)
+        @test promote(P1) === (P1,)
+        P2 = Point(3,11)
+        P3 = Point{Float32}(-2.1,11.8)
+        @test promote(P1, P2) === (P1,Float64.(P2))
+        @test promote(P1, P2, P3) === (P1,Float64.(P2),Float64.(P3))
         @test convert(Point, P1) === P1
         @test convert(Point{Float32}, P1) === Float32.(P1)
         @test Tuple(Point(0.0,1)) === (0.0,1.0)
         @test nearest(Point(1.2,-0.7)) === Point(1.0,-1.0)
         @test nearest(Point(1,-7)) === Point(1,-7)
         @test nearest(Float32, Point(1,-7)) === Point{Float32}(1,-7)
+        @test nearest(Float32, Point(1.0,-7.6)) === Point{Float32}(1,-8)
         @test nearest(Int32, Point(1,-7)) === Point{Int32}(1,-7)
         @test nearest(Int, Point(1.2,-0.7)) === Point(1,-1)
+        @test nearest(Int, Point(1,-4)) === Point(1,-4)
         @test nearest(Point{Float64}, P1) === Point(map(round, Tuple(P1)))
         @test nearest(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
@@ -49,6 +56,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test hypot(P1) == hypot(P1.x, P1.y)
         @test atan(P1) == atan(P1.y, P1.x)
         @test distance(P1, Point(0,0)) == hypot(P1)
+        @test distance(Point(0x02,0x05), Point(0x00,0x00)) == hypot(0x02,0x05)
     end
     @testset "Weighted points" begin
         P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
@@ -71,6 +79,11 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test BoundingBox{Float32}(B) === BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
         @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
         @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) === BoundingBox(2,4,3,5)
+        B1 = BoundingBox(2,3,4,5)
+        B2 = BoundingBox(1.1,3.2,4.5,5.8)
+        B3 = BoundingBox{Float32}(1.1,3.2,4.5,5.8)
+        @test promote(B1, B2) === (Float64.(B1),B2)
+        @test promote(B1, B2, B3) === (Float64.(B1),B2,Float64.(B3))
         @test BoundingBox(Tuple(B)...) === B
         @test BoundingBox(Tuple(B)) === B
         @test BoundingBox(rand(5,7)) === BoundingBox(1,5, 1,7)
@@ -91,13 +104,17 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test typemax(BoundingBox{Float64}) === BoundingBox(-Inf,Inf,-Inf,Inf)
         @test nearest(BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox(1.0,2.0,-4.0,8.0)
         @test nearest(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
+        @test nearest(Int, BoundingBox(1,2,-3,7)) === BoundingBox(1,2,-3,7)
         @test nearest(Int32, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
         @test nearest(Int32, BoundingBox(1,2,-4,8)) === BoundingBox{Int32}(1,2,-4,8)
         @test nearest(Float32, BoundingBox{Int32}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
         @test exterior(B) === B
         @test exterior(B + 0.1) === B + 1.0
+        @test exterior(BoundingBox{Int}, B) === BoundingBox{Int}(exterior(B))
         @test interior(B) === B
         @test interior(B + 0.1) === Float64.(B)
+        @test interior(BoundingBox{Int}, B) === BoundingBox{Int}(interior(B))
+
         @test area(BoundingBox(2,4,5,8)) == 6
         @test area(BoundingBox(2.0,4.0,5.0,8.0)) == 6.0
 
@@ -106,6 +123,8 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test center(BoundingBox{Float64}(B)) === C
     end
     @testset "Arithmetic" begin
+        @test half(Float64) == 0.5
+        @test half(Float32) == one(Float32)/2
         @test 2*Point(3,4) === Point(6,8)
         @test Point(3,4)*3 === Point(9,12)
         @test 3\Point(3,4) === Point(3/3,4/3)

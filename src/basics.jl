@@ -116,16 +116,8 @@ Base.Tuple(P::Point) = (P.x, P.y)
 Base.eltype(::AbstractPoint{T}) where {T} = T
 Broadcast.broadcasted(::Type{T}, obj::Point) where {T<:Real} =
     Point{T}(obj)
-Base.promote(A::Point) = (A,)
-Base.promote(A::Point{T}, B::Point{T}) where {T} = (A, B)
-Base.promote(A::Point{Ta}, B::Point{Tb}) where {Ta,Tb} = begin
-    T = promote_type(Ta, Tb)
-    (Point{T}(A), Point{T}(B))
-end
-Base.promote(args::Point...) = begin
-    T = promote_type(map(eltype, args)...)
-    map(Point{T}, args)
-end
+Base.promote_type(::Type{Point{U}}, ::Type{Point{V}}) where {U,V} =
+    Point{promote_type(U,V)}
 
 # Constructors of weighted points.
 WeightedPoint(P::WeightedPoint) = P
@@ -139,6 +131,8 @@ WeightedPoint(P::NTuple{3,Real}) = WeightedPoint(P[1], P[2], P[3])
 Base.Tuple(P::WeightedPoint) = (P.w, P.x, P.y)
 Broadcast.broadcasted(::Type{T}, obj::WeightedPoint) where {T<:AbstractFloat} =
     WeightedPoint{T}(obj)
+Base.promote_type(::Type{WeightedPoint{U}}, ::Type{WeightedPoint{V}}) where {U,V} =
+    WeightedPoint{promote_type(U,V)}
 
 # Conversion of points and rounding to nearest integer coordinates.
 Base.convert(::Type{T}, obj::AbstractPoint) where {T<:AbstractPoint} = T(obj)
@@ -238,16 +232,8 @@ Base.eltype(::BoundingBox{T}) where {T} = T
 Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
 Broadcast.broadcasted(::Type{T}, obj::BoundingBox) where {T<:Real} =
     BoundingBox{T}(obj)
-Base.promote(A::BoundingBox) = (A,)
-Base.promote(A::BoundingBox{T}, B::BoundingBox{T}) where {T} = (A, B)
-Base.promote(A::BoundingBox{Ta}, B::BoundingBox{Tb}) where {Ta,Tb} = begin
-    T = promote_type(Ta, Tb)
-    (BoundingBox{T}(A), BoundingBox{T}(B))
-end
-Base.promote(args::BoundingBox...) = begin
-    T = promote_type(map(eltype, args)...)
-    map(BoundingBox{T}, args)
-end
+Base.promote_type(::Type{BoundingBox{U}}, ::Type{BoundingBox{V}}) where {U,V} =
+    BoundingBox{promote_type(U,V)}
 
 BoundingBox(A::AbstractMatrix) = BoundingBox(axes(A))
 BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
