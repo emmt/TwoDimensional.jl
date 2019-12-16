@@ -145,7 +145,7 @@ end
 
 # Constructors of points and conversion to/from a Cartesian index.
 Point(P::Point) = P
-Point{T}(P::Point{T}) where {T} = P # OK because immutable
+Point{T}(P::Point{T}) where {T} = P
 Point{T}(P::Point) where {T} = Point{T}(P.x, P.y)
 Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} = Point{promote_type(Tx,Ty)}(x, y)
 Point(; x::Real, y::Real) = Point(x, y)
@@ -162,7 +162,7 @@ Broadcast.broadcasted(::Type{T}, obj::Point) where {T<:Real} =
 
 # Constructors of weighted points.
 WeightedPoint(P::WeightedPoint) = P
-WeightedPoint{T}(P::WeightedPoint{T}) where {T} = P # OK because immutable
+WeightedPoint{T}(P::WeightedPoint{T}) where {T<:AbstractFloat} = P
 WeightedPoint{T}(P::WeightedPoint) where {T} = WeightedPoint{T}(P.w, P.x, P.y)
 WeightedPoint(w::Tw, x::Tx, y::Ty) where {Tw<:Real,Tx<:Real,Ty<:Real} =
     WeightedPoint{float(promote_type(Tw,Tx,Ty))}(w, x, y)
@@ -239,8 +239,8 @@ end
 BoundingBox(; xmin::Real, xmax::Real, ymin::Real, ymax::Real) =
     BoundingBox(xmin, xmax, ymin, ymax)
 BoundingBox(B::BoundingBox) = B
-BoundingBox{T}(B::BoundingBox{T}) where {T} = B
-BoundingBox{T}(B::BoundingBox) where {T} =
+BoundingBox{T}(B::BoundingBox{T}) where {T<:Real} = B
+BoundingBox{T}(B::BoundingBox) where {T<:Real} =
     BoundingBox{T}(B.xmin, B.xmax, B.ymin, B.ymax)
 BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
     BoundingBox(I0[1], I1[1], I0[2], I1[2])

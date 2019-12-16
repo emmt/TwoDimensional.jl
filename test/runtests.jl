@@ -143,7 +143,7 @@ end
         @test_deprecated BigFloat(A)
         @test_deprecated Float32(A) === Float32.(A)
         @test AffineTransform(A) === A
-        @test AffineTransform{Float64}(A) === A
+        @test AffineTransform{eltype(A)}(A) === A
         for G in (I, A, B)
             @test eltype(G) == Float64
             for T in types
@@ -167,7 +167,9 @@ end
         for G in (I, A, B),
             v in vectors
             @test distance(G(v...), G(v)) ≤ 0
+            @test distance(G*v, G(v)) ≤ 0
             @test distance(G(Point(v)), Point(G(v))) ≤ 0
+            @test distance(G*Point(v), Point(G(v))) ≤ 0
         end
     end
 
@@ -189,6 +191,7 @@ end
         end
         for v in vectors
             @test distance((A*B*C)(v), A(B(C(v)))) ≤ tol
+            @test distance((A*C*B*C)(v), A(C(B(C(v))))) ≤ tol
         end
     end
 
@@ -291,6 +294,8 @@ end
         for M in (I, A, B)
             x, y = intercept(M)
             @test distance(M(x, y), (0,0)) ≤ tol
+            P = intercept(Point, M)
+            @test distance(M*P, Point(0,0)) ≤ tol
         end
     end
 

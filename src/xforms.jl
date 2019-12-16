@@ -146,7 +146,7 @@ function AffineTransform(Axx::T, Axy::T, Ax::T,
 end
 
 AffineTransform(A::AffineTransform) = A
-AffineTransform{T}(A::AffineTransform{T}) where {T} = A
+AffineTransform{T}(A::AffineTransform{T}) where {T<:AbstractFloat} = A
 AffineTransform{T}(A::AffineTransform) where {T<:AbstractFloat} =
     AffineTransform{T}(A.xx, A.xy, A.x,
                        A.yx, A.yy, A.y)
