@@ -370,15 +370,16 @@ jacobian(A::AffineTransform) = abs(det(A))
 """
 `inv(A)` returns the inverse of the affine transform `A`.
 """
-function inv(A::AffineTransform{T}) where {T<:AbstractFloat}
-    d = det(A)
-    d == zero(T) && error("transformation is not invertible")
-    Txx =  A.yy/d
-    Txy = -A.xy/d
-    Tyx = -A.yx/d
-    Tyy =  A.xx/d
-    return AffineTransform{T}(Txx, Txy, -Txx*A.x - Txy*A.y,
-                              Tyx, Tyy, -Tyx*A.x - Tyy*A.y)
+function inv(A::AffineTransform{T}) where {T}
+    Δ = det(A)
+    Δ == zero(T) && error("transformation is not invertible")
+    α = one(T)/Δ
+    Txx =  α*A.yy
+    Txy = α*A.xy
+    Tyx = α*A.yx
+    Tyy =  α*A.xx
+    return AffineTransform{T}(+Txx, -Txy, Txy*A.y - Txx*A.x,
+                              -Tyx, +Tyy, Tyx*A.x - Tyy*A.y)
 end
 
 """
@@ -393,25 +394,18 @@ It is possible to compose more than two affine transforms.  For instance,
 `A`.
 
 """
-compose() = error("missing argument(s)")
-
 compose(A::AffineTransform) = A
 
-compose(A::AffineTransform, B::AffineTransform) = __compose(A, B)
+compose(A::AffineTransform{T}, B::AffineTransform{T}) where {T} =
+    AffineTransform{T}(A.xx*B.xx + A.xy*B.yx,
+                       A.xx*B.xy + A.xy*B.yy,
+                       A.xx*B.x  + A.xy*B.y + A.x,
+                       A.yx*B.xx + A.yy*B.yx,
+                       A.yx*B.xy + A.yy*B.yy,
+                       A.yx*B.x  + A.yy*B.y + A.y)
 
-compose(args::AffineTransform...) =
-    compose(__compose(args[1], args[2]), args[3:end]...)
-
-function __compose(A::AffineTransform{Ta},
-                   B::AffineTransform{Tb}) where {Ta, Tb}
-    T = promote_type(Ta, Tb)
-    return AffineTransform{T}(A.xx*B.xx + A.xy*B.yx,
-                              A.xx*B.xy + A.xy*B.yy,
-                              A.xx*B.x  + A.xy*B.y + A.x,
-                              A.yx*B.xx + A.yy*B.yx,
-                              A.yx*B.xy + A.yy*B.yy,
-                              A.yx*B.x  + A.yy*B.y + A.y)
-end
+compose(A::AffineTransform, B::AffineTransform, C::AffineTransform, args::AffineTransform...) =
+    compose(compose(A, B), C, args...)
 
 """
 
@@ -419,16 +413,16 @@ end
 transform `A` by the affine transform `B`.
 
 """
-function rightdivide(A::AffineTransform{T},
-                     B::AffineTransform{T}) where {T<:AbstractFloat}
-    d = det(B)
-    d == zero(T) && error("right operand is not invertible")
-    Rxx = (A.xx*B.yy - A.xy*B.yx)/d
-    Rxy = (A.xy*B.xx - A.xx*B.xy)/d
-    Ryx = (A.yx*B.yy - A.yy*B.yx)/d
-    Ryy = (A.yy*B.xx - A.yx*B.xy)/d
-    return AffineTransform{T}(Rxx, Rxy, A.x - (Rxx*B.x + Rxy*B.y),
-                              Ryx, Ryy, A.y - (Ryx*B.y + Ryy*B.y))
+rightdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T} = begin
+    Δ = det(B)
+    Δ == zero(T) && error("right operand is not invertible")
+    α = one(T)/Δ
+    Rxx = α*(A.xx*B.yy - A.xy*B.yx)
+    Rxy = α*(A.xy*B.xx - A.xx*B.xy)
+    Ryx = α*(A.yx*B.yy - A.yy*B.yx)
+    Ryy = α*(A.yy*B.xx - A.yx*B.xy)
+    AffineTransform{T}(Rxx, Rxy, A.x - (Rxx*B.x + Rxy*B.y),
+                       Ryx, Ryy, A.y - (Ryx*B.y + Ryy*B.y))
 
 end
 
@@ -436,32 +430,29 @@ end
 `leftdivide(A,B)` yields `A\\B`, the left division of the affine
 transform `A` by the affine transform `B`.
 """
-function leftdivide(A::AffineTransform{T},
-                    B::AffineTransform{T}) where {T<:AbstractFloat}
-    d = det(A)
-    d == zero(T) && error("left operand is not invertible")
-    Txx =  A.yy/d
-    Txy = -A.xy/d
-    Tyx = -A.yx/d
-    Tyy =  A.xx/d
+leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T} = begin
+    Δ = det(B)
+    Δ == zero(T) && error("left operand is not invertible")
+    α = one(T)/Δ
+    Txx =  α*A.yy
+    Txy = -α*A.xy
+    Tyx = -α*A.yx
+    Tyy =  α*A.xx
     Tx = B.x - A.x
     Ty = B.y - A.y
-    return AffineTransform{T}(Txx*B.xx + Txy*B.yx,
-                              Txx*B.xy + Txy*B.yy,
-                              Txx*Tx   + Txy*Ty,
-                              Tyx*B.xx + Tyy*B.yx,
-                              Tyx*B.xy + Tyy*B.yy,
-                              Tyx*Tx   + Tyy*Ty)
+    AffineTransform{T}(Txx*B.xx + Txy*B.yx,
+                       Txx*B.xy + Txy*B.yy,
+                       Txx*Tx   + Txy*Ty,
+                       Tyx*B.xx + Tyy*B.yx,
+                       Tyx*B.xy + Tyy*B.yy,
+                       Tyx*Tx   + Tyy*Ty)
 end
 
-for func in (:rightdivide, :leftdivide)
-    @eval begin
-        function $func(A::AffineTransform{Ta},
-                       B::AffineTransform{Tb}) where {Ta<:AbstractFloat,
-                                                      Tb<:AbstractFloat}
-            T = AffineTransform{promote_type(Ta, Tb)}
-            return $func(convert(T, A), convert(T, B))
-        end
+for func in (:compose, :rightdivide, :leftdivide)
+    @eval function $func(A::AffineTransform{Ta},
+                         B::AffineTransform{Tb}) where {Ta,Tb}
+        T = promote_type(Ta, Tb)
+        $func(AffineTransform{T}(A), AffineTransform{T}(B))
     end
 end
 
@@ -470,17 +461,20 @@ end
 `intercept(A)` returns the tuple `(x,y)` such that `A(x,y) = (0,0)`.
 
 """
-function intercept(A::AffineTransform{T}) where {T<:AbstractFloat}
-    d = det(A)
-    d == zero(T) && error("transformation is not invertible")
-    return ((A.xy*A.y - A.yy*A.x)/d, (A.yx*A.x - A.xx*A.y)/d)
+function intercept(A::AffineTransform{T}) where {T}
+    Δ = det(A)
+    Δ == zero(T) && error("transformation is not invertible")
+    α = one(T)/Δ
+    return (α*(A.xy*A.y - A.yy*A.x), α*(A.yx*A.x - A.xx*A.y))
 end
 
 intercept(T::Type{<:Point}, A::AffineTransform) = T(intercept(A)...)
 
-+(v::Union{AbstractPoint,Tuple{Real,Real}}, A::AffineTransform) = translate(v, A)
++(v::Union{AbstractPoint,Tuple{Real,Real}}, A::AffineTransform) =
+    translate(v, A)
 
-+(A::AffineTransform, v::Union{AbstractPoint,Tuple{Real,Real}}) = translate(A, v)
++(A::AffineTransform, v::Union{AbstractPoint,Tuple{Real,Real}}) =
+    translate(A, v)
 
 -(A::AffineTransform, v::Tuple{Real,Real}) = A + (-v[1], -v[2])
 -(A::AffineTransform, v::AbstractPoint) = A + (-v.x, -v.y)

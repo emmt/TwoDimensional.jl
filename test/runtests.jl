@@ -5,10 +5,15 @@ using TwoDimensional: WeightedPoint, center, half, exterior, interior, area
 using Test, LinearAlgebra
 import Base.MathConstants: φ
 
-distance(a::Real, b::Real) = abs(a - b)
+distance(a::Real, b::Real) = distance(promote(a, b)...)
+distance(a::T, b::T) where {T<:Unsigned} = ifelse(a < b, b - a, a - b)
+distance(a::T, b::T) where {T<:Real} = abs(a - b)
 
-distance(a::NTuple{2,Real}, b::NTuple{2,Real}) =
-    hypot(a[1] - b[1], a[2] - b[2])
+distance(A::NTuple{2,Real}, B::NTuple{2,Real}) =
+    hypot(A[1] - B[1], A[2] - B[2])
+
+distance(A::Point, B::Point) =
+    hypot(A.x - B.x, A.y - B.y)
 
 distance(A::AffineTransform, B::AffineTransform) =
     max(abs(A.xx - B.xx), abs(A.xy - B.xy), abs(A.x - B.x),
@@ -133,17 +138,19 @@ end
     scales = (2, 0.1, φ)
     angles = (-2π/11, π/7, 0.1)
     types = (BigFloat, Float64, Float32, Float16)
-    @test_deprecated BigFloat(A)
 
-    @testset "conversion" begin
-        @test_throws ErrorException compose()
+    @testset "construction/conversion" begin
+        @test_deprecated BigFloat(A)
+        @test_deprecated Float32(A) === Float32.(A)
+        @test AffineTransform(A) === A
+        @test AffineTransform{Float64}(A) === A
         for G in (I, A, B)
             @test eltype(G) == Float64
             for T in types
                 @test typeof(AffineTransform{T}(G)) == AffineTransform{T}
                 @test typeof(convert(AffineTransform{T}, G)) == AffineTransform{T}
-                @test typeof(T(G)) == AffineTransform{T} # FIXME: deprecated
                 @test eltype(AffineTransform{T}(G)) == T
+                @test eltype(T.(G)) == T
             end
         end
     end
@@ -160,6 +167,7 @@ end
         for G in (I, A, B),
             v in vectors
             @test distance(G(v...), G(v)) ≤ 0
+            @test distance(G(Point(v)), Point(G(v))) ≤ 0
         end
     end
 
@@ -240,6 +248,12 @@ end
             @test distance(translate(t, M)(v), (t + M)(v)) ≤ tol
             @test distance(translate(M, t)(v), M(v .+ t)) ≤ tol
             @test distance(translate(M, t)(v), (M + t)(v)) ≤ tol
+        end
+        for v in vectors
+            @test distance(A - v, A + (-v[1], -v[2])) ≤ tol
+            @test distance(A + Point(v), translate(A, v...)) ≤ tol
+            @test distance(Point(v) + A, translate(v..., A)) ≤ tol
+            @test distance(A - Point(v), A - v) ≤ tol
         end
         for G in (A, B, C),
             v in vectors,
