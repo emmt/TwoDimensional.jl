@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction",
     "title": "Table of contents",
     "category": "section",
-    "text": "Pages = [\"install.md\", \"AffineTransforms.md\"]"
+    "text": "Pages = [\"install.md\", \"AffineTransforms.md\",\n         \"Points.md\", \"BoundingBoxes.md\", \"reference.md\"]"
 },
 
 {
@@ -150,6 +150,166 @@ var documenterSearchIndex = {"docs": [
     "title": "Type conversion",
     "category": "section",
     "text": "As a general rule, the floating-point type T of an AffineTransform{T} is imposed for all operations and for the result.  The floating-point type of the composition of several coordinate transforms is the promoted type of the transforms which have been composed.The type of the coefficients of the affine transform A  is given by:eltype(A)To convert the floating-point type of the coefficients of A to be T, do one of:B = T.(A)\nB = AffineTransform{T}(A)\nB = convert(AffineTransform{T}, A)"
+},
+
+{
+    "location": "Points/#",
+    "page": "Points",
+    "title": "Points",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "Points/#Points-1",
+    "page": "Points",
+    "title": "Points",
+    "category": "section",
+    "text": "An object whose type is derived from AbstractPoint{T} (or AbstractPoint2D{T} if TwoDimensional.Suffixed is used instead of TwoDimensional) has 2-D coordinates: its abscissa and ordinate respectively named x and y.  The parameter T is the type of the coordinates and can be retrieved by the eltype method."
+},
+
+{
+    "location": "Points/#Aliases-1",
+    "page": "Points",
+    "title": "Aliases",
+    "category": "section",
+    "text": "Call:using TwoDimensional.Suffixedinstead of:using TwoDimensionalto have Point2D, WeightedPoint2D and AbstractPoint2D provided as respective aliases to TwoDimensional.Point TwoDimensional.WeightedPoint and TwoDimensional.AbstractPoint."
+},
+
+{
+    "location": "Points/#Construction-1",
+    "page": "Points",
+    "title": "Construction",
+    "category": "section",
+    "text": "The most simple concrete type is Point{T} constructed by:Point(x,y)where (x,y) are the coordinates of the point.  Weighted points of type WeightedPoint{T} associate a weight and coordinates:WeightedPoint(w,x,y)where (x,y) are the coordinates of the point and w its weight (nonnegative by convention).Coordinates and weights can also be specified by keywords:Point(x=xval, y=yval)orWeightedPoint(w=wgt, x=xval, y=yval)There are no default values for keywords w, x and y so they must all be specified."
+},
+
+{
+    "location": "Points/#Conversion-1",
+    "page": "Points",
+    "title": "Conversion",
+    "category": "section",
+    "text": "Simple points can be constructed from a 2-tuple of coordinates or from an instance of 2-dimensional CartesianIndex:v = (x,y)\nI = Cartesianindex(x,y)\nPoint(v)    # yields Point(x,y)\nPoint(I)    # yields Point(x,y)and reciprocally:P = Point(x, y)\nTuple(P)          # yields (P.x, P.y)\nCartesianIndex(P) # yields Cartesianindex(P.x, P.y)Coordinate type conversion, say to type T, is done by:P = Point(x, y)\nPoint{T}(P)\nconvert(Point{T}, P)\nT.(P)The latter form involves broadcasting rules and may be a bit slower."
+},
+
+{
+    "location": "Points/#Operations-on-Points-1",
+    "page": "Points",
+    "title": "Operations on Points",
+    "category": "section",
+    "text": "The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates:Point(x1,y1) + Point(x2,y2)   # yields Point(x1+x2,y1+y2)\nPoint(x1,y1) - Point(x2,y2)   # yields Point(x1-x2,y1-y2)Unary minus of a point negates its coordinates:-Point(x,y)   # yields Point(-x,-y)A point may be multiplied or divided by a scalar, say α, to scale its coordinates:α*Point(x,y)  # yields Point(α*x,α*y)\nPoint(x,y)*α  # yields Point(α*x,α*y)\nα\\Point(x,y)  # yields Point((1/α)*x,(1/α)*y)\nPoint(x,y)/α  # yields Point((1/α)*x,(1/α)*y)Taking the hypothenuse or the arctangent of a point P = Point(x,y) yield its distance to the origin O = Point(0,0) and the angle between OP and the abscissa axis:hypot(Point(x,y))  # yields hypot(x, y)\natan(Point(x,y))   # yields atan(y, x)The distance between two points is given by the distance method:distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)The nearest point to an instance obj of Point is given by:nearest([T,] obj)which rounds the coordinates of obj to the nearest integer.  Optional argument T is to specify the type of the result or the type of the coordinates of the result."
+},
+
+{
+    "location": "BoundingBoxes/#",
+    "page": "Bounding-Boxes",
+    "title": "Bounding-Boxes",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "BoundingBoxes/#Bounding-Boxes-1",
+    "page": "Bounding-Boxes",
+    "title": "Bounding-Boxes",
+    "category": "section",
+    "text": "2-D bounding boxes are build by:BoundingBox(xmin,xmax,ymin,ymax)to represent a 2D rectangular box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.The type of the coordinates, say T, can be explicitly specified:BoundingBox{T}(xmin,xmax,ymin,ymax)The type of the coordinates and can be retrieved by the eltype method."
+},
+
+{
+    "location": "BoundingBoxes/#Aliases-1",
+    "page": "Bounding-Boxes",
+    "title": "Aliases",
+    "category": "section",
+    "text": "Call:using TwoDimensional.Suffixedinstead of:using TwoDimensionalto have BoundingBox2D provided as an alias to TwoDimensional.BoundingBox."
+},
+
+{
+    "location": "BoundingBoxes/#Construction-1",
+    "page": "Bounding-Boxes",
+    "title": "Construction",
+    "category": "section",
+    "text": "The coordinates of a bounding box can be specified by keywords:BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)There are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.A bounding box can be constructed from a 4-tuple of coordinates and conversely:BoundingBox((x0,x1,y0,y1))      # yields BoundingBox(x0,x1,y0,y1)\nTuple(BoundingBox(x0,x1,y0,y1)) # yields (x0,x1,y0,y1)A bounding box can be constructed from its first and last points (i.e. at the lower-left and upper right opposite corners) specified as instances of Point or of CartesianIndex:BoundingBox(Point(x0,y0), Point(x1,y1))\nBoundingBox(CartesianIndex(x0,y0), CartesianIndex(x1,y1))both yield the same result as:BoundingBox(x0,x1,y0,y1)Integer-valued unit-ranges can be specified to define a bounding box.  For example:BoundingBox(x0:x1,y0:y1)    # 2 unit-range\nBoundingBox((x0:x1,y0:y1))  # a 2-tuple of unit rangeThis makes possible writing:BoundingBox(axes(A))to get the bounding box corresponding to all indices of array A which is also given by:BoundingBox(A)Conversely:axes(BoundingBox(x0,x1,y0,y1))yields the axes of a bounding-box with integer coordinates, that is (x0:x1,y0:y1).  To get the k-th axis of a bounding-box B, call axes(B,k).To loop over the Cartesian indices edfined by a bounding-box B with integer coordinates, you can just write:for I in CartesianIndices(B)\n   ...\nendA bounding box may also be constructed by applying a predicate function to the elements of a 2-dimensional array:BoundingBox(f, A)yields the bounding box of all integer coordinates (x,y) such that f(A[x,y]) yields true."
+},
+
+{
+    "location": "BoundingBoxes/#Conversion-1",
+    "page": "Bounding-Boxes",
+    "title": "Conversion",
+    "category": "section",
+    "text": "Coordinate type conversion, say to type T, is done by:B = BoundingBox(x0,x1,y0,y1)\nBoundingBox{T}(B)\nconvert(BoundingBox{T}, B)\nT.(B)The latter form involves broadcasting rules and may be a bit slower."
+},
+
+{
+    "location": "BoundingBoxes/#Union-and-Intersection-of-Bounding-Boxes-1",
+    "page": "Bounding-Boxes",
+    "title": "Union and Intersection of Bounding-Boxes",
+    "category": "section",
+    "text": "The union of bounding boxes b1, b2, ... is given by one of:B1 ∪ B2 ∪ ...\nunion(B1, B2, ...)wich both yield the smallest bounding box containing the bounding boxes B1, B2, ...The intersection of bounding boxes B1, B2, ... is given by one of:B1 ∩ B2 ∩ ...\nintersect(B1, B2, ...)wich both yield the largest bounding box contained into the bounding boxes B1, B2, ...The maximal or minimal bounding-box with coordinates of type T that can be constructed are respectively given by typemax(BoundingBox{T}) and typemin(BoundingBox{T}).  These can be useful to initiate a shrinking ar a growing bounding-box.  The call:BoundingBox{T}(nothing)yields the same result as typemin(BoundingBox{T})."
+},
+
+{
+    "location": "BoundingBoxes/#Interrior,-Exterior,-Nearest,-etc.-1",
+    "page": "Bounding-Boxes",
+    "title": "Interrior, Exterior, Nearest, etc.",
+    "category": "section",
+    "text": "Methods interior and exterior can be applied to a bounding box to respectively yield the largest interior and smallest exterior bounding boxes with integer bounds.The round and nearest methods can be applied to a bounding box to round its limits to the nearest integer values.The center method yields the Point whose coordinates are the geometrical center of a bounding-box.The area method yields the area of a bounding-box."
+},
+
+{
+    "location": "BoundingBoxes/#Arithmetic-and-Basic-Methods-1",
+    "page": "Bounding-Boxes",
+    "title": "Arithmetic and Basic Methods",
+    "category": "section",
+    "text": "Adding or subtracting a scalar δ to a bounding box B can be used to add or remove a margin δ to the bounding box B:BoundingBox(x0,x1,y0,y1) + δ # yields BoundingBox(x0-δ,x1+δ,y0-δ,y1+δ)Adding or subtracting a point P to a bounding box B can be used to shift the bounding box B:BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)eltype(B) yields the type of the coordinates of a bounding-box B.Methods first(B) and last(B) respectively yield the lower left and upper right corners of the bounding-box B (as a Point instance).The method isempty(B) can be used to check whether a bounding-box B is empty or not."
+},
+
+{
+    "location": "reference/#",
+    "page": "Reference",
+    "title": "Reference",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "reference/#Reference-1",
+    "page": "Reference",
+    "title": "Reference",
+    "category": "section",
+    "text": "The following provides detailled documentation about types and methods provided by the TwoDimensional package.  This information is also available from the REPL by typing ? followed by the name of a method or a type."
+},
+
+{
+    "location": "reference/#Affine-2D-Coordinate-Transforms-1",
+    "page": "Reference",
+    "title": "Affine 2D Coordinate Transforms",
+    "category": "section",
+    "text": "AffineTransform\nscale\nrotate\ntranslate\njacobian\nintercept\nrightdivide\nleftdivide\ncompose"
+},
+
+{
+    "location": "reference/#Points-1",
+    "page": "Reference",
+    "title": "Points",
+    "category": "section",
+    "text": "AbstractPoint\nPoint\nWeightedPoint\ndistance"
+},
+
+{
+    "location": "reference/#Bounding-Boxes-1",
+    "page": "Reference",
+    "title": "Bounding-Boxes",
+    "category": "section",
+    "text": "BoundingBox\narea\ncenter\ninterior\nexterior"
+},
+
+{
+    "location": "reference/#Methods-1",
+    "page": "Reference",
+    "title": "Methods",
+    "category": "section",
+    "text": "nearest"
 },
 
 ]}
