@@ -281,11 +281,99 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference/#TwoDimensional.AffineTransforms.AffineTransform",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransforms.AffineTransform",
+    "category": "type",
+    "text": "Affine 2D Transforms\n\nAn affine 2D transform A is defined by 6 real coefficients, Axx, Axy, Ax, Ayx, Ayy and Ay.  Such a transform maps (x,y) as (xp,yp) given by:\n\nxp = Axx*x + Axy*y + Ax\nyp = Ayx*x + Ayy*y + Ay\n\nThe immutable type AffineTransform is used to store an affine 2D transform A, it can be created by:\n\nI = AffineTransform{T}() # yields the identity with type T\nA = AffineTransform{T}(Axx, Axy, Ax, Ayx, Ayy, Ay)\n\nThe parameter T above is used to specify the floating-point type for the coefficients; if omitted it is guessed from the types of the coefficients.\n\nOperations with affine 2D transforms\n\nMany operations are available to manage or apply affine transforms:\n\n(xp, yp) = A(x,y)       # apply affine transform A to coordinates (x,y)\n(xp, yp) = A*(x,y)      # idem\n(xp, yp) = A(v)         # idem, with v = (x,y)\n(xp, yp) = A*v          # idem\n\nA(Point(x,y)) -> Point(xp, yp)\nA*Point(x,y)  -> Point(xp, yp)\n\nC = compose(A, B, ...)  # compose 2 (or more) transforms, C = apply B then A\nC = A∘B                 # idem\nC = A*B                 # idem\nC = A⋅B                 # idem\n\nB = translate(x, y, A)  # B = apply A then translate by (x,y)\nB = translate(v, A)     # idem with v = (x,y)\nB = v + A               # idem\n\nB = translate(A, x, y)  # B = translate by (x,y) then apply A\nB = translate(A, v)     # idem with v = (x,y)\nB = A + v               # idem\n\nB = rotate(θ, A)   # B = apply A then rotate by angle θ\nC = rotate(A, θ)   # C = rotate by angle θ then apply A\n\nB = scale(ρ, A)    # B = apply A then scale by ρ\nB = ρ*A            # idem\nC = scale(A, ρ)    # C = scale by ρ then apply A\nC = A*ρ            # idem\n\nB = inv(A)         # reciprocal coordinate transform\nC = A/B            # right division, same as: C = compose(A, inv(B))\nC = A\\B            # left division, same as: C = compose(inv(A), B)\n\n\"∘\" and \"⋅\" can be typed by \\circ<tab> and \\cdot<tab>.\n\nType conversion\n\nAs a general rule, the floating-point type T of an AffineTransform{T} is imposed for all operations and for the result.  The floating-point type of the composition of several coordinate transforms is the promoted type of the transforms which have been composed.\n\nCalling eltype(A) yields floating-point type of the coefficients of the 2D affine transform A.  To convert the floating-point type of the coefficients of A to be T, do one of:\n\nB = T.(A)\nB = AffineTransform{T}(A)\nB = convert(AffineTransform{T}, A)\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.AffineTransforms.scale",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransforms.scale",
+    "category": "function",
+    "text": "Scaling an affine transform\n\nThere are two ways to combine a scaling by a factor ρ with an affine transform A.  Left-scaling as in:\n\nB = scale(ρ, A)\n\nresults in scaling the output of the transform; while right-scaling as in:\n\nC = scale(A, ρ)\n\nresults in scaling the input of the transform.  The above examples yield transforms which behave as:\n\nB(v) = ρ.*A(v)\nC(v) = A(ρ.*v)\n\nwhere v is any 2-element tuple.\n\nThe same results can be obtained with the * operator:\n\nB = ρ*A    # same as: B = scale(ρ, A)\nC = A*ρ    # same as: B = scale(A, ρ)\n\nSee also: AffineTransform, rotate, translate.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.AffineTransforms.rotate",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransforms.rotate",
+    "category": "function",
+    "text": "Rotating an affine transform\n\nThere are two ways to combine a rotation by angle θ (in radians counterclockwise) with an affine transform A.  Left-rotating as in:\n\nB = rotate(θ, A)\n\nresults in rotating the output of the transform; while right-rotating as in:\n\nC = rotate(A, θ)\n\nresults in rotating the input of the transform.  The above examples are similar to:\n\nB = R∘A\nC = A∘R\n\nwhere R implements rotation by angle θ around (0,0).\n\nSee also: AffineTransform, scale, translate.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.AffineTransforms.translate",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransforms.translate",
+    "category": "function",
+    "text": "Translating an affine transform\n\nAffine transforms can be letf- or right-translated.\n\ntranslate(x, y, A)\n\nor\n\ntranslate((x,y), A)\n\nyield an affine transform which translate the output of affine transform A by offsets x and y.\n\ntranslate(A, x, y)\n\nor\n\ntranslate(A, (x,y))\n\nyield an affine transform which translate the input of affine transform A by offsets x and y.\n\nThe same results can be obtained with the + operator:\n\nB = (x,y) + A    # same as: B = translate((x,y), A)\nB = A + (x,y)    # same as: B = translate(A, (x,y))\n\nSee also: AffineTransform, rotate, scale.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.AffineTransforms.jacobian",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransforms.jacobian",
+    "category": "function",
+    "text": "jacobian(A) returns the Jacobian of the affine transform A, that is the absolute value of the determinant of its linear part.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.AffineTransforms.intercept",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransforms.intercept",
+    "category": "function",
+    "text": "intercept(A) returns the tuple (x,y) such that A(x,y) = (0,0).\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.AffineTransforms.compose",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransforms.compose",
+    "category": "function",
+    "text": "compose(A,B) yields the affine transform which combines the two affine transforms A and B, that is the affine transform which applies B and then A.  Composition is accessible via: A∘B, A*B or A⋅B (\"∘\" and \"⋅\" can be typed by \\circ<tab> and \\cdot<tab>).\n\nIt is possible to compose more than two affine transforms.  For instance, compose(A,B,C) yields the affine transform which applies C then B, then A.\n\n\n\n\n\n"
+},
+
+{
     "location": "reference/#Affine-2D-Coordinate-Transforms-1",
     "page": "Reference",
     "title": "Affine 2D Coordinate Transforms",
     "category": "section",
-    "text": "AffineTransform\nscale\nrotate\ntranslate\njacobian\nintercept\nrightdivide\nleftdivide\ncompose"
+    "text": "AffineTransform\nscale\nrotate\ntranslate\njacobian\nintercept\ncompose"
+},
+
+{
+    "location": "reference/#TwoDimensional.AbstractPoint",
+    "page": "Reference",
+    "title": "TwoDimensional.AbstractPoint",
+    "category": "type",
+    "text": "Any object whose type is derived from AbstractPoint{T} has at least 2 fields: x its abscissa and y its ordinate, both of type T.\n\nSee also: Point, WeightedPoint.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.Point",
+    "page": "Reference",
+    "title": "TwoDimensional.Point",
+    "category": "type",
+    "text": "Point(x,y)\n\nyields an instance of a 2D point of coordinates (x,y).\n\nA point may be multiplied or divided by a scalar to scale its coordinates.  The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates.\n\nCoordinates can be specified by keywords:\n\nPoint(x=xval, y=yval)\n\nThere are no default values for keywords x and y so both must be specified.\n\nSee also: WeightedPoint, AbstractPoint.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.WeightedPoint",
+    "page": "Reference",
+    "title": "TwoDimensional.WeightedPoint",
+    "category": "type",
+    "text": "A WeightedPoint{T} has just 3 fields: w its weight, x its abscissa and y its ordinate, all of type T.  By convention w ≥ 0 but this is not checked for efficiency reasons.\n\nSee also: Point, AbstractPoint.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.distance",
+    "page": "Reference",
+    "title": "TwoDimensional.distance",
+    "category": "function",
+    "text": "distance(A, B)\n\nyields the Euclidean distance between 2 points A and B.\n\n\n\n\n\n"
 },
 
 {
@@ -297,11 +385,59 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference/#TwoDimensional.BoundingBox",
+    "page": "Reference",
+    "title": "TwoDimensional.BoundingBox",
+    "category": "type",
+    "text": "BoundingBox(xmin,xmax,ymin,ymax) yields an instance of a 2D rectangular bounding box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.  The box is empty if xmin > xmax or ymin > ymax.\n\nA bounding box can be constructed from the first and last points (i.e. at the lower-left and upper right opposite corners) of the box:\n\nBoundingBox(P0::Point, P1::Point)\nBoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})\n\nCoordinates can be specified by keywords:\n\nBoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)\n\nThere are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.\n\nSee also Point, interior, exterior.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.area",
+    "page": "Reference",
+    "title": "TwoDimensional.area",
+    "category": "function",
+    "text": "area(B) yields the area of the bounding box B.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.center",
+    "page": "Reference",
+    "title": "TwoDimensional.center",
+    "category": "function",
+    "text": "center(B::BoundingBox) -> c::Point\n\nyields the central point of the bounding box B.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.interior",
+    "page": "Reference",
+    "title": "TwoDimensional.interior",
+    "category": "function",
+    "text": "interior([BoundingBox{T},] B::BoundingBox) yields the largest bounding box with integer valued bounds which is contained by box B.  Optional first argument is to specify the type of the result which is that of B by default.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.exterior",
+    "page": "Reference",
+    "title": "TwoDimensional.exterior",
+    "category": "function",
+    "text": "exterior([BoundingBox{T},] B::BoundingBox) yields the smallest boundingbox box with integer valued bounds which contains box B.  Optional first argument is to specify the type of the result which is that of B by default.\n\n\n\n\n\n"
+},
+
+{
     "location": "reference/#Bounding-Boxes-1",
     "page": "Reference",
     "title": "Bounding-Boxes",
     "category": "section",
     "text": "BoundingBox\narea\ncenter\ninterior\nexterior"
+},
+
+{
+    "location": "reference/#TwoDimensional.nearest",
+    "page": "Reference",
+    "title": "TwoDimensional.nearest",
+    "category": "function",
+    "text": "nearest([T,] obj)\n\nyields the object that is the nearest to obj by rounding its coordinates to the nearest integer.  Argument T can be the type of the result (a point or a bounding box) or the type of the coordinates of the result.\n\n\n\n\n\n"
 },
 
 {
