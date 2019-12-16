@@ -1,7 +1,7 @@
 module TwoDimensionalTests
 
 using TwoDimensional
-using TwoDimensional: WeightedPoint, center, half, exterior, interior
+using TwoDimensional: WeightedPoint, center, half, exterior, interior, area
 using Test, LinearAlgebra
 import Base.MathConstants: φ
 
@@ -17,8 +17,8 @@ distance(A::AffineTransform, B::AffineTransform) =
 @testset "Points and bounding-boxes" begin
     @testset "Simple points" begin
         P1 = Point(1, 1.3)
-        @test Point(P1) === P1
         @test eltype(P1) == Float64
+        @test Point(P1) === P1
         @test Point{eltype(P1)}(P1) === P1
         @test eltype(Point(1,2)) == Int
         @test Point(1,2) === Point(y=2, x=1)
@@ -29,9 +29,13 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test convert(Tuple, Point(2,3)) === (2,3)
         @test convert(Tuple{Float64,Int}, Point(2,3)) === (2.0,3)
         @test Point(Tuple(P1)...) === P1
+        @test Point(Tuple(P1)) === P1
         @test Point{Float32}(P1) === Float32.(P1)
+        @test convert(Point, P1) === P1
+        @test convert(Point{Float32}, P1) === Float32.(P1)
         @test Tuple(Point(0.0,1)) === (0.0,1.0)
         @test nearest(Int, Point(1.2,-0.7)) === Point(1,-1)
+        @test nearest(Point{Float64}, P1) === Point(map(round, Tuple(P1)))
         @test nearest(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
@@ -40,19 +44,49 @@ distance(A::AffineTransform, B::AffineTransform) =
     end
     @testset "Weighted points" begin
         P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
-        @test WeightedPoint(P2.w, P2.x, P2.y) === P2
-        @test WeightedPoint(P2) === P2
         @test eltype(P2) == Float64
+        @test WeightedPoint(P2) === P2
         @test WeightedPoint{eltype(P2)}(P2) === P2
         @test WeightedPoint{Float64}(P2) === P2
+        @test WeightedPoint(P2.w, P2.x, P2.y) === P2
         @test WeightedPoint(Tuple(P2)...) === P2
+        @test WeightedPoint(Tuple(P2)) === P2
         @test WeightedPoint{Float32}(P2) === Float32.(P2)
         @test WeightedPoint(Point(3.1,4.2)) === WeightedPoint(w=1, x=3.1, y=4.2)
     end
     @testset "Bounding boxes" begin
         B = BoundingBox(2,3,4,5)
+        @test eltype(B) === Int
+        @test BoundingBox(B) === B
+        @test BoundingBox{eltype(B)}(B) === B
+        @test BoundingBox{Float32}(B) === BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
+        @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
+        @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) === BoundingBox(2,4,3,5)
+        @test BoundingBox(Tuple(B)...) === B
+        @test BoundingBox(Tuple(B)) === B
+        @test BoundingBox(rand(5,7)) === BoundingBox(1,5, 1,7)
+        @test BoundingBox(-2:6,8:11) === BoundingBox(-2,6, 8,11)
+        @test BoundingBox((2:4,-1:7)) === BoundingBox(2,4, -1,7)
+        A = ones(7,8)
+        A[1:2,:] .= 0
+        A[4,:] .= 0
+        A[end,:] .= 0
+        @test BoundingBox(x -> x > 0, A) === BoundingBox(3,6, 1,8)
+        A[:,1] .= 0
+        A[:3:4] .= 0
+        A[:,end-1:end] .= 0
+        A[2,2] = 1
+        @test BoundingBox(x -> x > 0, A) === BoundingBox(2,6, 2,6)
+        @test BoundingBox{Float32}(nothing) === BoundingBox{Float32}(Inf,-Inf,Inf,-Inf)
+        @test typemin(BoundingBox{Float64}) === BoundingBox(Inf,-Inf,Inf,-Inf)
+        @test typemax(BoundingBox{Float64}) === BoundingBox(-Inf,Inf,-Inf,Inf)
+
         @test exterior(B) === B
         @test exterior(B + 0.1) === B + 1.0
+        @test interior(B) === B
+        @test interior(B + 0.1) === Float64.(B)
+        @test area(BoundingBox(2,4,5,8)) == 6
+        @test area(BoundingBox(2.0,4.0,5.0,8.0)) == 6.0
 
         C = Point(x = 0.5*(B.xmin + B.xmax), y = 0.5*(B.ymin + B.ymax))
         @test center(B) === C

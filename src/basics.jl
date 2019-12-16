@@ -150,6 +150,7 @@ Point{T}(P::Point) where {T} = Point{T}(P.x, P.y)
 Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} = Point{promote_type(Tx,Ty)}(x, y)
 Point(; x::Real, y::Real) = Point(x, y)
 Point(I::CartesianIndex{2}) = Point(I[1], I[2])
+Point(P::NTuple{2,Real}) = Point(P[1], P[2])
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
 Base.convert(::Type{CartesianIndex}, P::Point{<:Integer}) = CartesianIndex(P)
 Base.convert(::Type{CartesianIndex{2}}, P::Point{<:Integer}) = CartesianIndex(P)
@@ -167,8 +168,9 @@ WeightedPoint(w::Tw, x::Tx, y::Ty) where {Tw<:Real,Tx<:Real,Ty<:Real} =
     WeightedPoint{float(promote_type(Tw,Tx,Ty))}(w, x, y)
 WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
 WeightedPoint(P::Point{T}) where {T} = WeightedPoint(one(T), P.x, P.y)
+WeightedPoint(P::NTuple{3,Real}) = WeightedPoint(P[1], P[2], P[3])
 Base.Tuple(P::WeightedPoint) = (P.w, P.x, P.y)
-Broadcast.broadcasted(::Type{T}, obj::WeightedPoint) where {T<:Real} =
+Broadcast.broadcasted(::Type{T}, obj::WeightedPoint) where {T<:AbstractFloat} =
     WeightedPoint{T}(obj)
 
 # Conversion of points and rounding to nearest integer coordinates.
@@ -179,23 +181,50 @@ Base.round(::Type{T}, obj::AbstractPoint) where {T} = nearest(T, obj)
 """
 
 ```julia
-nearest(T, obj)
+nearest([T,] obj)
 ```
 
-yields the object that is the nearest to `obj` by rounding its coordinates.
-Argument `T` can be the type of the result (a point or a bounding box) or the
-type of the coordinates of the result.
+yields the object that is the nearest to `obj` by rounding its coordinates to
+the nearest integer.  Argument `T` can be the type of the result (a point or a
+bounding box) or the type of the coordinates of the result.
 
 """
-nearest(::Type{T}, obj::Point{T}) where {T} = obj
-nearest(::Type{T}, obj::BoundingBox{T}) where {T} = obj
-nearest(::Type{Point{T}}, obj::Point) where {T<:Real} = nearest(T, obj)
-nearest(::Type{BoundingBox{T}}, obj::BoundingBox) where {T<:Real} = nearest(T, obj)
-nearest(::Type{T}, obj::Point) where {T<:Real} =
-    Point(round(T, obj.x), round(T, obj.y))
-nearest(::Type{T}, obj::BoundingBox) where {T<:Real} =
-    BoundingBox(round(T, obj.xmin), round(T, obj.xmax),
-                round(T, obj.ymin), round(T, obj.ymax))
+nearest(::Type{Point{T}}, obj::Point) where {T} = nearest(T, obj)
+nearest(obj::Point{T}) where {T} = nearest(T, obj)
+nearest(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
+nearest(::Type{T}, obj::Point{T}) where {T<:Real} =
+    Point(round(obj.x, RoundNearest),
+          round(obj.y, RoundNearest))
+nearest(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
+    Point{T}(obj)
+nearest(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
+    Point(round(T, obj.x, RoundNearest),
+          round(T, obj.y, RoundNearest))
+nearest(::Type{T}, obj::Point{S}) where {T<:Real,S<:Real} =
+    Point{T}(round(S, obj))
+nearest(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
+    Point{T}(obj)
+
+nearest(::Type{BoundingBox{T}}, obj::BoundingBox) where {T} = nearest(T, obj)
+nearest(obj::BoundingBox{T}) where {T} = nearest(T, obj)
+nearest(::Type{T}, obj::BoundingBox{T}) where {T<:Integer} = obj
+nearest(::Type{T}, obj::BoundingBox{T}) where {T<:Real} =
+    BoundingBox(round(obj.xmin, RoundNearest),
+                round(obj.xmax, RoundNearest),
+                round(obj.ymin, RoundNearest),
+                round(obj.ymax, RoundNearest))
+nearest(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Integer} =
+    BoundingBox{T}(obj)
+nearest(::Type{T}, obj::BoundingBox{<:Real}) where {T<:Integer} =
+    BoundingBox(round(T, obj.xmin, RoundNearest),
+                round(T, obj.xmax, RoundNearest),
+                round(T, obj.ymin, RoundNearest),
+                round(T, obj.ymax, RoundNearest))
+nearest(::Type{T}, obj::BoundingBox{S}) where {T<:Real,S<:Real} =
+    BoundingBox{T}(round(S, obj))
+nearest(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Real} =
+    BoundingBox{T}(obj)
+
 
 # Methods hypot() and atan() yield the polar coordinates of a point.
 Base.hypot(P::Point) = hypot(P.x, P.y)
@@ -217,8 +246,12 @@ BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
     BoundingBox(I0[1], I1[1], I0[2], I1[2])
 BoundingBox(P0::AbstractPoint, P1::AbstractPoint) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
+BoundingBox(P::NTuple{4,Real}) = BoundingBox(P[1], P[2], P[3], P[4])
 Base.convert(::Type{T}, B::BoundingBox) where {T<:Tuple} = convert(T, Tuple(B))
+Base.eltype(::BoundingBox{T}) where {T} = T
 Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
+Broadcast.broadcasted(::Type{T}, obj::BoundingBox) where {T<:Real} =
+    BoundingBox{T}(obj)
 BoundingBox(A::AbstractMatrix) = BoundingBox(axes(A))
 BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
     BoundingBox(inds[1], inds[2])
