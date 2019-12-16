@@ -11,7 +11,8 @@ makedocs(
         prettyurls = DEPLOYDOCS,
     ),
     authors = "Éric Thiébaut and contributors",
-    pages = ["index.md", "install.md", "AffineTransforms.md"]
+    pages = ["index.md", "install.md", "AffineTransforms.md",
+             "Points.md", "BoundingBoxes.md", "reference.md"]
 )
 
 if DEPLOYDOCS

@@ -15,7 +15,8 @@ The source code of TwoDimensional is available on
 ## Table of contents
 
 ```@contents
-Pages = ["install.md", "AffineTransforms.md"]
+Pages = ["install.md", "AffineTransforms.md",
+         "Points.md", "BoundingBoxes.md", "reference.md"]
 ```
 
 ## Index
