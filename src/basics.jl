@@ -45,7 +45,8 @@ There are no default values for keywords `x` and `y` so both must be specified.
 
 See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
 
-"""
+""" Point
+
 struct Point{T} <: AbstractPoint{T}
     x::T
     y::T
@@ -59,7 +60,8 @@ checked for efficiency reasons.
 
 See also: [`Point`](@ref), [`AbstractPoint`](@ref).
 
-"""
+""" WeightedPoint
+
 struct WeightedPoint{T<:AbstractFloat}  <: AbstractPoint{T}
     w::T # weight
     x::T # abscissa
@@ -92,7 +94,8 @@ all must be specified.
 
 See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
-"""
+""" BoundingBox
+
 struct BoundingBox{T<:Real}
     xmin::T
     xmax::T
@@ -113,7 +116,7 @@ Base.Tuple(P::Point) = (P.x, P.y)
 Base.eltype(::AbstractPoint{T}) where {T} = T
 Broadcast.broadcasted(::Type{T}, obj::Point) where {T<:Real} =
     Point{T}(obj)
-Base.promote(A::Point) = A
+Base.promote(A::Point) = (A,)
 Base.promote(A::Point{T}, B::Point{T}) where {T} = (A, B)
 Base.promote(A::Point{Ta}, B::Point{Tb}) where {Ta,Tb} = begin
     T = promote_type(Ta, Tb)
@@ -235,7 +238,7 @@ Base.eltype(::BoundingBox{T}) where {T} = T
 Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
 Broadcast.broadcasted(::Type{T}, obj::BoundingBox) where {T<:Real} =
     BoundingBox{T}(obj)
-Base.promote(A::BoundingBox) = A
+Base.promote(A::BoundingBox) = (A,)
 Base.promote(A::BoundingBox{T}, B::BoundingBox{T}) where {T} = (A, B)
 Base.promote(A::BoundingBox{Ta}, B::BoundingBox{Tb}) where {Ta,Tb} = begin
     T = promote_type(Ta, Tb)
