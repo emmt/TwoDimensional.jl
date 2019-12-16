@@ -77,7 +77,7 @@ A bounding box can be constructed from the first and last points (i.e. at the
 lower-left and upper right opposite corners) of the box:
 
 ```julia
-BoundingBox(P0::Point, P1::point)
+BoundingBox(P0::Point, P1::Point)
 BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})
 ```
 
@@ -89,49 +89,6 @@ BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
 
 There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
 all must be specified.
-
-A bounding box may also be constructed by applying a predicate function to the
-elements of a 2-dimensional array:
-
-```julia
-BoundingBox(f, A)
-```
-
-yields the bounding box of all integer coordinates `(x,y)` such that
-`f(A[x,y])` yields `true`.
-
-The union of bounding boxes `b1`, `b2`, ... is given by one of:
-
-```julia
-b1 ∪ b2 ∪ ...
-union(b1, b2, ...)
-```
-
-and is the smallest bounding box containing the bounding boxes `b1`, `b2`, ...
-
-The intersection of bounding boxes `b1`, `b2`, ... is given by one of:
-
-```julia
-b1 ∩ b2 ∩ ...
-intersect(b1, b2, ...)
-```
-
-and is the largest bounding box contained into the bounding boxes `b1`, `b2`,
-...
-
-The `round` method can be applied to a bounding box to round its limits to the
-nearest integer values.  Methods [`interior`](@ref) and [`exterior`](@ref) can
-be applied to a bounding box to respectively yield the largest interior and
-smallest exterior bounding boxes with integer bounds.
-
-Adding or subtracting a scalar `δ` to a bounding box `b` can be used to add or
-remove a margin `δ` to the bounding box `b`.
-
-Adding or subtracting a point `p` to a bounding box `b` can be used to shift
-the bounding box `b`.
-
-`first(b)` and `last(b)` respectively yield the lower left and upper right
-corners of a bounding box (as a `Point` instance).
 
 See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
@@ -152,13 +109,20 @@ Point(; x::Real, y::Real) = Point(x, y)
 Point(I::CartesianIndex{2}) = Point(I[1], I[2])
 Point(P::NTuple{2,Real}) = Point(P[1], P[2])
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
-Base.convert(::Type{CartesianIndex}, P::Point{<:Integer}) = CartesianIndex(P)
-Base.convert(::Type{CartesianIndex{2}}, P::Point{<:Integer}) = CartesianIndex(P)
-Base.convert(::Type{T}, P::Point) where {T<:Tuple} = convert(T, Tuple(P))
 Base.Tuple(P::Point) = (P.x, P.y)
 Base.eltype(::AbstractPoint{T}) where {T} = T
 Broadcast.broadcasted(::Type{T}, obj::Point) where {T<:Real} =
     Point{T}(obj)
+Base.promote(A::Point) = A
+Base.promote(A::Point{T}, B::Point{T}) where {T} = (A, B)
+Base.promote(A::Point{Ta}, B::Point{Tb}) where {Ta,Tb} = begin
+    T = promote_type(Ta, Tb)
+    (Point{T}(A), Point{T}(B))
+end
+Base.promote(args::Point...) = begin
+    T = promote_type(map(eltype, args)...)
+    map(Point{T}, args)
+end
 
 # Constructors of weighted points.
 WeightedPoint(P::WeightedPoint) = P
@@ -174,7 +138,6 @@ Broadcast.broadcasted(::Type{T}, obj::WeightedPoint) where {T<:AbstractFloat} =
     WeightedPoint{T}(obj)
 
 # Conversion of points and rounding to nearest integer coordinates.
-Base.convert(::Type{T}, obj::T) where {T<:AbstractPoint} = obj
 Base.convert(::Type{T}, obj::AbstractPoint) where {T<:AbstractPoint} = T(obj)
 Base.round(::Type{T}, obj::AbstractPoint) where {T} = nearest(T, obj)
 
@@ -190,45 +153,66 @@ bounding box) or the type of the coordinates of the result.
 
 """
 nearest(::Type{Point{T}}, obj::Point) where {T} = nearest(T, obj)
+nearest(::Type{BoundingBox{T}}, obj::BoundingBox) where {T} = nearest(T, obj)
+
 nearest(obj::Point{T}) where {T} = nearest(T, obj)
+nearest(obj::BoundingBox{T}) where {T} = nearest(T, obj)
+
 nearest(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
 nearest(::Type{T}, obj::Point{T}) where {T<:Real} =
     Point(round(obj.x, RoundNearest),
           round(obj.y, RoundNearest))
-nearest(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
-    Point{T}(obj)
-nearest(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
-    Point(round(T, obj.x, RoundNearest),
-          round(T, obj.y, RoundNearest))
-nearest(::Type{T}, obj::Point{S}) where {T<:Real,S<:Real} =
-    Point{T}(round(S, obj))
-nearest(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
-    Point{T}(obj)
-
-nearest(::Type{BoundingBox{T}}, obj::BoundingBox) where {T} = nearest(T, obj)
-nearest(obj::BoundingBox{T}) where {T} = nearest(T, obj)
 nearest(::Type{T}, obj::BoundingBox{T}) where {T<:Integer} = obj
 nearest(::Type{T}, obj::BoundingBox{T}) where {T<:Real} =
     BoundingBox(round(obj.xmin, RoundNearest),
                 round(obj.xmax, RoundNearest),
                 round(obj.ymin, RoundNearest),
                 round(obj.ymax, RoundNearest))
+
+nearest(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
+    Point{T}(obj)
 nearest(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Integer} =
     BoundingBox{T}(obj)
+
+nearest(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
+    Point(round(T, obj.x, RoundNearest),
+          round(T, obj.y, RoundNearest))
 nearest(::Type{T}, obj::BoundingBox{<:Real}) where {T<:Integer} =
     BoundingBox(round(T, obj.xmin, RoundNearest),
                 round(T, obj.xmax, RoundNearest),
                 round(T, obj.ymin, RoundNearest),
                 round(T, obj.ymax, RoundNearest))
-nearest(::Type{T}, obj::BoundingBox{S}) where {T<:Real,S<:Real} =
-    BoundingBox{T}(round(S, obj))
+
+nearest(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
+    Point{T}(obj)
 nearest(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Real} =
     BoundingBox{T}(obj)
 
+nearest(::Type{T}, obj::Point{S}) where {T<:Real,S<:Real} =
+    Point{T}(nearest(S, obj))
+nearest(::Type{T}, obj::BoundingBox{S}) where {T<:Real,S<:Real} =
+    BoundingBox{T}(nearest(S, obj))
 
 # Methods hypot() and atan() yield the polar coordinates of a point.
 Base.hypot(P::Point) = hypot(P.x, P.y)
 Base.atan(P::Point) = atan(P.y, P.x)
+
+"""
+
+```julia
+distance(A, B)
+```
+
+yields the Euclidean distance between 2 points `A` and `B`.
+
+"""
+distance(A::Point, B::Point) =
+    distance(promote(A, B)...)
+distance(A::Point{T}, B::Point{T}) where {T<:Unsigned} =
+    hypot(ifelse(A.x > B.x, A.x - B.x, B.x - A.x),
+          ifelse(A.y > B.y, A.y - B.y, B.y - A.y))
+distance(A::Point{T}, B::Point{T}) where {T<:Real} =
+    hypot(B.x - A.x, B.y - A.y)
 
 # Constructors of bounding boxes and conversion.
 function BoundingBox(xmin::Txmin, xmax::Txmax,
@@ -247,11 +231,21 @@ BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
 BoundingBox(P0::AbstractPoint, P1::AbstractPoint) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
 BoundingBox(P::NTuple{4,Real}) = BoundingBox(P[1], P[2], P[3], P[4])
-Base.convert(::Type{T}, B::BoundingBox) where {T<:Tuple} = convert(T, Tuple(B))
 Base.eltype(::BoundingBox{T}) where {T} = T
 Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
 Broadcast.broadcasted(::Type{T}, obj::BoundingBox) where {T<:Real} =
     BoundingBox{T}(obj)
+Base.promote(A::BoundingBox) = A
+Base.promote(A::BoundingBox{T}, B::BoundingBox{T}) where {T} = (A, B)
+Base.promote(A::BoundingBox{Ta}, B::BoundingBox{Tb}) where {Ta,Tb} = begin
+    T = promote_type(Ta, Tb)
+    (BoundingBox{T}(A), BoundingBox{T}(B))
+end
+Base.promote(args::BoundingBox...) = begin
+    T = promote_type(map(eltype, args)...)
+    map(BoundingBox{T}, args)
+end
+
 BoundingBox(A::AbstractMatrix) = BoundingBox(axes(A))
 BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
     BoundingBox(inds[1], inds[2])
@@ -286,10 +280,6 @@ Base.typemax(::Type{BoundingBox{T}}) where {T<:Real} =
 # Conversion of bounding boxes to/from Cartesian indices.
 Base.CartesianIndices(B::BoundingBox{<:Integer}) =
     CartesianIndices((Int(B.xmin):Int(B.xmax), Int(B.ymin):Int(B.ymax)))
-Base.convert(::Type{CartesianIndices}, B::BoundingBox{<:Integer}) =
-    CartesianIndices(B)
-Base.convert(::Type{CartesianIndices{2}}, B::BoundingBox{<:Integer}) =
-    CartesianIndices(B)
 
 # Conversion of bounding boxes and rounding to nearest integer coordinates.
 Base.convert(::Type{T}, obj::T) where {T<:BoundingBox} = obj

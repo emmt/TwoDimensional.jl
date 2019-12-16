@@ -1,7 +1,8 @@
 module TwoDimensionalTests
 
 using TwoDimensional
-using TwoDimensional: WeightedPoint, center, half, exterior, interior, area
+using TwoDimensional: WeightedPoint, half
+import TwoDimensional: distance
 using Test, LinearAlgebra
 import Base.MathConstants: φ
 
@@ -11,9 +12,6 @@ distance(a::T, b::T) where {T<:Real} = abs(a - b)
 
 distance(A::NTuple{2,Real}, B::NTuple{2,Real}) =
     hypot(A[1] - B[1], A[2] - B[2])
-
-distance(A::Point, B::Point) =
-    hypot(A.x - B.x, A.y - B.y)
 
 distance(A::AffineTransform, B::AffineTransform) =
     max(abs(A.xx - B.xx), abs(A.xy - B.xy), abs(A.x - B.x),
@@ -29,16 +27,20 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test Point(1,2) === Point(y=2, x=1)
         @test Point(CartesianIndex(7,8)) === Point(7,8)
         @test CartesianIndex(Point(2,3)) === CartesianIndex(2,3)
-        @test convert(CartesianIndex, Point(2,3)) === CartesianIndex(2,3)
-        @test convert(CartesianIndex{2}, Point(2,3)) === CartesianIndex(2,3)
-        @test convert(Tuple, Point(2,3)) === (2,3)
-        @test convert(Tuple{Float64,Int}, Point(2,3)) === (2.0,3)
+        #@test convert(CartesianIndex, Point(2,3)) === CartesianIndex(2,3)
+        #@test convert(CartesianIndex{2}, Point(2,3)) === CartesianIndex(2,3)
+        #@test convert(Tuple, Point(2,3)) === (2,3)
+        #@test convert(Tuple{Float64,Int}, Point(2,3)) === (2.0,3)
         @test Point(Tuple(P1)...) === P1
         @test Point(Tuple(P1)) === P1
         @test Point{Float32}(P1) === Float32.(P1)
         @test convert(Point, P1) === P1
         @test convert(Point{Float32}, P1) === Float32.(P1)
         @test Tuple(Point(0.0,1)) === (0.0,1.0)
+        @test nearest(Point(1.2,-0.7)) === Point(1.0,-1.0)
+        @test nearest(Point(1,-7)) === Point(1,-7)
+        @test nearest(Float32, Point(1,-7)) === Point{Float32}(1,-7)
+        @test nearest(Int32, Point(1,-7)) === Point{Int32}(1,-7)
         @test nearest(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test nearest(Point{Float64}, P1) === Point(map(round, Tuple(P1)))
         @test nearest(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
@@ -46,6 +48,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test hypot(P1) == hypot(P1.x, P1.y)
         @test atan(P1) == atan(P1.y, P1.x)
+        @test distance(P1, Point(0,0)) == hypot(P1)
     end
     @testset "Weighted points" begin
         P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
@@ -63,6 +66,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         B = BoundingBox(2,3,4,5)
         @test eltype(B) === Int
         @test BoundingBox(B) === B
+        @test BoundingBox(2,3,4,5.0) === BoundingBox(2.0,3.0,4.0,5.0)
         @test BoundingBox{eltype(B)}(B) === B
         @test BoundingBox{Float32}(B) === BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
         @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
@@ -85,7 +89,11 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test BoundingBox{Float32}(nothing) === BoundingBox{Float32}(Inf,-Inf,Inf,-Inf)
         @test typemin(BoundingBox{Float64}) === BoundingBox(Inf,-Inf,Inf,-Inf)
         @test typemax(BoundingBox{Float64}) === BoundingBox(-Inf,Inf,-Inf,Inf)
-
+        @test nearest(BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox(1.0,2.0,-4.0,8.0)
+        @test nearest(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
+        @test nearest(Int32, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
+        @test nearest(Int32, BoundingBox(1,2,-4,8)) === BoundingBox{Int32}(1,2,-4,8)
+        @test nearest(Float32, BoundingBox{Int32}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
         @test exterior(B) === B
         @test exterior(B + 0.1) === B + 1.0
         @test interior(B) === B
@@ -190,7 +198,9 @@ end
             @test eltype(T1(A)*T2(B)) == T
         end
         for v in vectors
+            @test distance(compose(A,B,C)(v), A(B(C(v)))) ≤ tol
             @test distance((A*B*C)(v), A(B(C(v)))) ≤ tol
+            @test distance(compose(A,C,B,C)(v), A(C(B(C(v))))) ≤ tol
             @test distance((A*C*B*C)(v), A(C(B(C(v))))) ≤ tol
         end
     end
