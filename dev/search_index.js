@@ -197,7 +197,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Points",
     "title": "Operations on Points",
     "category": "section",
-    "text": "The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates:Point(x1,y1) + Point(x2,y2)   # yields Point(x1+x2,y1+y2)\nPoint(x1,y1) - Point(x2,y2)   # yields Point(x1-x2,y1-y2)Unary minus of a point negates its coordinates:-Point(x,y)   # yields Point(-x,-y)A point may be multiplied or divided by a scalar, say α, to scale its coordinates:α*Point(x,y)  # yields Point(α*x,α*y)\nPoint(x,y)*α  # yields Point(α*x,α*y)\nα\\Point(x,y)  # yields Point((1/α)*x,(1/α)*y)\nPoint(x,y)/α  # yields Point((1/α)*x,(1/α)*y)Taking the hypothenuse or the arctangent of a point P = Point(x,y) yield its distance to the origin O = Point(0,0) and the angle between OP and the abscissa axis:hypot(Point(x,y))  # yields hypot(x, y)\natan(Point(x,y))   # yields atan(y, x)The distance between two points is given by the distance method:distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)The nearest point to an instance obj of Point is given by:nearest([T,] obj)which rounds the coordinates of obj to the nearest integer.  Optional argument T is to specify the type of the result or the type of the coordinates of the result."
+    "text": "The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates:Point(x1,y1) + Point(x2,y2)   # yields Point(x1+x2,y1+y2)\nPoint(x1,y1) - Point(x2,y2)   # yields Point(x1-x2,y1-y2)Unary minus of a point negates its coordinates:-Point(x,y)   # yields Point(-x,-y)A point may be multiplied or divided by a scalar, say α, to scale its coordinates:α*Point(x,y)  # yields Point(α*x,α*y)\nPoint(x,y)*α  # yields Point(α*x,α*y)\nα\\Point(x,y)  # yields Point((1/α)*x,(1/α)*y)\nPoint(x,y)/α  # yields Point((1/α)*x,(1/α)*y)Taking the hypothenuse or the arctangent of a point P = Point(x,y) yield its distance to the origin O = Point(0,0) and the angle between OP and the abscissa axis:hypot(Point(x,y))  # yields hypot(x, y)\natan(Point(x,y))   # yields atan(y, x)The distance between two points is given by the distance method:distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)The nearest point to an instance obj of Point is given by:round([T,] obj)which rounds the coordinates of obj to the nearest integer.  Optional argument T is to specify the type of the result or the type of the coordinates of the result."
 },
 
 {
@@ -253,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Interrior, Exterior, Nearest, etc.",
     "category": "section",
-    "text": "Methods interior and exterior can be applied to a bounding box to respectively yield the largest interior and smallest exterior bounding boxes with integer bounds.The round and nearest methods can be applied to a bounding box to round its limits to the nearest integer values.The center method yields the Point whose coordinates are the geometrical center of a bounding-box.The area method yields the area of a bounding-box."
+    "text": "Methods interior and exterior can be applied to a bounding box to respectively yield the largest interior and smallest exterior bounding boxes with integer bounds.The round method can be applied to a bounding box to round its limits to the nearest integer values.The center method yields the Point whose coordinates are the geometrical center of a bounding-box.The area method yields the area of a bounding-box."
 },
 
 {
@@ -373,7 +373,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.distance",
     "category": "function",
-    "text": "distance(A, B)\n\nyields the Euclidean distance between 2 points A and B.\n\n\n\n\n\n"
+    "text": "distance(A, B)\n\nyields the Euclidean distance between the 2 points A and B.\n\n\n\n\n\n"
 },
 
 {
@@ -433,11 +433,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/#TwoDimensional.nearest",
+    "location": "reference/#Base.round-Tuple{Point}",
     "page": "Reference",
-    "title": "TwoDimensional.nearest",
-    "category": "function",
-    "text": "nearest([T,] obj)\n\nyields the object that is the nearest to obj by rounding its coordinates to the nearest integer.  Argument T can be the type of the result (a point or a bounding box) or the type of the coordinates of the result.\n\n\n\n\n\n"
+    "title": "Base.round",
+    "category": "method",
+    "text": "round([T,] obj)\n\nyields the object that is the nearest to obj by rounding its coordinates to the nearest integer.  Argument T can be the type of the result (a point or a bounding box) or the type of the coordinates of the result.\n\n\n\n\n\n"
 },
 
 {
@@ -445,7 +445,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Methods",
     "category": "section",
-    "text": "nearest"
+    "text": "round(::Point)"
 },
 
 ]}
