@@ -66,6 +66,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test floor(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
         @test floor(Point(-1.7,3.2)) === Point(-2.0,3.0)
         @test floor(Int, Point(-1.7,3.2)) === Point(-2,3)
+        @test floor(Float32, Point(-1,3)) === Point{Float32}(-1,3)
         @test floor(Point{Float32}, Point(-1.7,3.2)) === Point{Float32}(-2,3)
         # ceil
         @test ceil(Point(-1,3)) === Point(-1,3)
@@ -75,6 +76,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test ceil(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
         @test ceil(Point(-1.7,3.2)) === Point(-1.0,4.0)
         @test ceil(Int, Point(-1.7,3.2)) === Point(-1,4)
+        @test ceil(Float32, Point(-1,3)) === Point{Float32}(-1,3)
         @test ceil(Point{Float32}, Point(-1.7,3.2)) === Point{Float32}(-1,4)
         # other methods
         @test hypot(P1) == hypot(P1.x, P1.y)
@@ -104,6 +106,7 @@ distance(A::AffineTransform, B::AffineTransform) =
             @test promote_type(BoundingBox{T1}, BoundingBox{T2}) === BoundingBox{promote_type(T1,T2)}
         end
         B = BoundingBox(2,3,4,5)
+        δ = 0.1
         @test eltype(B) === Int
         @test BoundingBox(B) === B
         @test BoundingBox(2,3,4,5.0) === BoundingBox(2.0,3.0,4.0,5.0)
@@ -157,6 +160,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test BoundingBox{Float32}(nothing) === BoundingBox{Float32}(Inf,-Inf,Inf,-Inf)
         @test typemin(BoundingBox{Float64}) === BoundingBox(Inf,-Inf,Inf,-Inf)
         @test typemax(BoundingBox{Float64}) === BoundingBox(-Inf,Inf,-Inf,Inf)
+        # round
         @test round(BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox(1.0,2.0,-4.0,8.0)
         @test round(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
         @test round(Int, BoundingBox(1,2,-3,7)) === BoundingBox(1,2,-3,7)
@@ -164,20 +168,27 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test round(Int32, BoundingBox(1,2,-4,8)) === BoundingBox{Int32}(1,2,-4,8)
         @test round(Float32, BoundingBox{Int32}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
         @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) === BoundingBox{Float32}(1,3,-5,8)
+        # exterior
         @test exterior(B) === B
         @test exterior(Int, B) === B
+        @test exterior(Int16, B) === BoundingBox{Int16}(B)
+        @test exterior(Float32, B) === BoundingBox{Float32}(B)
         @test exterior(BoundingBox{Int}, B) === B
-        @test exterior(B + 0.1) === B + 1.0
-        @test exterior(Int, B + 0.1) === B + 1
+        @test exterior(B + δ) === B + 1.0
+        @test exterior(Int, B + δ) === B + 1
         @test exterior(BoundingBox{Int}, B) === BoundingBox{Int}(exterior(B))
-
+        @test exterior(Float32, B + δ) === BoundingBox{Float32}(exterior(B + δ))
+        # interior
         @test interior(B) === B
         @test interior(Int, B) === B
+        @test interior(Int16, B) === BoundingBox{Int16}(B)
+        @test interior(Float32, B) === BoundingBox{Float32}(B)
         @test interior(BoundingBox{Int}, B) === B
-        @test interior(B + 0.1) === Float64.(B)
-        @test interior(Int, B - 0.1) === B - 1
+        @test interior(B + δ) === Float64.(B)
+        @test interior(Int, B - δ) === B - 1
         @test interior(BoundingBox{Int}, B) === BoundingBox{Int}(interior(B))
-
+        @test interior(Float32, B + δ) === BoundingBox{Float32}(interior(B + δ))
+        # other methods
         @test area(BoundingBox(2,4,5,8)) == 6
         @test area(BoundingBox(2.0,4.0,5.0,8.0)) == 6.0
 
