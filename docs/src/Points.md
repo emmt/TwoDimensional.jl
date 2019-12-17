@@ -144,3 +144,6 @@ round([T,] obj)
 which rounds the coordinates of `obj` to the nearest integer.  Optional
 argument `T` is to specify the type of the result or the type of the
 coordinates of the result.
+
+Similarly, `floor([T,],P)` and `ceil([T,],P)` yield the point with integer
+coordinates immediately (inclusively) before and after [`Point`](@ref) `P`.

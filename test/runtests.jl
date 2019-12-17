@@ -46,6 +46,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test convert(Point, P1) === P1
         @test convert(Point{Float32}, P1) === Float32.(P1)
         @test Tuple(Point(0.0,1)) === (0.0,1.0)
+        # round
         @test round(Point(1.2,-0.7)) === Point(1.0,-1.0)
         @test round(Point(1,-7)) === Point(1,-7)
         @test round(Float32, Point(1,-7)) === Point{Float32}(1,-7)
@@ -57,6 +58,25 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
+        # floor
+        @test floor(Point(-1,3)) === Point(-1,3)
+        @test floor(Int, Point(-1,3)) === Point(-1,3)
+        @test floor(Point{Int}, Point(-1,3)) === Point(-1,3)
+        @test floor(Int16, Point(-1,3)) === Point{Int16}(-1,3)
+        @test floor(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
+        @test floor(Point(-1.7,3.2)) === Point(-2.0,3.0)
+        @test floor(Int, Point(-1.7,3.2)) === Point(-2,3)
+        @test floor(Point{Float32}, Point(-1.7,3.2)) === Point{Float32}(-2,3)
+        # ceil
+        @test ceil(Point(-1,3)) === Point(-1,3)
+        @test ceil(Int, Point(-1,3)) === Point(-1,3)
+        @test ceil(Point{Int}, Point(-1,3)) === Point(-1,3)
+        @test ceil(Int16, Point(-1,3)) === Point{Int16}(-1,3)
+        @test ceil(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
+        @test ceil(Point(-1.7,3.2)) === Point(-1.0,4.0)
+        @test ceil(Int, Point(-1.7,3.2)) === Point(-1,4)
+        @test ceil(Point{Float32}, Point(-1.7,3.2)) === Point{Float32}(-1,4)
+        # other methods
         @test hypot(P1) == hypot(P1.x, P1.y)
         @test atan(P1) == atan(P1.y, P1.x)
         @test distance(P1, Point(0,0)) == hypot(P1)

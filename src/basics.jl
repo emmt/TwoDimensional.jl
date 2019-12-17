@@ -151,49 +151,101 @@ yields the object that is the nearest to `obj` by rounding its coordinates to
 the nearest integer.  Argument `T` can be the type of the result (a point or a
 bounding-box) or the type of the coordinates of the result.
 
-See also: [`interior`](@ref), [`exterior`](@ref).
+For points, see also: [`floor`](@ref), [`ceil`](@ref).
+
+For bounding-boxes, see also: [`interior`](@ref), [`exterior`](@ref).
 
 """
-Base.round(::Type{Point{T}}, obj::Point) where {T} = round(T, obj)
-Base.round(::Type{BoundingBox{T}}, obj::BoundingBox) where {T} = round(T, obj)
-
 Base.round(obj::Point{T}) where {T} = round(T, obj)
-Base.round(obj::BoundingBox{T}) where {T} = round(T, obj)
-
+Base.round(::Type{Point{T}}, obj::Point) where {T} = round(T, obj)
 Base.round(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
 Base.round(::Type{T}, obj::Point{T}) where {T<:Real} =
     Point(round(obj.x, RoundNearest),
           round(obj.y, RoundNearest))
+Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
+    Point{T}(obj)
+Base.round(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
+    Point(round(T, obj.x, RoundNearest),
+          round(T, obj.y, RoundNearest))
+Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
+    Point{T}(obj)
+Base.round(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
+    Point{T}(round(U, obj))
+
+# Extend round for bounding-boxes.
+Base.round(obj::BoundingBox{T}) where {T} = round(T, obj)
+Base.round(::Type{BoundingBox{T}}, obj::BoundingBox) where {T} = round(T, obj)
 Base.round(::Type{T}, obj::BoundingBox{T}) where {T<:Integer} = obj
 Base.round(::Type{T}, obj::BoundingBox{T}) where {T<:Real} =
     BoundingBox(round(obj.xmin, RoundNearest),
                 round(obj.xmax, RoundNearest),
                 round(obj.ymin, RoundNearest),
                 round(obj.ymax, RoundNearest))
-
-Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
-    Point{T}(obj)
 Base.round(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Integer} =
     BoundingBox{T}(obj)
-
-Base.round(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
-    Point(round(T, obj.x, RoundNearest),
-          round(T, obj.y, RoundNearest))
 Base.round(::Type{T}, obj::BoundingBox{<:Real}) where {T<:Integer} =
     BoundingBox(round(T, obj.xmin, RoundNearest),
                 round(T, obj.xmax, RoundNearest),
                 round(T, obj.ymin, RoundNearest),
                 round(T, obj.ymax, RoundNearest))
-
-Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
-    Point{T}(obj)
 Base.round(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Real} =
     BoundingBox{T}(obj)
+Base.round(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
+    BoundingBox{T}(round(U, obj))
 
-Base.round(::Type{T}, obj::Point{S}) where {T<:Real,S<:Real} =
-    Point{T}(round(S, obj))
-Base.round(::Type{T}, obj::BoundingBox{S}) where {T<:Real,S<:Real} =
-    BoundingBox{T}(round(S, obj))
+"""
+
+```julia
+floor([T,] P)
+```
+
+yields the point with the largest integer coordinates smaller or equal those of
+the point `P`.  Argument `T` can be the type of the result or the type of the
+coordinates of the result.
+
+See also: [`round`](@ref), [`ceil`](@ref).
+
+"""
+Base.floor(obj::Point{T}) where {T} = floor(T, obj)
+Base.floor(::Type{Point{T}}, obj::Point) where {T} = floor(T, obj)
+Base.floor(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
+Base.floor(::Type{T}, obj::Point{T}) where {T<:Real} =
+    Point(floor(obj.x), floor(obj.y))
+Base.floor(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
+    Point{T}(obj)
+Base.floor(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
+    Point(floor(T, obj.x), floor(T, obj.y))
+Base.floor(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
+    Point{T}(obj)
+Base.floor(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
+    Point{T}(floor(U, obj))
+
+"""
+
+```julia
+ceil([T,] P)
+```
+
+yields the point with the smallest integer coordinates larger or equal those of
+the point `P`.  Argument `T` can be the type of the result or the type of the
+coordinates of the result.
+
+See also: [`round`](@ref), [`floor`](@ref).
+
+"""
+Base.ceil(obj::Point{T}) where {T} = ceil(T, obj)
+Base.ceil(::Type{Point{T}}, obj::Point) where {T} = ceil(T, obj)
+Base.ceil(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
+Base.ceil(::Type{T}, obj::Point{T}) where {T<:Real} =
+    Point(ceil(obj.x), ceil(obj.y))
+Base.ceil(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
+    Point{T}(obj)
+Base.ceil(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
+    Point(ceil(T, obj.x), ceil(T, obj.y))
+Base.ceil(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
+    Point{T}(obj)
+Base.ceil(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
+    Point{T}(ceil(U, obj))
 
 # Methods hypot() and atan() yield the polar coordinates of a point.
 Base.hypot(P::Point) = hypot(P.x, P.y)
@@ -365,8 +417,8 @@ interior(::Type{T}, obj::BoundingBox{<:Real}) where {T<:Integer} =
                 ceil(T, obj.ymin), floor(T, obj.ymax))
 interior(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Real} =
     BoundingBox{T}(obj)
-interior(::Type{T}, obj::BoundingBox{S}) where {T<:Real,S<:Real} =
-    BoundingBox{T}(interior(S, obj))
+interior(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
+    BoundingBox{T}(interior(U, obj))
 
 """
 
@@ -394,8 +446,8 @@ exterior(::Type{T}, obj::BoundingBox{<:Real}) where {T<:Integer} =
                 floor(T, obj.ymin), ceil(T, obj.ymax))
 exterior(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Real} =
     BoundingBox{T}(obj)
-exterior(::Type{T}, obj::BoundingBox{S}) where {T<:Real,S<:Real} =
-    BoundingBox{T}(exterior(S, obj))
+exterior(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
+    BoundingBox{T}(exterior(U, obj))
 
 """
 
