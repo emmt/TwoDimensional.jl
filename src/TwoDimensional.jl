@@ -27,7 +27,6 @@ export
     intercept,
     interior,
     jacobian,
-    nearest,
     rotate,
     scale,
     translate
@@ -80,7 +79,6 @@ export
     intercept,
     interior,
     jacobian,
-    nearest,
     rotate,
     scale,
     translate
@@ -97,7 +95,6 @@ import ..TwoDimensional:
     intercept,
     interior,
     jacobian,
-    nearest,
     rotate,
     scale,
     translate

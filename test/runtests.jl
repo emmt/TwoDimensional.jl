@@ -42,15 +42,15 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test convert(Point, P1) === P1
         @test convert(Point{Float32}, P1) === Float32.(P1)
         @test Tuple(Point(0.0,1)) === (0.0,1.0)
-        @test nearest(Point(1.2,-0.7)) === Point(1.0,-1.0)
-        @test nearest(Point(1,-7)) === Point(1,-7)
-        @test nearest(Float32, Point(1,-7)) === Point{Float32}(1,-7)
-        @test nearest(Float32, Point(1.0,-7.6)) === Point{Float32}(1,-8)
-        @test nearest(Int32, Point(1,-7)) === Point{Int32}(1,-7)
-        @test nearest(Int, Point(1.2,-0.7)) === Point(1,-1)
-        @test nearest(Int, Point(1,-4)) === Point(1,-4)
-        @test nearest(Point{Float64}, P1) === Point(map(round, Tuple(P1)))
-        @test nearest(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
+        @test round(Point(1.2,-0.7)) === Point(1.0,-1.0)
+        @test round(Point(1,-7)) === Point(1,-7)
+        @test round(Float32, Point(1,-7)) === Point{Float32}(1,-7)
+        @test round(Float32, Point(1.0,-7.6)) === Point{Float32}(1,-8)
+        @test round(Int32, Point(1,-7)) === Point{Int32}(1,-7)
+        @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
+        @test round(Int, Point(1,-4)) === Point(1,-4)
+        @test round(Point{Float64}, P1) === Point(map(round, Tuple(P1)))
+        @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test hypot(P1) == hypot(P1.x, P1.y)
@@ -102,12 +102,13 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test BoundingBox{Float32}(nothing) === BoundingBox{Float32}(Inf,-Inf,Inf,-Inf)
         @test typemin(BoundingBox{Float64}) === BoundingBox(Inf,-Inf,Inf,-Inf)
         @test typemax(BoundingBox{Float64}) === BoundingBox(-Inf,Inf,-Inf,Inf)
-        @test nearest(BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox(1.0,2.0,-4.0,8.0)
-        @test nearest(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
-        @test nearest(Int, BoundingBox(1,2,-3,7)) === BoundingBox(1,2,-3,7)
-        @test nearest(Int32, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
-        @test nearest(Int32, BoundingBox(1,2,-4,8)) === BoundingBox{Int32}(1,2,-4,8)
-        @test nearest(Float32, BoundingBox{Int32}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
+        @test round(BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox(1.0,2.0,-4.0,8.0)
+        @test round(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
+        @test round(Int, BoundingBox(1,2,-3,7)) === BoundingBox(1,2,-3,7)
+        @test round(Int32, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
+        @test round(Int32, BoundingBox(1,2,-4,8)) === BoundingBox{Int32}(1,2,-4,8)
+        @test round(Float32, BoundingBox{Int32}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
+        @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) === BoundingBox{Float32}(1,3,-5,8)
         @test exterior(B) === B
         @test exterior(B + 0.1) === B + 1.0
         @test exterior(BoundingBox{Int}, B) === BoundingBox{Int}(exterior(B))
@@ -167,7 +168,7 @@ end
     types = (BigFloat, Float64, Float32, Float16)
 
     @testset "construction/conversion" begin
-        @test_deprecated BigFloat(A)
+        @test_deprecated BigFloat(A) === BigFloat.(A)
         @test_deprecated Float32(A) === Float32.(A)
         @test AffineTransform(A) === A
         @test AffineTransform{eltype(A)}(A) === A
@@ -249,8 +250,8 @@ end
         end
         for T1 in types, T2 in types
             T = promote_type(T1, T2)
-            @test eltype(T1(A)/T2(B)) == T
-            @test eltype(T1(A)\T2(B)) == T
+            @test eltype(T1.(A)/T2.(B)) == T
+            @test eltype(T1.(A)\T2.(B)) == T
         end
     end
 

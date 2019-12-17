@@ -135,10 +135,10 @@ The distance between two points is given by the [`distance`](@ref) method:
 distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)
 ```
 
-The [`nearest`](@ref) point to an instance `obj` of `Point` is given by:
+The nearest point to an instance `obj` of [`Point`](@ref) is given by:
 
 ```julia
-nearest([T,] obj)
+round([T,] obj)
 ```
 
 which rounds the coordinates of `obj` to the nearest integer.  Optional

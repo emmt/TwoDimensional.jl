@@ -40,5 +40,5 @@ exterior
 ## Methods
 
 ```@docs
-nearest
+round(::Point)
 ```

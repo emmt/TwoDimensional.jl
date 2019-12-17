@@ -174,8 +174,8 @@ Methods [`interior`](@ref) and [`exterior`](@ref) can be applied to a bounding
 box to respectively yield the largest interior and smallest exterior bounding
 boxes with integer bounds.
 
-The `round` and [`nearest`](@ref) methods can be applied to a bounding box to
-round its limits to the nearest integer values.
+The [`round`](@ref round) method can be applied to a bounding box to round its
+limits to the nearest integer values.
 
 The [`center`](@ref) method yields the `Point` whose coordinates are the
 geometrical center of a bounding-box.
