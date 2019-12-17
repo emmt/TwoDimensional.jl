@@ -31,6 +31,9 @@ You can also fine tune what you want.  For instance:
 using TwoDimensional: AffineTransform, Point2D
 ```
 
+Latest documentation is
+[here](https://emmt.github.io/TwoDimensional.jl/latest).
+
 
 ## Installation
 
