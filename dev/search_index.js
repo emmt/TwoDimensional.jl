@@ -17,6 +17,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "#Exported-Types-1",
+    "page": "Introduction",
+    "title": "Exported Types",
+    "category": "section",
+    "text": "using TwoDimensionalgives you types AffineTransform{T}, Point{T} and BoundingBox{T} parameterized by the type T of their components (T must be floating point for AffineTransform{T}).To avoid conflicts with other packages, you may use/import TwoDimensional.Suffixed which gives you types AffineTransform2D{T}, Point2D{T} and BoundingBox2D{T} instead, that is with suffix 2D.You can also fine tune what you want.  For instance:using TwoDimensional: AffineTransform, Point2D"
+},
+
+{
     "location": "#Table-of-contents-1",
     "page": "Introduction",
     "title": "Table of contents",
@@ -229,7 +237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Construction",
     "category": "section",
-    "text": "The coordinates of a bounding box can be specified by keywords:BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)There are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.A bounding box can be constructed from a 4-tuple of coordinates and conversely:BoundingBox((x0,x1,y0,y1))      # yields BoundingBox(x0,x1,y0,y1)\nTuple(BoundingBox(x0,x1,y0,y1)) # yields (x0,x1,y0,y1)A bounding box can be constructed from its first and last points (i.e. at the lower-left and upper right opposite corners) specified as instances of Point or of CartesianIndex:BoundingBox(Point(x0,y0), Point(x1,y1))\nBoundingBox(CartesianIndex(x0,y0), CartesianIndex(x1,y1))both yield the same result as:BoundingBox(x0,x1,y0,y1)Integer-valued unit-ranges can be specified to define a bounding box.  For example:BoundingBox(x0:x1,y0:y1)    # 2 unit-range\nBoundingBox((x0:x1,y0:y1))  # a 2-tuple of unit rangeThis makes possible writing:BoundingBox(axes(A))to get the bounding box corresponding to all indices of array A which is also given by:BoundingBox(A)Conversely:axes(BoundingBox(x0,x1,y0,y1))yields the axes of a bounding-box with integer coordinates, that is (x0:x1,y0:y1).  To get the k-th axis of a bounding-box B, call axes(B,k).To loop over the Cartesian indices edfined by a bounding-box B with integer coordinates, you can just write:for I in CartesianIndices(B)\n   ...\nendA bounding box may also be constructed by applying a predicate function to the elements of a 2-dimensional array:BoundingBox(f, A)yields the bounding box of all integer coordinates (x,y) such that f(A[x,y]) yields true."
+    "text": "The coordinates of a bounding box can be specified by keywords:BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)There are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.A bounding box can be constructed from a 4-tuple of coordinates and conversely:BoundingBox((x0,x1,y0,y1))      # yields BoundingBox(x0,x1,y0,y1)\nTuple(BoundingBox(x0,x1,y0,y1)) # yields (x0,x1,y0,y1)A bounding box can be constructed from its first and last points (i.e. at the lower-left and upper right opposite corners) specified as instances of Point or of CartesianIndex:BoundingBox(Point(x0,y0), Point(x1,y1))\nBoundingBox(CartesianIndex(x0,y0), CartesianIndex(x1,y1))both yield the same result as:BoundingBox(x0,x1,y0,y1)Conversely, methods first(B) and last(B) respectively yield the lower left and upper right corners of the bounding-box B (as a Point instance):first(BoundingBox(x0,x1,y0,y1)) # yields Point(x0,y0)\nlast(BoundingBox(x0,x1,y0,y1))  # yields Point(x1,y1)Integer-valued unit-ranges can be specified to define a bounding box.  For example:BoundingBox(x0:x1,y0:y1)    # 2 unit-range\nBoundingBox((x0:x1,y0:y1))  # a 2-tuple of unit rangeThis makes possible writing:BoundingBox(axes(A))to get the bounding box corresponding to all indices of array A which is also given by:BoundingBox(A)Conversely:axes(BoundingBox(x0,x1,y0,y1))yields the axes of a bounding-box with integer coordinates, that is (x0:x1,y0:y1).  To get the k-th axis of a bounding-box B, call axes(B,k).To loop over the Cartesian indices edfined by a bounding-box B with integer coordinates, you can just write:for I in CartesianIndices(B)\n   ...\nendA bounding box may also be constructed by applying a predicate function to the elements of a 2-dimensional array:BoundingBox(f, A)yields the bounding box of all integer coordinates (x,y) such that f(A[x,y]) yields true."
 },
 
 {
@@ -245,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Union and Intersection of Bounding-Boxes",
     "category": "section",
-    "text": "The union of bounding boxes b1, b2, ... is given by one of:B1 ∪ B2 ∪ ...\nunion(B1, B2, ...)wich both yield the smallest bounding box containing the bounding boxes B1, B2, ...The intersection of bounding boxes B1, B2, ... is given by one of:B1 ∩ B2 ∩ ...\nintersect(B1, B2, ...)wich both yield the largest bounding box contained into the bounding boxes B1, B2, ...The maximal or minimal bounding-box with coordinates of type T that can be constructed are respectively given by typemax(BoundingBox{T}) and typemin(BoundingBox{T}).  These can be useful to initiate a shrinking ar a growing bounding-box.  The call:BoundingBox{T}(nothing)yields the same result as typemin(BoundingBox{T})."
+    "text": "The union of bounding boxes b1, b2, ... is given by one of:B1 ∪ B2 ∪ ...\nunion(B1, B2, ...)wich both yield the smallest bounding box containing the bounding boxes B1, B2, ...The intersection of bounding boxes B1, B2, ... is given by one of:B1 ∩ B2 ∩ ...\nintersect(B1, B2, ...)wich both yield the largest bounding box contained into the bounding boxes B1, B2, ...The maximal or minimal bounding-box with coordinates of type T that can be constructed are respectively given by typemax(BoundingBox{T}) and typemin(BoundingBox{T}).  These can be useful to initiate a shrinking ar a growing bounding-box.  The call:BoundingBox{T}(nothing)yields the same result as typemin(BoundingBox{T}).The method isempty(B) yields whether a bounding-box B is empty or not."
 },
 
 {
@@ -253,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Interrior, Exterior, Nearest, etc.",
     "category": "section",
-    "text": "Methods interior and exterior can be applied to a bounding box to respectively yield the largest interior and smallest exterior bounding boxes with integer bounds.The round method can be applied to a bounding box to round its limits to the nearest integer values.The center method yields the Point whose coordinates are the geometrical center of a bounding-box.The area method yields the area of a bounding-box."
+    "text": "Given the bounding-box B, interior(B) and exterior(B) respectively yield the largest interior and smallest exterior bounding boxes with integer bounds.round(B) or round(T,B) yield a bounding box whose limits are those of the bounding-box B rounded to the nearest integer values.center(B) yields the Point whose coordinates are the geometrical center of the bounding-box B.area(B) yields the area of a bounding-box B."
 },
 
 {
@@ -261,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Arithmetic and Basic Methods",
     "category": "section",
-    "text": "Adding or subtracting a scalar δ to a bounding box B can be used to add or remove a margin δ to the bounding box B:BoundingBox(x0,x1,y0,y1) + δ # yields BoundingBox(x0-δ,x1+δ,y0-δ,y1+δ)Adding or subtracting a point P to a bounding box B can be used to shift the bounding box B:BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)eltype(B) yields the type of the coordinates of a bounding-box B.Methods first(B) and last(B) respectively yield the lower left and upper right corners of the bounding-box B (as a Point instance).The method isempty(B) can be used to check whether a bounding-box B is empty or not."
+    "text": "Adding or subtracting a scalar δ to a bounding box B can be used to add or remove a margin δ to the bounding box B:BoundingBox(x0,x1,y0,y1) + δ # yields BoundingBox(x0-δ,x1+δ,y0-δ,y1+δ)Adding or subtracting a point P to a bounding box B can be used to shift the bounding box B:BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)eltype(B) yields the type of the coordinates of a bounding-box B.Basic methods size(B[,k]) and axes(B[,k]) can be applied to an integer-valued bounding-box B."
 },
 
 {
@@ -389,7 +397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.BoundingBox",
     "category": "type",
-    "text": "BoundingBox(xmin,xmax,ymin,ymax) yields an instance of a 2D rectangular bounding box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.  The box is empty if xmin > xmax or ymin > ymax.\n\nA bounding box can be constructed from the first and last points (i.e. at the lower-left and upper right opposite corners) of the box:\n\nBoundingBox(P0::Point, P1::Point)\nBoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})\n\nCoordinates can be specified by keywords:\n\nBoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)\n\nThere are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.\n\nSee also Point, interior, exterior.\n\n\n\n\n\n"
+    "text": "BoundingBox(xmin,xmax,ymin,ymax) yields an instance of a 2D rectangular bounding-box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.  The box is empty if xmin > xmax or ymin > ymax.\n\nA bounding-box can be constructed from the first and last points (i.e. at the lower-left and upper right opposite corners) of the box:\n\nBoundingBox(P0::Point, P1::Point)\nBoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})\n\nCoordinates can be specified by keywords:\n\nBoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)\n\nThere are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.\n\nSee also Point, interior, exterior.\n\n\n\n\n\n"
 },
 
 {
@@ -397,7 +405,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.area",
     "category": "function",
-    "text": "area(B) yields the area of the bounding box B.\n\n\n\n\n\n"
+    "text": "area(B) yields the area of the bounding-box B.\n\n\n\n\n\n"
 },
 
 {
@@ -405,7 +413,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.center",
     "category": "function",
-    "text": "center(B::BoundingBox) -> c::Point\n\nyields the central point of the bounding box B.\n\n\n\n\n\n"
+    "text": "center(B::BoundingBox) -> c::Point\n\nyields the central point of the bounding-box B.\n\n\n\n\n\n"
 },
 
 {
@@ -413,7 +421,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.interior",
     "category": "function",
-    "text": "interior([BoundingBox{T},] B::BoundingBox) yields the largest bounding box with integer valued bounds which is contained by box B.  Optional first argument is to specify the type of the result which is that of B by default.\n\n\n\n\n\n"
+    "text": "interior([T,] B)\n\nyields the largest bounding -box with integer valued bounds which is contained by the bounding-box B.  Optional argument T is to specify the type of the result or of the coordinates of the result which is the same as B by default.\n\nSee also: exterior, round.\n\n\n\n\n\n"
 },
 
 {
@@ -421,7 +429,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.exterior",
     "category": "function",
-    "text": "exterior([BoundingBox{T},] B::BoundingBox) yields the smallest boundingbox box with integer valued bounds which contains box B.  Optional first argument is to specify the type of the result which is that of B by default.\n\n\n\n\n\n"
+    "text": "exterior([T,] B)\n\nyields the smallest bounding-box with integer valued bounds which contains the bounding-box B.  Optional argument T is to specify the type of the result or of the coordinates of the result which is the same as B by default.\n\nSee also: interior, round.\n\n\n\n\n\n"
 },
 
 {
@@ -437,7 +445,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Base.round",
     "category": "method",
-    "text": "round([T,] obj)\n\nyields the object that is the nearest to obj by rounding its coordinates to the nearest integer.  Argument T can be the type of the result (a point or a bounding box) or the type of the coordinates of the result.\n\n\n\n\n\n"
+    "text": "round([T,] obj)\n\nyields the object that is the nearest to obj by rounding its coordinates to the nearest integer.  Argument T can be the type of the result (a point or a bounding-box) or the type of the coordinates of the result.\n\nSee also: interior, exterior.\n\n\n\n\n\n"
 },
 
 {
@@ -446,6 +454,54 @@ var documenterSearchIndex = {"docs": [
     "title": "Methods",
     "category": "section",
     "text": "round(::Point)"
+},
+
+{
+    "location": "reference/#TwoDimensional.AbstractPoint2D",
+    "page": "Reference",
+    "title": "TwoDimensional.AbstractPoint2D",
+    "category": "type",
+    "text": "AffineTransform{T} is an alias for TwoDimensional.AbstractPoint{T}.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.Point2D",
+    "page": "Reference",
+    "title": "TwoDimensional.Point2D",
+    "category": "type",
+    "text": "Point2D{T} is an alias for TwoDimensional.Point{T}.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.WeightedPoint2D",
+    "page": "Reference",
+    "title": "TwoDimensional.WeightedPoint2D",
+    "category": "type",
+    "text": "WeightedPoint2D{T} is an alias for TwoDimensional.WeightedPoint{T}.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.BoundingBox2D",
+    "page": "Reference",
+    "title": "TwoDimensional.BoundingBox2D",
+    "category": "type",
+    "text": "BoundingBox2D{T} is an alias for TwoDimensional.BoundingBox{T}.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#TwoDimensional.AffineTransform2D",
+    "page": "Reference",
+    "title": "TwoDimensional.AffineTransform2D",
+    "category": "type",
+    "text": "AffineTransform2D{T} is an alias for TwoDimensional.AffineTransform{T}.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#Aliases-1",
+    "page": "Reference",
+    "title": "Aliases",
+    "category": "section",
+    "text": "AbstractPoint2D\nPoint2D\nWeightedPoint2D\nBoundingBox2D\nAffineTransform2D"
 },
 
 ]}
