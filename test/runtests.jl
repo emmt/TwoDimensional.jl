@@ -77,8 +77,30 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test BoundingBox(2,3,4,5.0) === BoundingBox(2.0,3.0,4.0,5.0)
         @test BoundingBox{eltype(B)}(B) === B
         @test BoundingBox{Float32}(B) === BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
+        @test convert(BoundingBox, B) === B
+        @test convert(BoundingBox{Int}, B) === B
         @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
         @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) === BoundingBox(2,4,3,5)
+        @test first(B) === Point(B.xmin,B.ymin)
+        @test last(B) === Point(B.xmax,B.ymax)
+        @test isempty(typemax(BoundingBox{Int})) == false
+        @test isempty(typemin(BoundingBox{Float64})) == true
+        @test BoundingBox{Float32}(nothing) === typemin(BoundingBox{Float32})
+        @test size(BoundingBox{Int32}(nothing)) === (0,0)
+        Rx, Ry = 3:7, -6:-3
+        B = BoundingBox(Rx,Ry)
+        @test size(B) === (length(Rx),length(Ry))
+        @test size(BoundingBox{Int32}(B)) === size(B)
+        @test axes(B) === (Rx,Ry)
+        @test axes(BoundingBox{Int32}(B)) === (Rx,Ry)
+        for k in (1,2)
+            @test size(B, k) === size(B)[k]
+            @test axes(B, k) === axes(B)[k]
+            @test size(BoundingBox{Int32}(B), k) === size(B)[k]
+            @test axes(BoundingBox{Int32}(B), k) === axes(B)[k]
+        end
+        @test size(B,40) === 1
+        @test_throws ErrorException size(B, 0)
         B1 = BoundingBox(2,3,4,5)
         B2 = BoundingBox(1.1,3.2,4.5,5.8)
         B3 = BoundingBox{Float32}(1.1,3.2,4.5,5.8)
@@ -89,6 +111,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test BoundingBox(rand(5,7)) === BoundingBox(1,5, 1,7)
         @test BoundingBox(-2:6,8:11) === BoundingBox(-2,6, 8,11)
         @test BoundingBox((2:4,-1:7)) === BoundingBox(2,4, -1,7)
+        @test CartesianIndices(BoundingBox(2:4,-1:7)) === CartesianIndices((2:4,-1:7))
         A = ones(7,8)
         A[1:2,:] .= 0
         A[4,:] .= 0
@@ -122,6 +145,15 @@ distance(A::AffineTransform, B::AffineTransform) =
         C = Point(x = 0.5*(B.xmin + B.xmax), y = 0.5*(B.ymin + B.ymax))
         @test center(B) === C
         @test center(BoundingBox{Float64}(B)) === C
+        B1 = BoundingBox(-2:6, -7:-1)
+        B2 = BoundingBox(1:8, -9:3)
+        @test B1 ∪ B2 === BoundingBox(-2:8, -9:3)
+        @test B1 ∩ B2 === BoundingBox(1:6, -7:-1)
+        A = rand(7,8)
+        X, Y = 2:4, 1:3
+        B = BoundingBox(X, Y)
+        @test A[X,Y] == A[B]
+        @test view(A,X,Y) === view(A, B)
     end
     @testset "Arithmetic" begin
         @test half(Float64) == 0.5
