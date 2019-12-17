@@ -277,7 +277,7 @@ Base.convert(::Type{T}, obj::BoundingBox) where {T<:BoundingBox} = T(obj)
 Base.first(B::BoundingBox) = Point(B.xmin, B.ymin)
 Base.last(B::BoundingBox) = Point(B.xmax, B.ymax)
 
-Base.isempty(B::BoundingBox{<:Integer}) = ((B.xmin > B.xmax)|(B.ymin > B.ymax))
+Base.isempty(B::BoundingBox) = ((B.xmin > B.xmax)|(B.ymin > B.ymax))
 
 Base.size(B::BoundingBox{Int}) =
     (isempty(B) ? (0, 0) : (B.xmax - B.xmin + 1,
