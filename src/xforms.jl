@@ -156,6 +156,10 @@ Broadcast.broadcasted(::Type{T}, A::AffineTransform) where {T<:AbstractFloat} =
     AffineTransform{T}(A)
 
 Base.convert(::Type{T}, A::AffineTransform) where {T<:AffineTransform} = T(A)
+Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{U}}) where {T,U} =
+    AffineTransform{promote_type(T,U)}
+Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{T}}) where {T} =
+    AffineTransform{T}
 
 @deprecate(Float16(A::AffineTransform),  AffineTransform{Float16}(A))
 @deprecate(Float32(A::AffineTransform),  AffineTransform{Float32}(A))
@@ -396,13 +400,16 @@ It is possible to compose more than two affine transforms.  For instance,
 """
 compose(A::AffineTransform) = A
 
-compose(A::AffineTransform{T}, B::AffineTransform{T}) where {T} =
+compose(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} =
     AffineTransform{T}(A.xx*B.xx + A.xy*B.yx,
                        A.xx*B.xy + A.xy*B.yy,
                        A.xx*B.x  + A.xy*B.y + A.x,
                        A.yx*B.xx + A.yy*B.yx,
                        A.yx*B.xy + A.yy*B.yy,
                        A.yx*B.x  + A.yy*B.y + A.y)
+
+compose(A::AffineTransform, B::AffineTransform) =
+    compose(promote(A, B)...)
 
 compose(A::AffineTransform, B::AffineTransform, C::AffineTransform, args::AffineTransform...) =
     compose(compose(A, B), C, args...)
@@ -413,7 +420,7 @@ compose(A::AffineTransform, B::AffineTransform, C::AffineTransform, args::Affine
 transform `A` by the affine transform `B`.
 
 """
-rightdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T} = begin
+rightdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} = begin
     Δ = det(B)
     Δ == zero(T) && error("right operand is not invertible")
     α = one(T)/Δ
@@ -426,11 +433,14 @@ rightdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T} = begin
 
 end
 
+rightdivide(A::AffineTransform, B::AffineTransform) =
+    rightdivide(promote(A, B)...)
+
 """
 `leftdivide(A,B)` yields `A\\B`, the left division of the affine
 transform `A` by the affine transform `B`.
 """
-leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T} = begin
+leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} = begin
     Δ = det(B)
     Δ == zero(T) && error("left operand is not invertible")
     α = one(T)/Δ
@@ -448,13 +458,8 @@ leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T} = begin
                        Tyx*Tx   + Tyy*Ty)
 end
 
-for func in (:compose, :rightdivide, :leftdivide)
-    @eval function $func(A::AffineTransform{Ta},
-                         B::AffineTransform{Tb}) where {Ta,Tb}
-        T = promote_type(Ta, Tb)
-        $func(AffineTransform{T}(A), AffineTransform{T}(B))
-    end
-end
+leftdivide(A::AffineTransform, B::AffineTransform) =
+    leftdivide(promote(A, B)...)
 
 """
 

@@ -19,6 +19,10 @@ distance(A::AffineTransform, B::AffineTransform) =
 
 @testset "Points and bounding-boxes" begin
     @testset "Simple points" begin
+        types = (Int8, Int32, Int64, Float32, Float64)
+        for T1 in types, T2 in types
+            @test promote_type(Point{T1}, Point{T2}) === Point{promote_type(T1,T2)}
+        end
         P1 = Point(1, 1.3)
         @test eltype(P1) == Float64
         @test Point(P1) === P1
@@ -59,6 +63,10 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test distance(Point(0x02,0x05), Point(0x00,0x00)) == hypot(0x02,0x05)
     end
     @testset "Weighted points" begin
+        types = (Float32, Float64)
+        for T1 in types, T2 in types
+            @test promote_type(WeightedPoint{T1}, WeightedPoint{T2}) === WeightedPoint{promote_type(T1,T2)}
+        end
         P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
         @test eltype(P2) == Float64
         @test WeightedPoint(P2) === P2
@@ -71,6 +79,10 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test WeightedPoint(Point(3.1,4.2)) === WeightedPoint(w=1, x=3.1, y=4.2)
     end
     @testset "Bounding boxes" begin
+        types = (Int8, Int32, Int64, Float32, Float64)
+        for T1 in types, T2 in types
+            @test promote_type(BoundingBox{T1}, BoundingBox{T2}) === BoundingBox{promote_type(T1,T2)}
+        end
         B = BoundingBox(2,3,4,5)
         @test eltype(B) === Int
         @test BoundingBox(B) === B
@@ -133,10 +145,17 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test round(Float32, BoundingBox{Int32}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
         @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) === BoundingBox{Float32}(1,3,-5,8)
         @test exterior(B) === B
+        @test exterior(Int, B) === B
+        @test exterior(BoundingBox{Int}, B) === B
         @test exterior(B + 0.1) === B + 1.0
+        @test exterior(Int, B + 0.1) === B + 1
         @test exterior(BoundingBox{Int}, B) === BoundingBox{Int}(exterior(B))
+
         @test interior(B) === B
+        @test interior(Int, B) === B
+        @test interior(BoundingBox{Int}, B) === B
         @test interior(B + 0.1) === Float64.(B)
+        @test interior(Int, B - 0.1) === B - 1
         @test interior(BoundingBox{Int}, B) === BoundingBox{Int}(interior(B))
 
         @test area(BoundingBox(2,4,5,8)) == 6
@@ -202,6 +221,9 @@ end
     @testset "construction/conversion" begin
         @test_deprecated BigFloat(A) === BigFloat.(A)
         @test_deprecated Float32(A) === Float32.(A)
+        for T1 in types, T2 in types
+            @test promote_type(AffineTransform{T1}, AffineTransform{T2}) === AffineTransform{promote_type(T1,T2)}
+        end
         @test AffineTransform(A) === A
         @test AffineTransform{eltype(A)}(A) === A
         for G in (I, A, B)
