@@ -46,20 +46,45 @@ import .AffineTransforms:
 #
 # Define some aliases with a 2D suffix to avoid conflicts with other packages.
 #
+
+"""
+
+`AffineTransform{T}` is an alias for [`TwoDimensional.AbstractPoint{T}`](@ref
+AbstractPoint).
+
+""" AbstractPoint2D
 const AbstractPoint2D{T} = AbstractPoint{T}
-@doc @doc(AbstractPoint) AbstractPoint2D
 
+"""
+
+`Point2D{T}` is an alias for [`TwoDimensional.Point{T}`](@ref Point).
+
+""" Point2D
 const Point2D{T} = Point{T}
-@doc @doc(Point) Point2D
 
+"""
+
+`WeightedPoint2D{T}` is an alias for [`TwoDimensional.WeightedPoint{T}`](@ref
+WeightedPoint).
+
+""" WeightedPoint2D
 const WeightedPoint2D{T} = WeightedPoint{T}
-@doc @doc(WeightedPoint) WeightedPoint2D
 
+"""
+
+`BoundingBox2D{T}` is an alias for [`TwoDimensional.BoundingBox{T}`](@ref
+BoundingBox).
+
+""" BoundingBox2D
 const BoundingBox2D{T} = BoundingBox{T}
-@doc @doc(BoundingBox) BoundingBox2D
 
+"""
+
+`AffineTransform2D{T}` is an alias for
+[`TwoDimensional.AffineTransform{T}`](@ref AffineTransform).
+
+""" AffineTransform2D
 const AffineTransform2D{T} = AffineTransform{T}
-@doc @doc(AffineTransform) AffineTransform2D
 
 
 # The TwoDimensional.Suffixed can be imported/used instead of TwoDimensional to
@@ -84,9 +109,11 @@ export
     translate
 
 import ..TwoDimensional:
+    AbstractPoint2D,
     AffineTransform2D,
     BoundingBox2D,
     Point2D,
+    WeightedPoint2D,
     area,
     center,
     compose,

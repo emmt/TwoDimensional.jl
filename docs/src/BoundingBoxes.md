@@ -33,7 +33,8 @@ instead of:
 using TwoDimensional
 ```
 
-to have `BoundingBox2D` provided as an alias to `TwoDimensional.BoundingBox`.
+to have [`BoundingBox2D`](@ref BoundingBox2D) provided as an alias to
+[`TwoDimensional.BoundingBox`](@ref BoundingBox).
 
 
 ## Construction
@@ -67,6 +68,15 @@ both yield the same result as:
 
 ```julia
 BoundingBox(x0,x1,y0,y1)
+```
+
+Conversely, methods `first(B)` and `last(B)` respectively yield the lower left
+and upper right corners of the bounding-box `B` (as a [`Point`](@ref)
+instance):
+
+```julia
+first(BoundingBox(x0,x1,y0,y1)) # yields Point(x0,y0)
+last(BoundingBox(x0,x1,y0,y1))  # yields Point(x1,y1)
 ```
 
 Integer-valued unit-ranges can be specified to define a bounding box.  For
@@ -167,20 +177,23 @@ BoundingBox{T}(nothing)
 
 yields the same result as `typemin(BoundingBox{T})`.
 
+The method `isempty(B)` yields whether a bounding-box `B` is empty or not.
+
 
 ## Interrior, Exterior, Nearest, etc.
 
-Methods [`interior`](@ref) and [`exterior`](@ref) can be applied to a bounding
-box to respectively yield the largest interior and smallest exterior bounding
-boxes with integer bounds.
+Given the bounding-box `B`, [`interior(B)`](@ref interior) and
+[`exterior(B)`](@ref exterior) respectively yield the largest interior and
+smallest exterior bounding boxes with integer bounds.
 
-The [`round`](@ref round) method can be applied to a bounding box to round its
-limits to the nearest integer values.
+[`round(B)`](@ref round) or [`round(T,B)`](@ref round) yield a bounding box
+whose limits are those of the bounding-box `B` rounded to the nearest integer
+values.
 
-The [`center`](@ref) method yields the `Point` whose coordinates are the
-geometrical center of a bounding-box.
+[`center(B)`](@ref center) yields the `Point` whose coordinates are the
+geometrical center of the bounding-box `B`.
 
-The [`area`](@ref) method yields the area of a bounding-box.
+[`area(B)`](@ref area) yields the area of a bounding-box `B`.
 
 
 ## Arithmetic and Basic Methods
@@ -201,8 +214,5 @@ BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)
 
 `eltype(B)` yields the type of the coordinates of a bounding-box `B`.
 
-Methods `first(B)` and `last(B)` respectively yield the lower left and upper
-right corners of the bounding-box `B` (as a [`Point`](@ref) instance).
-
-The method `isempty(B)` can be used to check whether a bounding-box `B` is
-empty or not.
+Basic methods `size(B[,k])` and `axes(B[,k])` can be applied to an
+**integer-valued** bounding-box `B`.

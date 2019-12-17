@@ -42,3 +42,13 @@ exterior
 ```@docs
 round(::Point)
 ```
+
+## Aliases
+
+```@docs
+AbstractPoint2D
+Point2D
+WeightedPoint2D
+BoundingBox2D
+AffineTransform2D
+```
