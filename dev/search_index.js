@@ -197,7 +197,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Points",
     "title": "Conversion",
     "category": "section",
-    "text": "Simple points can be constructed from a 2-tuple of coordinates or from an instance of 2-dimensional CartesianIndex:v = (x,y)\nI = Cartesianindex(x,y)\nPoint(v)    # yields Point(x,y)\nPoint(I)    # yields Point(x,y)and reciprocally:P = Point(x, y)\nTuple(P)          # yields (P.x, P.y)\nCartesianIndex(P) # yields Cartesianindex(P.x, P.y)Coordinate type conversion, say to type T, is done by:P = Point(x, y)\nPoint{T}(P)\nconvert(Point{T}, P)\nT.(P)The latter form involves broadcasting rules and may be a bit slower."
+    "text": "Simple points can be constructed from a 2-tuple of coordinates or from an instance of 2-dimensional CartesianIndex:v = (x,y)\nI = CartesianIndex(x,y)\nPoint(v)    # yields Point(x,y)\nPoint(I)    # yields Point(x,y)and reciprocally, assuming P = Point(x,y):Tuple(P)          # yields the 2-tuple (P.x, P.y)\nCartesianIndex(P) # yields CartesianIndex(P.x, P.y)Coordinate type conversion, say to type T, for a point P = Point(x,y) is done by:Point{T}(P)\nconvert(Point{T}, P)\nT.(P)The latter form involves broadcasting rules and may be a bit slower."
 },
 
 {
