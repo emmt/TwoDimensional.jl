@@ -69,23 +69,22 @@ instance of 2-dimensional `CartesianIndex`:
 
 ```julia
 v = (x,y)
-I = Cartesianindex(x,y)
+I = CartesianIndex(x,y)
 Point(v)    # yields Point(x,y)
 Point(I)    # yields Point(x,y)
 ```
 
-and reciprocally:
+and reciprocally, assuming `P = Point(x,y)`:
 
 ```julia
-P = Point(x, y)
-Tuple(P)          # yields (P.x, P.y)
-CartesianIndex(P) # yields Cartesianindex(P.x, P.y)
+Tuple(P)          # yields the 2-tuple (P.x, P.y)
+CartesianIndex(P) # yields CartesianIndex(P.x, P.y)
 ```
 
-Coordinate type conversion, say to type `T`, is done by:
+Coordinate type conversion, say to type `T`, for a point `P = Point(x,y)` is
+done by:
 
 ```julia
-P = Point(x, y)
 Point{T}(P)
 convert(Point{T}, P)
 T.(P)
