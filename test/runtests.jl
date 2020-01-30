@@ -143,7 +143,7 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test promote(B1, B2, B3) === (Float64.(B1),B2,Float64.(B3))
         @test BoundingBox(Tuple(B)...) === B
         @test BoundingBox(Tuple(B)) === B
-        @test BoundingBox(rand(5,7)) === BoundingBox(1,5, 1,7)
+        @test_deprecated BoundingBox(ones(5,7)) === BoundingBox(1,5, 1,7)
         @test BoundingBox(-2:6,8:11) === BoundingBox(-2,6, 8,11)
         @test BoundingBox((2:4,-1:7)) === BoundingBox(2,4, -1,7)
         @test CartesianIndices(BoundingBox(2:4,-1:7)) === CartesianIndices((2:4,-1:7))
@@ -152,11 +152,13 @@ distance(A::AffineTransform, B::AffineTransform) =
         A[4,:] .= 0
         A[end,:] .= 0
         @test BoundingBox(x -> x > 0, A) === BoundingBox(3,6, 1,8)
+        @test BoundingBox(A .> 0) === BoundingBox(3,6, 1,8)
         A[:,1] .= 0
         A[:3:4] .= 0
         A[:,end-1:end] .= 0
         A[2,2] = 1
         @test BoundingBox(x -> x > 0, A) === BoundingBox(2,6, 2,6)
+        @test BoundingBox(A .> 0) === BoundingBox(2,6, 2,6)
         @test BoundingBox{Float32}(nothing) === BoundingBox{Float32}(Inf,-Inf,Inf,-Inf)
         @test typemin(BoundingBox{Float64}) === BoundingBox(Inf,-Inf,Inf,-Inf)
         @test typemax(BoundingBox{Float64}) === BoundingBox(-Inf,Inf,-Inf,Inf)

@@ -294,20 +294,21 @@ Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{U}}) where {T,U} =
 Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{T}}) where {T} =
     BoundingBox{T}
 
-BoundingBox(A::AbstractMatrix) = BoundingBox(axes(A))
+@deprecate BoundingBox(A::AbstractMatrix) BoundingBox(axes(A))
+BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
+
 BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
     BoundingBox(inds[1], inds[2])
 BoundingBox(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) =
     BoundingBox(Int(first(X)), Int(last(X)), Int(first(Y)), Int(last(Y)))
 
-# FIXME: speed-up stupid algorithm!
 function BoundingBox(f::Function, A::AbstractMatrix)
-    inds = axes(A)
+    I, J = axes(A)
     imin = typemax(Int)
     imax = typemin(Int)
     jmin = typemax(Int)
     jmax = typemin(Int)
-    for j in inds[2], i in inds[1]
+    @inbounds for j in J, i in I
         if f(A[i,j])
             imin = min(imin, i)
             imax = max(imax, i)

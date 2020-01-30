@@ -93,14 +93,7 @@ This makes possible writing:
 BoundingBox(axes(A))
 ```
 
-to get the bounding box corresponding to all indices of array `A` which is also
-given by:
-
-```julia
-BoundingBox(A)
-```
-
-Conversely:
+to get the bounding box corresponding to all indices of array `A`.  Conversely:
 
 ```julia
 axes(BoundingBox(x0,x1,y0,y1))
@@ -127,7 +120,8 @@ BoundingBox(f, A)
 ```
 
 yields the bounding box of all integer coordinates `(x,y)` such that
-`f(A[x,y])` yields `true`.
+`f(A[x,y])` yields `true`.  If the elements of `A` are booleans (of type
+`Bool`), then `BoundingBox(A)` is equivalent to `BoundingBox(identity,A)`.
 
 
 ## Conversion
