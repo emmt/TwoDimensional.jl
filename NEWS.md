@@ -2,6 +2,12 @@
 
 ## Version 0.2.0
 
+### New functionalities and improvements
+
+- The bounding box algorithm has been largely improved.  Except for very small
+  matrices, it is much faster than the former naive implementation.
+
+
 ### Changes of behavior
 
 - `BoundingBox(A)` is no longer equivalent to `BoundingBox(axes(A))` for a

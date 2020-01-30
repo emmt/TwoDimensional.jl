@@ -1,7 +1,7 @@
 module TwoDimensionalTests
 
 using TwoDimensional
-using TwoDimensional: WeightedPoint, half
+using TwoDimensional: WeightedPoint, half, getaxisbounds
 import TwoDimensional: distance
 using Test, LinearAlgebra
 import Base.MathConstants: φ
@@ -17,11 +17,37 @@ distance(A::AffineTransform, B::AffineTransform) =
     max(abs(A.xx - B.xx), abs(A.xy - B.xy), abs(A.x - B.x),
         abs(A.yx - B.yx), abs(A.yy - B.yy), abs(A.y - B.y))
 
+function randomize!(A::Matrix{Bool}, bits::Int)
+    @inbounds @simd for i in eachindex(A)
+        A[i] = (bits&1) == 1
+        bits >>= 1
+    end
+    return A
+end
+
+# Naive implementation of the bounding box algorithm.
+naiveboundingbox(A::AbstractMatrix{Bool}) = naiveboundingbox(identity, A)
+function naiveboundingbox(f::Function, A::AbstractMatrix)
+    I, J = axes(A)
+    imin = jmin = typemax(Int)
+    imax = jmax = typemin(Int)
+    @inbounds for j in J, i in I
+        if f(A[i,j])
+            imin = min(imin, i)
+            imax = max(imax, i)
+            jmin = min(jmin, j)
+            jmax = max(jmax, j)
+        end
+    end
+    return BoundingBox(imin, imax, jmin, jmax)
+end
+
 @testset "Points and bounding-boxes" begin
     @testset "Simple points" begin
         types = (Int8, Int32, Int64, Float32, Float64)
         for T1 in types, T2 in types
-            @test promote_type(Point{T1}, Point{T2}) === Point{promote_type(T1,T2)}
+            @test promote_type(Point{T1}, Point{T2}) ===
+                Point{promote_type(T1,T2)}
         end
         P1 = Point(1, 1.3)
         @test eltype(P1) == Float64
@@ -87,7 +113,8 @@ distance(A::AffineTransform, B::AffineTransform) =
     @testset "Weighted points" begin
         types = (Float32, Float64)
         for T1 in types, T2 in types
-            @test promote_type(WeightedPoint{T1}, WeightedPoint{T2}) === WeightedPoint{promote_type(T1,T2)}
+            @test promote_type(WeightedPoint{T1}, WeightedPoint{T2}) ===
+                WeightedPoint{promote_type(T1,T2)}
         end
         P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
         @test eltype(P2) == Float64
@@ -98,12 +125,14 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test WeightedPoint(Tuple(P2)...) === P2
         @test WeightedPoint(Tuple(P2)) === P2
         @test WeightedPoint{Float32}(P2) === Float32.(P2)
-        @test WeightedPoint(Point(3.1,4.2)) === WeightedPoint(w=1, x=3.1, y=4.2)
+        @test WeightedPoint(Point(3.1,4.2)) ===
+            WeightedPoint(w=1, x=3.1, y=4.2)
     end
     @testset "Bounding boxes" begin
         types = (Int8, Int32, Int64, Float32, Float64)
         for T1 in types, T2 in types
-            @test promote_type(BoundingBox{T1}, BoundingBox{T2}) === BoundingBox{promote_type(T1,T2)}
+            @test promote_type(BoundingBox{T1}, BoundingBox{T2}) ===
+                BoundingBox{promote_type(T1,T2)}
         end
         B = BoundingBox(2,3,4,5)
         δ = 0.1
@@ -111,11 +140,13 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test BoundingBox(B) === B
         @test BoundingBox(2,3,4,5.0) === BoundingBox(2.0,3.0,4.0,5.0)
         @test BoundingBox{eltype(B)}(B) === B
-        @test BoundingBox{Float32}(B) === BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
+        @test BoundingBox{Float32}(B) ===
+            BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
         @test convert(BoundingBox, B) === B
         @test convert(BoundingBox{Int}, B) === B
         @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
-        @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) === BoundingBox(2,4,3,5)
+        @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) ===
+            BoundingBox(2,4,3,5)
         @test first(B) === Point(B.xmin,B.ymin)
         @test last(B) === Point(B.xmax,B.ymax)
         @test isempty(typemax(BoundingBox{Int})) == false
@@ -146,30 +177,43 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test_deprecated BoundingBox(ones(5,7)) === BoundingBox(1,5, 1,7)
         @test BoundingBox(-2:6,8:11) === BoundingBox(-2,6, 8,11)
         @test BoundingBox((2:4,-1:7)) === BoundingBox(2,4, -1,7)
-        @test CartesianIndices(BoundingBox(2:4,-1:7)) === CartesianIndices((2:4,-1:7))
-        A = ones(7,8)
-        A[1:2,:] .= 0
-        A[4,:] .= 0
-        A[end,:] .= 0
-        @test BoundingBox(x -> x > 0, A) === BoundingBox(3,6, 1,8)
-        @test BoundingBox(A .> 0) === BoundingBox(3,6, 1,8)
-        A[:,1] .= 0
-        A[:3:4] .= 0
-        A[:,end-1:end] .= 0
-        A[2,2] = 1
-        @test BoundingBox(x -> x > 0, A) === BoundingBox(2,6, 2,6)
-        @test BoundingBox(A .> 0) === BoundingBox(2,6, 2,6)
-        @test BoundingBox{Float32}(nothing) === BoundingBox{Float32}(Inf,-Inf,Inf,-Inf)
+        @test CartesianIndices(BoundingBox(2:4,-1:7)) ===
+            CartesianIndices((2:4,-1:7))
+        @test getaxisbounds(9:13) === (9,13)
+        @test getaxisbounds(13:9) === (13,12)
+        @test getaxisbounds(13:-1:9) === (9,13)
+        @test_throws ArgumentError getaxisbounds(13:-2:9)
+        let A = ones(7,8)
+            A[1:2,:] .= 0
+            A[4,:] .= 0
+            A[end,:] .= 0
+            @test BoundingBox(x -> x > 0, A) === BoundingBox(3,6, 1,8)
+            @test BoundingBox(A .> 0) === BoundingBox(3,6, 1,8)
+            A[:,1] .= 0
+            A[:3:4] .= 0
+            A[:,end-1:end] .= 0
+            A[2,2] = 1
+            @test BoundingBox(x -> x > 0, A) === BoundingBox(2,6, 2,6)
+            @test BoundingBox(A .> 0) === BoundingBox(2,6, 2,6)
+        end
+        @test BoundingBox{Float32}(nothing) ===
+            BoundingBox{Float32}(Inf,-Inf,Inf,-Inf)
         @test typemin(BoundingBox{Float64}) === BoundingBox(Inf,-Inf,Inf,-Inf)
         @test typemax(BoundingBox{Float64}) === BoundingBox(-Inf,Inf,-Inf,Inf)
         # round
-        @test round(BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox(1.0,2.0,-4.0,8.0)
-        @test round(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
+        @test round(BoundingBox(1.1,2.1,-3.6,7.7)) ===
+            BoundingBox(1.0,2.0,-4.0,8.0)
+        @test round(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) ===
+            BoundingBox{Int32}(1,2,-4,8)
         @test round(Int, BoundingBox(1,2,-3,7)) === BoundingBox(1,2,-3,7)
-        @test round(Int32, BoundingBox(1.1,2.1,-3.6,7.7)) === BoundingBox{Int32}(1,2,-4,8)
-        @test round(Int32, BoundingBox(1,2,-4,8)) === BoundingBox{Int32}(1,2,-4,8)
-        @test round(Float32, BoundingBox{Int32}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
-        @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) === BoundingBox{Float32}(1,3,-5,8)
+        @test round(Int32, BoundingBox(1.1,2.1,-3.6,7.7)) ===
+            BoundingBox{Int32}(1,2,-4,8)
+        @test round(Int32, BoundingBox(1,2,-4,8)) ===
+            BoundingBox{Int32}(1,2,-4,8)
+        @test round(Float32, BoundingBox{Int32}(1,2,-4,8)) ===
+            BoundingBox{Float32}(1,2,-4,8)
+        @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) ===
+            BoundingBox{Float32}(1,3,-5,8)
         # exterior
         @test exterior(B) === B
         @test exterior(Int, B) === B
@@ -179,7 +223,8 @@ distance(A::AffineTransform, B::AffineTransform) =
         @test exterior(B + δ) === B + 1.0
         @test exterior(Int, B + δ) === B + 1
         @test exterior(BoundingBox{Int}, B) === BoundingBox{Int}(exterior(B))
-        @test exterior(Float32, B + δ) === BoundingBox{Float32}(exterior(B + δ))
+        @test exterior(Float32, B + δ) ===
+            BoundingBox{Float32}(exterior(B + δ))
         # interior
         @test interior(B) === B
         @test interior(Int, B) === B
@@ -206,6 +251,56 @@ distance(A::AffineTransform, B::AffineTransform) =
         B = BoundingBox(X, Y)
         @test A[X,Y] == A[B]
         @test view(A,X,Y) === view(A, B)
+    end
+    @testset "Bounding-box algorithm" begin
+        if true
+            # Exhaustively test all possibilities.
+            A = Array{Bool,2}(undef, (5,4))
+            n = (1 << length(A)) # number of possibilities
+            for bits in 0:n-1
+                randomize!(A, bits)
+                @test BoundingBox(A) === naiveboundingbox(A)
+            end
+        else
+            # Semi-exhaustive testing of the bounding box algorithm.
+            A = zeros(Bool, (7,8))
+            fill!(A,false)[1,3] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,true)[2:end-1,2:end-1] .= false
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[1,1] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[1,end] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[end,1] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[end,end] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[3,4] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            A[2,7] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            A[5,end] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[end,4] = true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[1,:] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[:,1] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[end,:] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[:,end] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[1,2:end-1] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[2:end-1,1] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[end,2:end-1] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+            fill!(A,false)[2:end-1,end] .= true
+            @test BoundingBox(A) === naiveboundingbox(A)
+        end
     end
     @testset "Arithmetic" begin
         @test half(Float64) == 0.5
@@ -255,7 +350,8 @@ end
         @test_deprecated BigFloat(A) === BigFloat.(A)
         @test_deprecated Float32(A) === Float32.(A)
         for T1 in types, T2 in types
-            @test promote_type(AffineTransform{T1}, AffineTransform{T2}) === AffineTransform{promote_type(T1,T2)}
+            @test promote_type(AffineTransform{T1}, AffineTransform{T2}) ===
+                AffineTransform{promote_type(T1,T2)}
         end
         @test AffineTransform(A) === A
         @test AffineTransform{eltype(A)}(A) === A
@@ -263,7 +359,8 @@ end
             @test eltype(G) == Float64
             for T in types
                 @test typeof(AffineTransform{T}(G)) == AffineTransform{T}
-                @test typeof(convert(AffineTransform{T}, G)) == AffineTransform{T}
+                @test typeof(convert(AffineTransform{T}, G)) ==
+                    AffineTransform{T}
                 @test eltype(AffineTransform{T}(G)) == T
                 @test eltype(T.(G)) == T
             end

@@ -302,21 +302,78 @@ BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
 BoundingBox(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) =
     BoundingBox(Int(first(X)), Int(last(X)), Int(first(Y)), Int(last(Y)))
 
+# See
+# https://stackoverflow.com/questions/9852159/calculate-bounding-box-of-arbitrary-pixel-based-drawing
+# for the basic ideas under the following algorithm.
 function BoundingBox(f::Function, A::AbstractMatrix)
     I, J = axes(A)
-    imin = typemax(Int)
-    imax = typemin(Int)
-    jmin = typemax(Int)
-    jmax = typemin(Int)
-    @inbounds for j in J, i in I
+    i0, i1 = getaxisbounds(I)
+    j0, j1 = getaxisbounds(J)
+    imin = jmin = typemax(Int)
+    imax = jmax = typemin(Int)
+    # Assuming column-major order, first start by scanning rows to narrow the
+    # subsequent searches long columns.
+    #
+    # 1. Find bottom bound `jmin` by scanning rows from bottom to top.
+    flag = false
+    @inbounds for j in j0:j1, i in i0:i1
         if f(A[i,j])
-            imin = min(imin, i)
-            imax = max(imax, i)
-            jmin = min(jmin, j)
-            jmax = max(jmax, j)
+            # This definitively set the value of `jmin` and gives limits for
+            # the other bounds.
+            imin = imax = i
+            jmin = jmax = j
+            flag = true
+            break
+        end
+    end
+    if flag
+        # 2. Find top bound `jmax` by scanning rows from top to bottom.  No
+        #    needs to go beyond `jmax+1`.
+        @inbounds for j in j1:-1:jmax+1, i in i0:i1
+            if f(A[i,j])
+                jmax = j
+                imin = min(imin, i)
+                imax = max(imax, i)
+                break
+            end
+        end
+        # 3. Find leftmost bound `imin` by scanning columns from left to right.
+        #    No needs to go beyond `imin-1`.
+        @inbounds for i in i0:imin-1, j in jmin:jmax
+            if f(A[i,j])
+                imin = i
+                imax = max(imax, i)
+                break
+            end
+        end
+        # 4. Find rightmost bound `imax` by scanning columns from right to
+        #    left.  No needs to go beyond `imax+1`.
+        @inbounds for i in i1:-1:imax+1, j in jmin:jmax
+            if f(A[i,j])
+                imax = i
+                break
+            end
         end
     end
     return BoundingBox(imin, imax, jmin, jmax)
+end
+
+"""
+```julia
+getaxisbounds(I) = (i0,i1)
+```
+
+yields the bounds `i0` and `i1` of index range `I` as a 2-tuple of `Int`'s and
+such that `i0:i1` represents the same indices as `I` (although not in the same
+order if `step(I) < 0`).  If `step(I)` is not equal to ±1, an `ArgumentError`
+exception is thrown.
+
+"""
+@inline function getaxisbounds(I::AbstractRange{<:Integer})
+    i0, i1, s = Int(first(I)), Int(last(I)), step(I)
+    return (s == +1 ? (i0,i1) :
+            s == -1 ? (i1,i0) :
+            throw(ArgumentError("expecting a range with a step equal to ±1")))
 end
 
 # Empty bounding and unlimited boxes.
