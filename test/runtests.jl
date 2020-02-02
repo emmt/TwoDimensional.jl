@@ -404,7 +404,7 @@ end
         end
         for T1 in types, T2 in types
             T = promote_type(T1, T2)
-            @test eltype(T1(A)*T2(B)) == T
+            @test eltype(T1.(A)*T2.(B)) == T
         end
         for v in vectors
             @test distance(compose(A,B,C)(v), A(B(C(v)))) ≤ tol
@@ -456,7 +456,7 @@ end
             T in types
             @test eltype(T(α)*G) == eltype(G)
             @test eltype(G*T(α)) == eltype(G)
-            H = T(G)
+            H = T.(G)
             @test eltype(α*H) == eltype(H)
             @test eltype(H*α) == eltype(H)
         end
@@ -482,7 +482,7 @@ end
             T in types
             @test eltype(T.(v) + G) == eltype(G)
             @test eltype(G + T.(v)) == eltype(G)
-            H = T(G)
+            H = T.(G)
             @test eltype(v + H) == eltype(H)
             @test eltype(H + v) == eltype(H)
         end
@@ -503,9 +503,9 @@ end
             T in types
             @test eltype(rotate(T(θ), G)) == eltype(G)
             @test eltype(rotate(G, T(θ))) == eltype(G)
-            H = T(G)
-            @test eltype(rotate(T(θ), H)) == eltype(H)
-            @test eltype(rotate(H, T(θ))) == eltype(H)
+            H = T.(G)
+            @test eltype(rotate(T.(θ), H)) == eltype(H)
+            @test eltype(rotate(H, T.(θ))) == eltype(H)
         end
     end
 
