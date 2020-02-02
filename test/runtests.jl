@@ -72,6 +72,11 @@ end
         @test convert(Point, P1) === P1
         @test convert(Point{Float32}, P1) === Float32.(P1)
         @test Tuple(Point(0.0,1)) === (0.0,1.0)
+        for T in (Float32, Int16)
+            @test zero(Point{T}) === Point(zero(T),zero(T))
+            @test one(Point{T}) === Point(one(T),one(T))
+            @test oneunit(Point{T}) === Point(oneunit(T),oneunit(T))
+        end
         # round
         @test round(Point(1.2,-0.7)) === Point(1.0,-1.0)
         @test round(Point(1,-7)) === Point(1,-7)
