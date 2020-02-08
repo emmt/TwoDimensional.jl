@@ -43,6 +43,13 @@ Point(x=xval, y=yval)
 
 There are no default values for keywords `x` and `y` so both must be specified.
 
+The coordinates of a `Point`, say `pnt`, can be retrieved as follows:
+
+```julia
+pnt.x  or  pnt[1]  ->  x
+pnt.y  or  pnt[2]  ->  y
+```
+
 See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
 
 """ Point
@@ -51,6 +58,11 @@ struct Point{T} <: AbstractPoint{T}
     x::T
     y::T
 end
+
+Base.getindex(obj::Point, i::Integer) =
+    (i == 1 ? obj.x :
+     i == 2 ? obj.y :
+     error("out of range index for `Point` object"))
 
 """
 
@@ -92,6 +104,15 @@ BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
 There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
 all must be specified.
 
+The coordinates of a `BoundingBox`, say `box`, can be retrieved as follows:
+
+```julia
+box.xmin  or  box[1]  ->  xmin
+box.xmax  or  box[2]  ->  xmax
+box.ymin  or  box[3]  ->  ymin
+box.ymax  or  box[4]  ->  ymax
+```
+
 See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
 """ BoundingBox
@@ -103,14 +124,34 @@ struct BoundingBox{T<:Real}
     ymax::T
 end
 
+Base.getindex(obj::BoundingBox, i::Integer) =
+    (i == 1 ? obj.xmin :
+     i == 2 ? obj.xmax :
+     i == 3 ? obj.ymin :
+     i == 4 ? obj.ymax :
+     error("out of range index for `BoundingBox` object"))
+
+# Allowed types to construct (or convert to) a point.
+const PointTypes = Union{AbstractPoint,NTuple{2,Real},CartesianIndex{2}}
+
 # Constructors of points and conversion to/from a Cartesian index.
 Point(P::Point) = P
 Point{T}(P::Point{T}) where {T} = P
-Point{T}(P::Point) where {T} = Point{T}(P.x, P.y)
+Point(P::AbstractPoint) = Point(P.x, P.y)
+Point{T}(P::AbstractPoint) where {T} = Point{T}(P.x, P.y)
 Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} = Point{promote_type(Tx,Ty)}(x, y)
 Point(; x::Real, y::Real) = Point(x, y)
+Point{T}(; x::Real, y::Real) where {T} = Point{T}(x, y)
 Point(I::CartesianIndex{2}) = Point(I[1], I[2])
+Point{T}(I::CartesianIndex{2}) where {T} = Point{T}(I[1], I[2])
 Point(P::NTuple{2,Real}) = Point(P[1], P[2])
+Point{T}(P::NTuple{2,Real}) where {T} = Point{T}(P[1], P[2])
+
+# Conversion to points (rely on constructors).
+Base.convert(::Type{T}, arg::T) where {T<:Point} = arg
+Base.convert(::Type{T}, arg::PointTypes) where {T<:Point} = T(arg)
+
+# Other basic methods.
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
 Base.Tuple(P::Point) = (P.x, P.y)
 Base.eltype(::AbstractPoint{T}) where {T} = T
@@ -140,9 +181,6 @@ Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{U}}) where {T,U
     WeightedPoint{promote_type(T,U)}
 Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} =
     WeightedPoint{T}
-
-# Conversion of points and rounding to nearest integer coordinates.
-Base.convert(::Type{T}, obj::AbstractPoint) where {T<:AbstractPoint} = T(obj)
 
 """
 
@@ -271,23 +309,70 @@ distance(A::Point{T}, B::Point{T}) where {T<:Unsigned} =
 distance(A::Point{T}, B::Point{T}) where {T<:Real} =
     hypot(B.x - A.x, B.y - A.y)
 
+# Allowed types to construct (or convert to) a bounding box.
+const BoundingBoxTypes = Union{BoundingBox,NTuple{2,AbstractPoint},
+                               NTuple{4,Real},NTuple{2,CartesianIndex{2}},
+                               NTuple{2,AbstractUnitRange{<:Integer}},
+                               CartesianIndices{2}}
+
 # Constructors of bounding-boxes and conversion.
 function BoundingBox(xmin::Txmin, xmax::Txmax,
                      ymin::Tymin, ymax::Tymax) where {Txmin,Txmax,Tymin,Tymax}
     T = promote_type(Txmin, Txmax, Tymin, Tymax)
     return BoundingBox{T}(xmin, xmax, ymin, ymax)
 end
+
 BoundingBox(; xmin::Real, xmax::Real, ymin::Real, ymax::Real) =
     BoundingBox(xmin, xmax, ymin, ymax)
+BoundingBox{T}(; xmin::Real, xmax::Real, ymin::Real, ymax::Real) where {T} =
+    BoundingBox{T}(xmin, xmax, ymin, ymax)
+
 BoundingBox(B::BoundingBox) = B
 BoundingBox{T}(B::BoundingBox{T}) where {T<:Real} = B
 BoundingBox{T}(B::BoundingBox) where {T<:Real} =
     BoundingBox{T}(B.xmin, B.xmax, B.ymin, B.ymax)
+
+BoundingBox(arg::NTuple{2,CartesianIndex}) = BoundingBox(arg...)
+BoundingBox{T}(arg::NTuple{2,CartesianIndex}) where {T} = BoundingBox{T}(arg...)
+
+BoundingBox(arg::NTuple{2,AbstractPoint}) = BoundingBox(arg...)
+BoundingBox{T}(arg::NTuple{2,AbstractPoint}) where {T} = BoundingBox{T}(arg...)
+
 BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
-    BoundingBox(I0[1], I1[1], I0[2], I1[2])
+    BoundingBox{Int}(I0, I1)
+BoundingBox{T}(I0::CartesianIndex{2}, I1::CartesianIndex{2}) where {T} =
+    BoundingBox{T}(I0[1], I1[1], I0[2], I1[2])
+
 BoundingBox(P0::AbstractPoint, P1::AbstractPoint) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
+BoundingBox{T}(P0::AbstractPoint, P1::AbstractPoint) where {T} =
+    BoundingBox{T}(P0.x, P1.x, P0.y, P1.y)
+
 BoundingBox(P::NTuple{4,Real}) = BoundingBox(P[1], P[2], P[3], P[4])
+BoundingBox{T}(P::NTuple{4,Real}) where {T} =
+    BoundingBox{T}(P[1], P[2], P[3], P[4])
+
+BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
+    BoundingBox(inds[1], inds[2])
+BoundingBox{T}(inds::NTuple{2,AbstractUnitRange{<:Integer}}) where {T} =
+    BoundingBox{T}(inds[1], inds[2])
+
+BoundingBox(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) =
+    BoundingBox{Int}(X, Y)
+BoundingBox{T}(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) where {T} =
+    BoundingBox{T}(first(X), last(X), first(Y), last(Y))
+
+BoundingBox(R::CartesianIndices{2}) = BoundingBox(first(R), last(R))
+BoundingBox{T}(R::CartesianIndices{2}) where {T} = BoundingBox{T}(first(R), last(R))
+
+@deprecate BoundingBox(A::AbstractMatrix) BoundingBox(axes(A))
+BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
+
+# Conversion to bounding-boxes (rely on constructors).
+Base.convert(::Type{T}, arg::T) where {T<:BoundingBox} = arg
+Base.convert(::Type{T}, arg::BoundingBoxTypes) where {T<:BoundingBox} = T(arg)
+
+# Other basic methods.
 Base.eltype(::BoundingBox{T}) where {T} = T
 Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
 Broadcast.broadcasted(::Type{T}, obj::BoundingBox) where {T<:Real} =
@@ -297,13 +382,6 @@ Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{U}}) where {T,U} =
 Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{T}}) where {T} =
     BoundingBox{T}
 
-@deprecate BoundingBox(A::AbstractMatrix) BoundingBox(axes(A))
-BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
-
-BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
-    BoundingBox(inds[1], inds[2])
-BoundingBox(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) =
-    BoundingBox(Int(first(X)), Int(last(X)), Int(first(Y)), Int(last(Y)))
 
 # See
 # https://stackoverflow.com/questions/9852159/calculate-bounding-box-of-arbitrary-pixel-based-drawing
@@ -389,10 +467,6 @@ Base.typemax(::Type{BoundingBox{T}}) where {T<:Real} =
 # Conversion of bounding-boxes to/from Cartesian indices.
 Base.CartesianIndices(B::BoundingBox{<:Integer}) =
     CartesianIndices((Int(B.xmin):Int(B.xmax), Int(B.ymin):Int(B.ymax)))
-
-# Conversion of bounding-boxes and rounding to nearest integer coordinates.
-Base.convert(::Type{T}, obj::T) where {T<:BoundingBox} = obj
-Base.convert(::Type{T}, obj::BoundingBox) where {T<:BoundingBox} = T(obj)
 
 # Lower left and upper right corners of a bounding-box.
 Base.first(B::BoundingBox) = Point(B.xmin, B.ymin)
