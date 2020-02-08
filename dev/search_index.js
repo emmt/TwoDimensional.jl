@@ -365,7 +365,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.Point",
     "category": "type",
-    "text": "Point(x,y)\n\nyields an instance of a 2D point of coordinates (x,y).\n\nA point may be multiplied or divided by a scalar to scale its coordinates.  The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates.\n\nCoordinates can be specified by keywords:\n\nPoint(x=xval, y=yval)\n\nThere are no default values for keywords x and y so both must be specified.\n\nSee also: WeightedPoint, AbstractPoint.\n\n\n\n\n\n"
+    "text": "Point(x,y)\n\nyields an instance of a 2D point of coordinates (x,y).\n\nA point may be multiplied or divided by a scalar to scale its coordinates.  The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates.\n\nCoordinates can be specified by keywords:\n\nPoint(x=xval, y=yval)\n\nThere are no default values for keywords x and y so both must be specified.\n\nThe coordinates of a Point, say pnt, can be retrieved as follows:\n\npnt.x  or  pnt[1]  ->  x\npnt.y  or  pnt[2]  ->  y\n\nSee also: WeightedPoint, AbstractPoint.\n\n\n\n\n\n"
 },
 
 {
@@ -397,7 +397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.BoundingBox",
     "category": "type",
-    "text": "BoundingBox(xmin,xmax,ymin,ymax) yields an instance of a 2D rectangular bounding-box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.  The box is empty if xmin > xmax or ymin > ymax.\n\nA bounding-box can be constructed from the first and last points (i.e. at the lower-left and upper right opposite corners) of the box:\n\nBoundingBox(P0::Point, P1::Point)\nBoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})\n\nCoordinates can be specified by keywords:\n\nBoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)\n\nThere are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.\n\nSee also Point, interior, exterior.\n\n\n\n\n\n"
+    "text": "BoundingBox(xmin,xmax,ymin,ymax) yields an instance of a 2D rectangular bounding-box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.  The box is empty if xmin > xmax or ymin > ymax.\n\nA bounding-box can be constructed from the first and last points (i.e. at the lower-left and upper right opposite corners) of the box:\n\nBoundingBox(P0::Point, P1::Point)\nBoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})\n\nCoordinates can be specified by keywords:\n\nBoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)\n\nThere are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.\n\nThe coordinates of a BoundingBox, say box, can be retrieved as follows:\n\nbox.xmin  or  box[1]  ->  xmin\nbox.xmax  or  box[2]  ->  xmax\nbox.ymin  or  box[3]  ->  ymin\nbox.ymax  or  box[4]  ->  ymax\n\nSee also Point, interior, exterior.\n\n\n\n\n\n"
 },
 
 {
