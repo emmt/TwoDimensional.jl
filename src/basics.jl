@@ -288,6 +288,12 @@ Base.ceil(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
 Base.ceil(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
     Point{T}(ceil(U, obj))
 
+function Base.clamp(P::Point{T1}, B::BoundingBox{T2}) where {T1,T2}
+    T = promote_type(T1, T2)
+    return Point{T}(clamp(T(P.x), T(B.xmin), T(B.xmax)),
+                    clamp(T(P.y), T(B.ymin), T(B.ymax)))
+end
+
 # Methods hypot() and atan() yield the polar coordinates of a point.
 Base.hypot(P::Point) = hypot(P.x, P.y)
 Base.atan(P::Point) = atan(P.y, P.x)

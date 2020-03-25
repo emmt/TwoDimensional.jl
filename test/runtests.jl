@@ -110,6 +110,7 @@ end
         @test ceil(Float32, Point(-1,3)) === Point{Float32}(-1,3)
         @test ceil(Point{Float32}, Point(-1.7,3.2)) === Point{Float32}(-1,4)
         # other methods
+        @test clamp(Point(-1.1, 6.3), BoundingBox(1,4,1,5)) === Point(1.0,5.0)
         @test hypot(P1) == hypot(P1.x, P1.y)
         @test atan(P1) == atan(P1.y, P1.x)
         @test distance(P1, Point(0,0)) == hypot(P1)
@@ -257,56 +258,6 @@ end
         @test A[X,Y] == A[B]
         @test view(A,X,Y) === view(A, B)
     end
-    @testset "Bounding-box algorithm" begin
-        if true
-            # Exhaustively test all possibilities.
-            A = Array{Bool,2}(undef, (5,4))
-            n = (1 << length(A)) # number of possibilities
-            for bits in 0:n-1
-                randomize!(A, bits)
-                @test BoundingBox(A) === naiveboundingbox(A)
-            end
-        else
-            # Semi-exhaustive testing of the bounding box algorithm.
-            A = zeros(Bool, (7,8))
-            fill!(A,false)[1,3] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,true)[2:end-1,2:end-1] .= false
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[1,1] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[1,end] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[end,1] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[end,end] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[3,4] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            A[2,7] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            A[5,end] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[end,4] = true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[1,:] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[:,1] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[end,:] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[:,end] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[1,2:end-1] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[2:end-1,1] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[end,2:end-1] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-            fill!(A,false)[2:end-1,end] .= true
-            @test BoundingBox(A) === naiveboundingbox(A)
-        end
-    end
     @testset "Arithmetic" begin
         @test half(Float64) == 0.5
         @test half(Float32) == one(Float32)/2
@@ -338,6 +289,57 @@ end
                                     ymin = B.ymin + t.y, ymax = B.ymax + t.y)
         @test B - t === BoundingBox(xmin = B.xmin - t.x, xmax = B.xmax - t.x,
                                     ymin = B.ymin - t.y, ymax = B.ymax - t.y)
+    end
+end
+
+@testset "Bounding-box algorithm" begin
+    if true
+        # Exhaustively test all possibilities.
+        A = Array{Bool,2}(undef, (5,4))
+        n = (1 << length(A)) # number of possibilities
+        for bits in 0:n-1
+            randomize!(A, bits)
+            @test BoundingBox(A) === naiveboundingbox(A)
+        end
+    else
+        # Semi-exhaustive testing of the bounding box algorithm.
+        A = zeros(Bool, (7,8))
+        fill!(A,false)[1,3] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,true)[2:end-1,2:end-1] .= false
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[1,1] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[1,end] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[end,1] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[end,end] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[3,4] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        A[2,7] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        A[5,end] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[end,4] = true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[1,:] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[:,1] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[end,:] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[:,end] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[1,2:end-1] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[2:end-1,1] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[end,2:end-1] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
+        fill!(A,false)[2:end-1,end] .= true
+        @test BoundingBox(A) === naiveboundingbox(A)
     end
 end
 
