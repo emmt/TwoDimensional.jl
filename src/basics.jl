@@ -382,7 +382,6 @@ Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{U}}) where {T,U} =
 Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{T}}) where {T} =
     BoundingBox{T}
 
-
 # See
 # https://stackoverflow.com/questions/9852159/calculate-bounding-box-of-arbitrary-pixel-based-drawing
 # for the basic ideas under the following algorithm.
@@ -614,9 +613,13 @@ Base.:(*)(α::Real, P::Point) = Point(α*P.x, α*P.y)
 Base.:(/)(P::Point, α::Real) = Point(P.x/α, P.y/α)
 Base.:(\)(α::Real, P::Point) = P/α
 
-# Unary minus applied to point negate coordinates.
+# Unary minus applied to a point negate coordinates.
 Base.:(-)(P::Point{<:Union{AbstractFloat,Signed,Irrational}}) =
     Point(-P.x, -P.y)
+
+# Unary minus applied to a bounding-box.
+Base.:(-)(B::BoundingBox{<:Union{AbstractFloat,Signed,Irrational}}) =
+    BoundingBox(-B.xmax, -B.xmin, -B.ymax, -B.ymin)
 
 # Addition and subtraction of point coordinates.
 Base.:(+)(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)

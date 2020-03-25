@@ -315,6 +315,7 @@ end
         @test 3\Point(3,4) === Point(3/3,4/3)
         @test Point(3,4)/3 === Point(3/3,4/3)
         @test -Point(2,-9) === Point(-2,9)
+        @test -BoundingBox(2,3,4,5) === BoundingBox(-3,-2,-5,-4)
         @test Point(2,-9) + Point(3,7) === Point(5,-2)
         @test Point(2,-9) - Point(3,7) === Point(-1,-16)
         α = 3
