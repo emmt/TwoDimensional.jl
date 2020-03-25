@@ -444,18 +444,18 @@ leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat
     Δ = det(B)
     Δ == zero(T) && error("left operand is not invertible")
     α = one(T)/Δ
-    Txx =  α*A.yy
-    Txy = -α*A.xy
-    Tyx = -α*A.yx
-    Tyy =  α*A.xx
+    Txx = α*A.yy
+    Txy = α*A.xy
+    Tyx = α*A.yx
+    Tyy = α*A.xx
     Tx = B.x - A.x
     Ty = B.y - A.y
-    AffineTransform{T}(Txx*B.xx + Txy*B.yx,
-                       Txx*B.xy + Txy*B.yy,
-                       Txx*Tx   + Txy*Ty,
-                       Tyx*B.xx + Tyy*B.yx,
-                       Tyx*B.xy + Tyy*B.yy,
-                       Tyx*Tx   + Tyy*Ty)
+    AffineTransform{T}(Txx*B.xx - Txy*B.yx,
+                       Txx*B.xy - Txy*B.yy,
+                       Txx*Tx   - Txy*Ty,
+                       Tyy*B.yx - Tyx*B.xx,
+                       Tyy*B.yy - Tyx*B.xy,
+                       Tyy*Ty   - Tyx*Tx)
 end
 
 leftdivide(A::AffineTransform, B::AffineTransform) =
