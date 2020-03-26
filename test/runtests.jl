@@ -151,8 +151,14 @@ end
         @test convert(BoundingBox, B) === B
         @test convert(BoundingBox{Int}, B) === B
         @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
+        @test BoundingBox{Int32}(Point(2,3),Point(4,5)) ===
+            BoundingBox{Int32}(2,4,3,5)
         @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) ===
             BoundingBox(2,4,3,5)
+        @test BoundingBox{Int32}(CartesianIndex(2,3),CartesianIndex(4,5)) ===
+            BoundingBox{Int32}(2,4,3,5)
+        @test BoundingBox((2,3),(4,5)) === BoundingBox(2,4,3,5)
+        @test BoundingBox{Int32}((2,3),(4,5)) === BoundingBox{Int32}(2,4,3,5)
         @test first(B) === Point(B.xmin,B.ymin)
         @test last(B) === Point(B.xmax,B.ymax)
         @test isempty(typemax(BoundingBox{Int})) == false

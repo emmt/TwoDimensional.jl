@@ -338,8 +338,9 @@ BoundingBox{T}(B::BoundingBox{T}) where {T<:Real} = B
 BoundingBox{T}(B::BoundingBox) where {T<:Real} =
     BoundingBox{T}(B.xmin, B.xmax, B.ymin, B.ymax)
 
-BoundingBox(arg::NTuple{2,CartesianIndex}) = BoundingBox(arg...)
-BoundingBox{T}(arg::NTuple{2,CartesianIndex}) where {T} = BoundingBox{T}(arg...)
+BoundingBox(arg::NTuple{2,CartesianIndex{2}}) = BoundingBox(arg...)
+BoundingBox{T}(arg::NTuple{2,CartesianIndex{2}}) where {T} =
+    BoundingBox{T}(arg...)
 
 BoundingBox(arg::NTuple{2,AbstractPoint}) = BoundingBox(arg...)
 BoundingBox{T}(arg::NTuple{2,AbstractPoint}) where {T} = BoundingBox{T}(arg...)
@@ -353,6 +354,11 @@ BoundingBox(P0::AbstractPoint, P1::AbstractPoint) =
     BoundingBox(P0.x, P1.x, P0.y, P1.y)
 BoundingBox{T}(P0::AbstractPoint, P1::AbstractPoint) where {T} =
     BoundingBox{T}(P0.x, P1.x, P0.y, P1.y)
+
+BoundingBox(P0::NTuple{2,Real}, P1::NTuple{2,Real}) =
+    BoundingBox(P0[1], P1[1], P0[2], P1[2])
+BoundingBox{T}(P0::NTuple{2,Real}, P1::NTuple{2,Real}) where {T} =
+    BoundingBox{T}(P0[1], P1[1], P0[2], P1[2])
 
 BoundingBox(P::NTuple{4,Real}) = BoundingBox(P[1], P[2], P[3], P[4])
 BoundingBox{T}(P::NTuple{4,Real}) where {T} =
@@ -525,8 +531,10 @@ Base.:(∩)(A::BoundingBox, B::BoundingBox) =
                 max(A.ymin, B.ymin), min(A.ymax, B.ymax))
 
 # Use bounding-boxes to extract a sub-array or a view.
-@propagate_inbounds Base.getindex(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
+@propagate_inbounds function Base.getindex(A::AbstractMatrix,
+                                           B::BoundingBox{<:Integer})
     A[B.xmin:B.xmax, B.ymin:B.ymax]
+end
 
 Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     view(A, B.xmin:B.xmax, B.ymin:B.ymax)
@@ -537,9 +545,10 @@ Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
 interior([T,] B)
 ```
 
-yields the largest bounding -box with integer valued bounds which is contained
-by the bounding-box `B`.  Optional argument `T` is to specify the type of the
-result or of the coordinates of the result which is the same as `B` by default.
+yields the largest bounding-box with integer valued bounds and which is
+contained by the bounding-box `B`.  Optional argument `T` is to specify the
+type of the result or of the coordinates of the result which is the same as `B`
+by default.
 
 See also: [`exterior`](@ref), [`round`](@ref).
 
@@ -566,9 +575,9 @@ interior(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
 exterior([T,] B)
 ```
 
-yields the smallest bounding-box with integer valued bounds which contains the
-bounding-box `B`.  Optional argument `T` is to specify the type of the result
-or of the coordinates of the result which is the same as `B` by default.
+yields the smallest bounding-box with integer valued bounds and which contains
+the bounding-box `B`.  Optional argument `T` is to specify the type of the
+result or of the coordinates of the result which is the same as `B` by default.
 
 See also: [`interior`](@ref), [`round`](@ref).
 

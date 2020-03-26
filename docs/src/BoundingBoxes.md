@@ -1,6 +1,6 @@
 # Bounding-Boxes
 
-2-D bounding boxes are build by:
+2-D bounding-boxes are build by:
 
 ```julia
 BoundingBox(xmin,xmax,ymin,ymax)
@@ -39,7 +39,7 @@ to have [`BoundingBox2D`](@ref BoundingBox2D) provided as an alias to
 
 ## Construction
 
-The coordinates of a bounding box can be specified by keywords:
+The coordinates of a bounding-box can be specified by keywords:
 
 ```julia
 BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
@@ -48,23 +48,24 @@ BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
 There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
 all must be specified.
 
-A bounding box can be constructed from a 4-tuple of coordinates and conversely:
+A bounding-box can be constructed from a 4-tuple of coordinates and conversely:
 
 ```julia
 BoundingBox((x0,x1,y0,y1))      # yields BoundingBox(x0,x1,y0,y1)
 Tuple(BoundingBox(x0,x1,y0,y1)) # yields (x0,x1,y0,y1)
 ```
 
-A bounding box can be constructed from its first and last points (*i.e.* at the
-lower-left and upper right opposite corners) specified as instances of `Point`
-or of `CartesianIndex`:
+A bounding-box can be constructed from its first and last points (*i.e.* at the
+lower-left and upper right opposite corners) specified as instances of `Point`,
+of `CartesianIndex{2}` or of `Tuple{Real,Real}`:
 
 ```julia
 BoundingBox(Point(x0,y0), Point(x1,y1))
 BoundingBox(CartesianIndex(x0,y0), CartesianIndex(x1,y1))
+BoundingBox((x0,y0), (x1,y1))
 ```
 
-both yield the same result as:
+which all yield the same result:
 
 ```julia
 BoundingBox(x0,x1,y0,y1)
@@ -79,12 +80,12 @@ first(BoundingBox(x0,x1,y0,y1)) # yields Point(x0,y0)
 last(BoundingBox(x0,x1,y0,y1))  # yields Point(x1,y1)
 ```
 
-Integer-valued unit-ranges can be specified to define a bounding box.  For
+Integer-valued unit-ranges can be specified to define a bounding-box.  For
 example:
 
 ```julia
-BoundingBox(x0:x1,y0:y1)    # 2 unit-range
-BoundingBox((x0:x1,y0:y1))  # a 2-tuple of unit range
+BoundingBox(x0:x1, y0:y1)    # 2 unit-range
+BoundingBox((x0:x1, y0:y1))  # a 2-tuple of unit range
 ```
 
 This makes possible writing:
@@ -93,7 +94,7 @@ This makes possible writing:
 BoundingBox(axes(A))
 ```
 
-to get the bounding box corresponding to all indices of array `A`.  Conversely:
+to get the bounding-box corresponding to all indices of array `A`.  Conversely:
 
 ```julia
 axes(BoundingBox(x0,x1,y0,y1))
@@ -112,14 +113,14 @@ for I in CartesianIndices(B)
 end
 ```
 
-A bounding box may also be constructed by applying a predicate function to the
+A bounding-box may also be constructed by applying a predicate function to the
 elements of a 2-dimensional array:
 
 ```julia
 BoundingBox(f, A)
 ```
 
-yields the bounding box of all integer coordinates `(x,y)` such that
+yields the bounding-box of all integer coordinates `(x,y)` such that
 `f(A[x,y])` yields `true`.  If the elements of `A` are booleans (of type
 `Bool`), then `BoundingBox(A)` is equivalent to `BoundingBox(identity,A)`.
 
@@ -140,24 +141,24 @@ The latter form involves broadcasting rules and may be a bit slower.
 
 ## Union and Intersection of Bounding-Boxes
 
-The union of bounding boxes `b1`, `b2`, ... is given by one of:
+The union of bounding-boxes `b1`, `b2`, ... is given by one of:
 
 ```julia
 B1 ∪ B2 ∪ ...
 union(B1, B2, ...)
 ```
 
-wich both yield the smallest bounding box containing the bounding boxes `B1`,
+wich both yield the smallest bounding-box containing the bounding-boxes `B1`,
 `B2`, ...
 
-The intersection of bounding boxes `B1`, `B2`, ... is given by one of:
+The intersection of bounding-boxes `B1`, `B2`, ... is given by one of:
 
 ```julia
 B1 ∩ B2 ∩ ...
 intersect(B1, B2, ...)
 ```
 
-wich both yield the largest bounding box contained into the bounding boxes
+wich both yield the largest bounding-box contained into the bounding-boxes
 `B1`, `B2`, ...
 
 The maximal or minimal bounding-box with coordinates of type `T` that can be
@@ -178,9 +179,9 @@ The method `isempty(B)` yields whether a bounding-box `B` is empty or not.
 
 Given the bounding-box `B`, [`interior(B)`](@ref interior) and
 [`exterior(B)`](@ref exterior) respectively yield the largest interior and
-smallest exterior bounding boxes with integer bounds.
+smallest exterior bounding-boxes with integer bounds.
 
-[`round(B)`](@ref round) or [`round(T,B)`](@ref round) yield a bounding box
+[`round(B)`](@ref round) or [`round(T,B)`](@ref round) yield a bounding-box
 whose limits are those of the bounding-box `B` rounded to the nearest integer
 values.
 
@@ -192,18 +193,24 @@ geometrical center of the bounding-box `B`.
 
 ## Arithmetic and Basic Methods
 
-Adding or subtracting a scalar `δ` to a bounding box `B` can be used to add or
-remove a margin `δ` to the bounding box `B`:
+Adding or subtracting a scalar `δ` to a bounding-box `B` adds or removes a
+margin `δ` to the bounding-box `B`:
 
 ```julia
 BoundingBox(x0,x1,y0,y1) + δ # yields BoundingBox(x0-δ,x1+δ,y0-δ,y1+δ)
+BoundingBox(x0,x1,y0,y1) - δ # yields BoundingBox(x0+δ,x1-δ,y0+δ,y1-δ)
 ```
 
-Adding or subtracting a point `P` to a bounding box `B` can be used to shift
-the bounding box `B`:
+Adding or subtracting a point `P` to a bounding-box `B` shifts the limits of
+the bounding-box `B`:
 
 ```julia
 BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)
+```
+
+A bounding-box `B` can be negated:
+```julia
+-BoundingBox(x0,x1,y0,y1) # yields BoundingBox(-x1, -x0, -y1, -y0)
 ```
 
 `eltype(B)` yields the type of the coordinates of a bounding-box `B`.
