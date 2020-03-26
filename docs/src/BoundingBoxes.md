@@ -216,4 +216,6 @@ A bounding-box `B` can be negated:
 `eltype(B)` yields the type of the coordinates of a bounding-box `B`.
 
 Basic methods `size(B[,k])` and `axes(B[,k])` can be applied to an
-**integer-valued** bounding-box `B`.
+**integer-valued** bounding-box `B`.  These two methods are type-stable:
+`size(B)` yields a 2-tuple of `Int`, `size(B,k)` yields an `Int`, `axes(B)`
+yields a 2-tuple of `UnitRange{Int}` and `axes(B,k)` yields a `UnitRange{Int}`.
