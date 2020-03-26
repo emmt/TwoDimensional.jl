@@ -5,7 +5,7 @@
 | [![][doc-dev-img]][doc-dev-url] | [![][license-img]][license-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] | [![][coveralls-img]][coveralls-url] [![][codecov-img]][codecov-url] |
 
 **TwoDimensional** is a [Julia][julia-url] package which provides useful types
-and methods to define and manipulate 2-dimensional points, bounding boxes and
+and methods to define and manipulate 2-dimensional points, bounding-boxes and
 affine coordinate transforms.
 
 Other related packages:
@@ -18,8 +18,9 @@ Other related packages:
 using TwoDimensional
 ```
 
-gives you types `AffineTransform{T}`, `Point{T}` and `BoundingBox{T}` parameterized by the
-type `T` of their components (`T` must be floating point for `AffineTransform{T}`).
+gives you types `AffineTransform{T}`, `Point{T}` and `BoundingBox{T}`
+parameterized by the type `T` of their components (`T` must be floating point
+for `AffineTransform{T}`).
 
 To avoid conflicts with other packages, you may use/import
 `TwoDimensional.Suffixed` which gives you types `AffineTransform2D{T}`,
@@ -31,15 +32,32 @@ You can also fine tune what you want.  For instance:
 using TwoDimensional: AffineTransform, Point2D
 ```
 
+## Documentation
+
 Latest documentation is
 [here](https://emmt.github.io/TwoDimensional.jl/latest).
 
 
 ## Installation
 
-`TwoDimensional` is not yet an [official Julia package][julia-pkgs-url] so you
-have to clone the repository.  In Julia, hit the `]` key to switch to the
-package manager REPL (you should get a `... pkg>` prompt) and type:
+`TwoDimensional` is an [official Julia package][julia-pkgs-url] so you can
+install it from Julia's package manager.  In an interactive Julia session, hit
+the `]` key to switch to the package manager REPL (you should get a `... pkg>`
+prompt) and type:
+
+```julia
+pkg> add TwoDimensional
+```
+
+You can also execute the following statements (in a Julia script or from Julia
+REPL):
+
+```julia
+using Pkg
+Pkg.add("TwoDimensional")
+```
+
+If you prefer to install and use the master version:
 
 ```julia
 pkg> add https://github.com/emmt/TwoDimensional.jl
