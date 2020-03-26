@@ -146,3 +146,10 @@ coordinates of the result.
 
 Similarly, `floor([T,],P)` and `ceil([T,],P)` yield the point with integer
 coordinates immediately (inclusively) before and after [`Point`](@ref) `P`.
+
+
+A point can be clamped within the limits of a bounding-box:
+
+```julia
+clamp(Point(-1.1, 6.3), BoundingBox(1:4,1:5)) # yields Point(1.0,5.0)
+```
