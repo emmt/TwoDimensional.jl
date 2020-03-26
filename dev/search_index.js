@@ -205,7 +205,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Points",
     "title": "Operations on Points",
     "category": "section",
-    "text": "The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates:Point(x1,y1) + Point(x2,y2)   # yields Point(x1+x2,y1+y2)\nPoint(x1,y1) - Point(x2,y2)   # yields Point(x1-x2,y1-y2)Unary minus of a point negates its coordinates:-Point(x,y)   # yields Point(-x,-y)A point may be multiplied or divided by a scalar, say α, to scale its coordinates:α*Point(x,y)  # yields Point(α*x,α*y)\nPoint(x,y)*α  # yields Point(α*x,α*y)\nα\\Point(x,y)  # yields Point((1/α)*x,(1/α)*y)\nPoint(x,y)/α  # yields Point((1/α)*x,(1/α)*y)Taking the hypothenuse or the arctangent of a point P = Point(x,y) yield its distance to the origin O = Point(0,0) and the angle between OP and the abscissa axis:hypot(Point(x,y))  # yields hypot(x, y)\natan(Point(x,y))   # yields atan(y, x)The distance between two points is given by the distance method:distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)The nearest point to an instance obj of Point is given by:round([T,] obj)which rounds the coordinates of obj to the nearest integer.  Optional argument T is to specify the type of the result or the type of the coordinates of the result.Similarly, floor([T,],P) and ceil([T,],P) yield the point with integer coordinates immediately (inclusively) before and after Point P."
+    "text": "The addition (resp. subtraction) of two points adds (resp. subtracts) their coordinates:Point(x1,y1) + Point(x2,y2)   # yields Point(x1+x2,y1+y2)\nPoint(x1,y1) - Point(x2,y2)   # yields Point(x1-x2,y1-y2)Unary minus of a point negates its coordinates:-Point(x,y)   # yields Point(-x,-y)A point may be multiplied or divided by a scalar, say α, to scale its coordinates:α*Point(x,y)  # yields Point(α*x,α*y)\nPoint(x,y)*α  # yields Point(α*x,α*y)\nα\\Point(x,y)  # yields Point((1/α)*x,(1/α)*y)\nPoint(x,y)/α  # yields Point((1/α)*x,(1/α)*y)Taking the hypothenuse or the arctangent of a point P = Point(x,y) yield its distance to the origin O = Point(0,0) and the angle between OP and the abscissa axis:hypot(Point(x,y))  # yields hypot(x, y)\natan(Point(x,y))   # yields atan(y, x)The distance between two points is given by the distance method:distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)The nearest point to an instance obj of Point is given by:round([T,] obj)which rounds the coordinates of obj to the nearest integer.  Optional argument T is to specify the type of the result or the type of the coordinates of the result.Similarly, floor([T,],P) and ceil([T,],P) yield the point with integer coordinates immediately (inclusively) before and after Point P.A point can be clamped within the limits of a bounding-box:clamp(Point(-1.1, 6.3), BoundingBox(1:4,1:5)) # yields Point(1.0,5.0)"
 },
 
 {
@@ -221,7 +221,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Bounding-Boxes",
     "category": "section",
-    "text": "2-D bounding boxes are build by:BoundingBox(xmin,xmax,ymin,ymax)to represent a 2D rectangular box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.The type of the coordinates, say T, can be explicitly specified:BoundingBox{T}(xmin,xmax,ymin,ymax)The type of the coordinates and can be retrieved by the eltype method."
+    "text": "2-D bounding-boxes are build by:BoundingBox(xmin,xmax,ymin,ymax)to represent a 2D rectangular box whose sides are aligned with the coordinate axes and containing points of coordinates (x,y) such that xmin ≤ x ≤ xmax and ymin ≤ y ≤ ymax.The type of the coordinates, say T, can be explicitly specified:BoundingBox{T}(xmin,xmax,ymin,ymax)The type of the coordinates and can be retrieved by the eltype method."
 },
 
 {
@@ -237,7 +237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Construction",
     "category": "section",
-    "text": "The coordinates of a bounding box can be specified by keywords:BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)There are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.A bounding box can be constructed from a 4-tuple of coordinates and conversely:BoundingBox((x0,x1,y0,y1))      # yields BoundingBox(x0,x1,y0,y1)\nTuple(BoundingBox(x0,x1,y0,y1)) # yields (x0,x1,y0,y1)A bounding box can be constructed from its first and last points (i.e. at the lower-left and upper right opposite corners) specified as instances of Point or of CartesianIndex:BoundingBox(Point(x0,y0), Point(x1,y1))\nBoundingBox(CartesianIndex(x0,y0), CartesianIndex(x1,y1))both yield the same result as:BoundingBox(x0,x1,y0,y1)Conversely, methods first(B) and last(B) respectively yield the lower left and upper right corners of the bounding-box B (as a Point instance):first(BoundingBox(x0,x1,y0,y1)) # yields Point(x0,y0)\nlast(BoundingBox(x0,x1,y0,y1))  # yields Point(x1,y1)Integer-valued unit-ranges can be specified to define a bounding box.  For example:BoundingBox(x0:x1,y0:y1)    # 2 unit-range\nBoundingBox((x0:x1,y0:y1))  # a 2-tuple of unit rangeThis makes possible writing:BoundingBox(axes(A))to get the bounding box corresponding to all indices of array A.  Conversely:axes(BoundingBox(x0,x1,y0,y1))yields the axes of a bounding-box with integer coordinates, that is (x0:x1,y0:y1).  To get the k-th axis of a bounding-box B, call axes(B,k).To loop over the Cartesian indices edfined by a bounding-box B with integer coordinates, you can just write:for I in CartesianIndices(B)\n   ...\nendA bounding box may also be constructed by applying a predicate function to the elements of a 2-dimensional array:BoundingBox(f, A)yields the bounding box of all integer coordinates (x,y) such that f(A[x,y]) yields true.  If the elements of A are booleans (of type Bool), then BoundingBox(A) is equivalent to BoundingBox(identity,A)."
+    "text": "The coordinates of a bounding-box can be specified by keywords:BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)There are no default values for keywords xmin, xmax, ymin and ymax so all must be specified.A bounding-box can be constructed from a 4-tuple of coordinates and conversely:BoundingBox((x0,x1,y0,y1))      # yields BoundingBox(x0,x1,y0,y1)\nTuple(BoundingBox(x0,x1,y0,y1)) # yields (x0,x1,y0,y1)A bounding-box can be constructed from its first and last points (i.e. at the lower-left and upper right opposite corners) specified as instances of Point, of CartesianIndex{2} or of Tuple{Real,Real}:BoundingBox(Point(x0,y0), Point(x1,y1))\nBoundingBox(CartesianIndex(x0,y0), CartesianIndex(x1,y1))\nBoundingBox((x0,y0), (x1,y1))which all yield the same result:BoundingBox(x0,x1,y0,y1)Conversely, methods first(B) and last(B) respectively yield the lower left and upper right corners of the bounding-box B (as a Point instance):first(BoundingBox(x0,x1,y0,y1)) # yields Point(x0,y0)\nlast(BoundingBox(x0,x1,y0,y1))  # yields Point(x1,y1)Integer-valued unit-ranges can be specified to define a bounding-box.  For example:BoundingBox(x0:x1, y0:y1)    # 2 unit-range\nBoundingBox((x0:x1, y0:y1))  # a 2-tuple of unit rangeThis makes possible writing:BoundingBox(axes(A))to get the bounding-box corresponding to all indices of array A.  Conversely:axes(BoundingBox(x0,x1,y0,y1))yields the axes of a bounding-box with integer coordinates, that is (x0:x1,y0:y1).  To get the k-th axis of a bounding-box B, call axes(B,k).To loop over the Cartesian indices edfined by a bounding-box B with integer coordinates, you can just write:for I in CartesianIndices(B)\n   ...\nendA bounding-box may also be constructed by applying a predicate function to the elements of a 2-dimensional array:BoundingBox(f, A)yields the bounding-box of all integer coordinates (x,y) such that f(A[x,y]) yields true.  If the elements of A are booleans (of type Bool), then BoundingBox(A) is equivalent to BoundingBox(identity,A)."
 },
 
 {
@@ -253,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Union and Intersection of Bounding-Boxes",
     "category": "section",
-    "text": "The union of bounding boxes b1, b2, ... is given by one of:B1 ∪ B2 ∪ ...\nunion(B1, B2, ...)wich both yield the smallest bounding box containing the bounding boxes B1, B2, ...The intersection of bounding boxes B1, B2, ... is given by one of:B1 ∩ B2 ∩ ...\nintersect(B1, B2, ...)wich both yield the largest bounding box contained into the bounding boxes B1, B2, ...The maximal or minimal bounding-box with coordinates of type T that can be constructed are respectively given by typemax(BoundingBox{T}) and typemin(BoundingBox{T}).  These can be useful to initiate a shrinking ar a growing bounding-box.  The call:BoundingBox{T}(nothing)yields the same result as typemin(BoundingBox{T}).The method isempty(B) yields whether a bounding-box B is empty or not."
+    "text": "The union of bounding-boxes b1, b2, ... is given by one of:B1 ∪ B2 ∪ ...\nunion(B1, B2, ...)wich both yield the smallest bounding-box containing the bounding-boxes B1, B2, ...The intersection of bounding-boxes B1, B2, ... is given by one of:B1 ∩ B2 ∩ ...\nintersect(B1, B2, ...)wich both yield the largest bounding-box contained into the bounding-boxes B1, B2, ...The maximal or minimal bounding-box with coordinates of type T that can be constructed are respectively given by typemax(BoundingBox{T}) and typemin(BoundingBox{T}).  These can be useful to initiate a shrinking ar a growing bounding-box.  The call:BoundingBox{T}(nothing)yields the same result as typemin(BoundingBox{T}).The method isempty(B) yields whether a bounding-box B is empty or not."
 },
 
 {
@@ -261,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Interrior, Exterior, Nearest, etc.",
     "category": "section",
-    "text": "Given the bounding-box B, interior(B) and exterior(B) respectively yield the largest interior and smallest exterior bounding boxes with integer bounds.round(B) or round(T,B) yield a bounding box whose limits are those of the bounding-box B rounded to the nearest integer values.center(B) yields the Point whose coordinates are the geometrical center of the bounding-box B.area(B) yields the area of a bounding-box B."
+    "text": "Given the bounding-box B, interior(B) and exterior(B) respectively yield the largest interior and smallest exterior bounding-boxes with integer bounds.round(B) or round(T,B) yield a bounding-box whose limits are those of the bounding-box B rounded to the nearest integer values.center(B) yields the Point whose coordinates are the geometrical center of the bounding-box B.area(B) yields the area of a bounding-box B."
 },
 
 {
@@ -269,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Bounding-Boxes",
     "title": "Arithmetic and Basic Methods",
     "category": "section",
-    "text": "Adding or subtracting a scalar δ to a bounding box B can be used to add or remove a margin δ to the bounding box B:BoundingBox(x0,x1,y0,y1) + δ # yields BoundingBox(x0-δ,x1+δ,y0-δ,y1+δ)Adding or subtracting a point P to a bounding box B can be used to shift the bounding box B:BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)eltype(B) yields the type of the coordinates of a bounding-box B.Basic methods size(B[,k]) and axes(B[,k]) can be applied to an integer-valued bounding-box B."
+    "text": "Adding or subtracting a scalar δ to a bounding-box B adds or removes a margin δ to the bounding-box B:BoundingBox(x0,x1,y0,y1) + δ # yields BoundingBox(x0-δ,x1+δ,y0-δ,y1+δ)\nBoundingBox(x0,x1,y0,y1) - δ # yields BoundingBox(x0+δ,x1-δ,y0+δ,y1-δ)Adding or subtracting a point P to a bounding-box B shifts the limits of the bounding-box B:BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)A bounding-box B can be negated:-BoundingBox(x0,x1,y0,y1) # yields BoundingBox(-x1, -x0, -y1, -y0)eltype(B) yields the type of the coordinates of a bounding-box B.Basic methods size(B[,k]) and axes(B[,k]) can be applied to an integer-valued bounding-box B.  These two methods are type-stable: size(B) yields a 2-tuple of Int, size(B,k) yields an Int, axes(B) yields a 2-tuple of UnitRange{Int} and axes(B,k) yields a UnitRange{Int}."
 },
 
 {
@@ -421,7 +421,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.interior",
     "category": "function",
-    "text": "interior([T,] B)\n\nyields the largest bounding -box with integer valued bounds which is contained by the bounding-box B.  Optional argument T is to specify the type of the result or of the coordinates of the result which is the same as B by default.\n\nSee also: exterior, round.\n\n\n\n\n\n"
+    "text": "interior([T,] B)\n\nyields the largest bounding-box with integer valued bounds and which is contained by the bounding-box B.  Optional argument T is to specify the type of the result or of the coordinates of the result which is the same as B by default.\n\nSee also: exterior, round.\n\n\n\n\n\n"
 },
 
 {
@@ -429,7 +429,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "TwoDimensional.exterior",
     "category": "function",
-    "text": "exterior([T,] B)\n\nyields the smallest bounding-box with integer valued bounds which contains the bounding-box B.  Optional argument T is to specify the type of the result or of the coordinates of the result which is the same as B by default.\n\nSee also: interior, round.\n\n\n\n\n\n"
+    "text": "exterior([T,] B)\n\nyields the smallest bounding-box with integer valued bounds and which contains the bounding-box B.  Optional argument T is to specify the type of the result or of the coordinates of the result which is the same as B by default.\n\nSee also: interior, round.\n\n\n\n\n\n"
 },
 
 {
