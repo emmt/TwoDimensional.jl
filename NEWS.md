@@ -4,8 +4,15 @@
 
 ### New functionalities and improvements
 
-- The bounding box algorithm has been largely improved.  Except for very small
+- The bounding-box algorithm has been largely improved.  Except for very small
   matrices, it is much faster than the former naive implementation.
+
+- A bounding-box can be negated and can be built from two 2-tuples of
+  coordinates.
+
+- A point can be clamped whithin the limits of a bounding-box.
+
+- `zero` and `one` methods have been extended for type `Point`.
 
 
 ### Changes of behavior
