@@ -1,6 +1,6 @@
 # Bounding-Boxes
 
-2-D bounding-boxes are build by:
+2-D bounding-boxes are built by:
 
 ```julia
 BoundingBox(xmin,xmax,ymin,ymax)
@@ -10,13 +10,14 @@ to represent a 2D rectangular box whose sides are aligned with the coordinate
 axes and containing points of coordinates `(x,y)` such that `xmin ≤ x ≤ xmax`
 and `ymin ≤ y ≤ ymax`.
 
-The type of the coordinates, say `T`, can be explicitly specified:
+The type of the bounds, say `T`, can be explicitly specified:
 
 ```julia
 BoundingBox{T}(xmin,xmax,ymin,ymax)
 ```
 
-The type of the coordinates and can be retrieved by the `eltype` method.
+If unspecified, it is assimed to be he types of the bounds promoted to a common
+type.  The type of the bounds and can be retrieved by the `eltype` method.
 
 
 ## Aliases
