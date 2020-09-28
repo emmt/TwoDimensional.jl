@@ -404,7 +404,7 @@ function BoundingBox(f::Function, A::AbstractMatrix)
     imin = jmin = typemax(Int)
     imax = jmax = typemin(Int)
     # Assuming column-major order, first start by scanning rows to narrow the
-    # subsequent searches long columns.
+    # subsequent searches along columns.
     #
     # 1. Find bottom bound `jmin` by scanning rows from bottom to top.
     flag = false
@@ -627,6 +627,10 @@ Base.:(*)(P::Point, α::Real) = α*P
 Base.:(*)(α::Real, P::Point) = Point(α*P.x, α*P.y)
 Base.:(/)(P::Point, α::Real) = Point(P.x/α, P.y/α)
 Base.:(\)(α::Real, P::Point) = P/α
+
+# Unary plus does nothing.
+Base.:(+)(P::Point) = P
+Base.:(+)(B::BoundingBox) = B
 
 # Unary minus applied to a point negate coordinates.
 Base.:(-)(P::Point{<:Union{AbstractFloat,Signed,Irrational}}) =
