@@ -126,6 +126,32 @@ yields the bounding-box of all integer coordinates `(x,y)` such that
 `Bool`), then `BoundingBox(A)` is equivalent to `BoundingBox(identity,A)`.
 
 
+## Fields
+
+The fields of a `BoundingBox`, say `box`, can be retrieved in different ways:
+
+```julia
+xmin = box.xmin
+xmax = box.xmax
+ymin = box.ymin
+ymax = box.ymax
+```
+
+or:
+
+```julia
+xmin = box[1]
+xmax = box[2]
+ymin = box[3]
+ymax = box[4]
+```
+
+or:
+
+```julia
+xmin, xmax, ymin, ymax = box
+```
+
 ## Conversion
 
 Coordinate type conversion, say to type `T`, is done by:

@@ -45,7 +45,7 @@ The coordinates of a `Point`, say `pnt`, can be retrieved as follows:
 
 or:
 
-    x, y = Tuple(pnt)
+    x, y = pnt
 
 See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
 
@@ -107,7 +107,7 @@ The coordinates of a `BoundingBox`, say `box`, can be retrieved as follows:
 
 or:
 
-    xmin, xmax, umy, ymax = Tuple(box)
+    xmin, xmax, ymin, ymax = box
 
 See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
@@ -302,14 +302,6 @@ distance(A::Point{T}, B::Point{T}) where {T<:Unsigned} =
           ifelse(A.y > B.y, A.y - B.y, B.y - A.y))
 distance(A::Point{T}, B::Point{T}) where {T<:Real} =
     hypot(B.x - A.x, B.y - A.y)
-
-Base.in(pnt::AbstractPoint, box::BoundingBox) =
-    ((box.xmin ≤ pnt.x ≤ box.xmax)&
-     (box.ymin ≤ pnt.y ≤ box.ymax))
-
-Base.in(A::BoundingBox, B::BoundingBox) =
-    (isempty(A)|((A.xmin ≥ B.xmin)&(A.xmax ≤ B.xmax)&
-                 (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
 
 # Allowed types to construct (or convert to) a bounding box.
 const BoundingBoxTypes = Union{BoundingBox,NTuple{2,AbstractPoint},
@@ -515,6 +507,25 @@ Base.axes(B::BoundingBox{<:Integer}, k::Integer) =
 
 @noinline throw_bad_dimension_index() =
     error("invalid dimension index")
+
+function Base.iterate(itr::Union{AbstractPoint,BoundingBox})
+    vals = Tuple(itr)
+    return (vals[1], (vals, 2))
+end
+
+function Base.iterate(itr::Union{AbstractPoint,BoundingBox},
+                      state::Tuple{Tuple,Int})
+    vals, i = state
+    return (i ≤ length(vals) ? (vals[i], (vals, i+1)) : nothing)
+end
+
+Base.in(pnt::AbstractPoint, box::BoundingBox) =
+    ((box.xmin ≤ pnt.x ≤ box.xmax)&
+     (box.ymin ≤ pnt.y ≤ box.ymax))
+
+Base.in(A::BoundingBox, B::BoundingBox) =
+    (isempty(A)|((A.xmin ≥ B.xmin)&(A.xmax ≤ B.xmax)&
+                 (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
 
 # Union of bounding-boxes:
 Base.:(∪)(A::BoundingBox, B::BoundingBox) =

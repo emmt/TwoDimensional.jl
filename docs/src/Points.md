@@ -62,6 +62,50 @@ There are no default values for keywords `w`, `x` and `y` so they must all be
 specified.
 
 
+## Fields
+
+The fields of a `Point`, say `pnt`, can be retrieved in different ways:
+
+```julia
+x = pnt.x
+y = pnt.y
+```
+
+or:
+
+```julia
+x = pnt[1]
+y = pnt[2]
+```
+
+or:
+
+```julia
+x, y = pnt
+```
+
+Similar rules apply for a `WeightedPoint`, say `wpt`:
+
+```julia
+w = wpt.w
+x = wpt.x
+y = wpt.y
+```
+
+or:
+
+```julia
+w = pnt[1]
+x = pnt[2]
+y = pnt[3]
+```
+
+or:
+
+```julia
+w, x, y = wpt
+```
+
 ## Conversion
 
 Simple points can be constructed from a 2-tuple of coordinates or from an

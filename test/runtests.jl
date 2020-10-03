@@ -43,6 +43,29 @@ function naiveboundingbox(f::Function, A::AbstractMatrix)
 end
 
 @testset "Points and bounding-boxes" begin
+    @testset "Miscellaneous" begin
+        # Iterators.
+        pnt = Point(2,3)
+        @test Point(Tuple(pnt)...) === pnt
+        @test Point(Tuple(pnt)) === pnt
+        x,y = pnt
+        @test (x,y) === (pnt.x, pnt.y)
+        @test Tuple(pnt) === (x,y)
+
+        wpnt = WeightedPoint(1.2,sqrt(2),3)
+        @test WeightedPoint(Tuple(wpnt)...) === wpnt
+        @test WeightedPoint(Tuple(wpnt)) === wpnt
+        w,x,y = wpnt
+        @test (w,x,y) === (wpnt.w, wpnt.x, wpnt.y)
+        @test Tuple(wpnt) === (w,x,y)
+
+        box = BoundingBox(1.2,sqrt(2),-3,11)
+        @test BoundingBox(Tuple(box)...) === box
+        @test BoundingBox(Tuple(box)) === box
+        xmin,xmax,ymin,ymax = box
+        @test (xmin,xmax,ymin,ymax) === (box.xmin,box.xmax,box.ymin,box.ymax)
+        @test Tuple(box) === (xmin,xmax,ymin,ymax)
+    end
     @testset "Simple points" begin
         types = (Int8, Int32, Int64, Float32, Float64)
         for T1 in types, T2 in types
@@ -61,8 +84,6 @@ end
         #@test convert(CartesianIndex{2}, Point(2,3)) === CartesianIndex(2,3)
         #@test convert(Tuple, Point(2,3)) === (2,3)
         #@test convert(Tuple{Float64,Int}, Point(2,3)) === (2.0,3)
-        @test Point(Tuple(P1)...) === P1
-        @test Point(Tuple(P1)) === P1
         @test Point{Float32}(P1) === Float32.(P1)
         @test promote(P1) === (P1,)
         P2 = Point(3,11)
@@ -71,7 +92,6 @@ end
         @test promote(P1, P2, P3) === (P1,Float64.(P2),Float64.(P3))
         @test convert(Point, P1) === P1
         @test convert(Point{Float32}, P1) === Float32.(P1)
-        @test Tuple(Point(0.0,1)) === (0.0,1.0)
         for T in (Float32, Int16)
             @test zero(Point{T}) === Point(zero(T),zero(T))
             @test one(Point{T}) === Point(one(T),one(T))
@@ -128,8 +148,6 @@ end
         @test WeightedPoint{eltype(P2)}(P2) === P2
         @test WeightedPoint{Float64}(P2) === P2
         @test WeightedPoint(P2.w, P2.x, P2.y) === P2
-        @test WeightedPoint(Tuple(P2)...) === P2
-        @test WeightedPoint(Tuple(P2)) === P2
         @test WeightedPoint{Float32}(P2) === Float32.(P2)
         @test WeightedPoint(Point(3.1,4.2)) ===
             WeightedPoint(w=1, x=3.1, y=4.2)
@@ -184,8 +202,6 @@ end
         B3 = BoundingBox{Float32}(1.1,3.2,4.5,5.8)
         @test promote(B1, B2) === (Float64.(B1),B2)
         @test promote(B1, B2, B3) === (Float64.(B1),B2,Float64.(B3))
-        @test BoundingBox(Tuple(B)...) === B
-        @test BoundingBox(Tuple(B)) === B
         @test_deprecated BoundingBox(ones(5,7)) === BoundingBox(1,5, 1,7)
         @test BoundingBox(-2:6,8:11) === BoundingBox(-2,6, 8,11)
         @test BoundingBox((2:4,-1:7)) === BoundingBox(2,4, -1,7)

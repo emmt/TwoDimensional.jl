@@ -2,6 +2,10 @@
 
 ## Version master
 
+- Instances of `Point`, `WeightedPoint` or `BoundingBox` are iterable.  Hence
+  `x, y = pnt` can be used to extract the coordinates of `pnt` an instance of
+  `Point`.
+
 - `A ∈ B` yields whether `A`, a point or a bounding-box, is inside the
   bounding-box `B`.
 
