@@ -304,8 +304,12 @@ distance(A::Point{T}, B::Point{T}) where {T<:Real} =
     hypot(B.x - A.x, B.y - A.y)
 
 Base.in(pnt::AbstractPoint, box::BoundingBox) =
-    (box.xmin ≤ pnt.x ≤ box.xmax &&
-     box.ymin ≤ pnt.y ≤ box.ymax)
+    ((box.xmin ≤ pnt.x ≤ box.xmax)&
+     (box.ymin ≤ pnt.y ≤ box.ymax))
+
+Base.in(A::BoundingBox, B::BoundingBox) =
+    (isempty(A)|((A.xmin ≥ B.xmin)&(A.xmax ≤ B.xmax)&
+                 (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
 
 # Allowed types to construct (or convert to) a bounding box.
 const BoundingBoxTypes = Union{BoundingBox,NTuple{2,AbstractPoint},

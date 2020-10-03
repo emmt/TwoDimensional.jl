@@ -229,4 +229,16 @@ bounding-box `box`:
 pnt ∈ box
 ```
 
-is the same as `box.xmin ≤ pnt.x ≤ box.xmax && box.ymin ≤ pnt.y ≤ box.ymax`.
+is a shortcut for:
+
+```julia
+(box.xmin ≤ pnt.x ≤ box.xmax) & (box.ymin ≤ pnt.y ≤ box.ymax)
+```
+
+The same method can be used to check whether a bounding-box, say `A`, is
+inside another one, say `B`.  That is `A in B` or `A ∈ B` is a shortcut for:
+
+```julia
+(isempty(A) | ((A.xmin ≥ B.xmin) & (A.xmax ≤ B.xmax) &
+               (A.ymin ≥ B.ymin) & (A.ymax ≤ B.ymax)))
+```

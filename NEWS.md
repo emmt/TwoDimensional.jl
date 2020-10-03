@@ -2,7 +2,8 @@
 
 ## Version master
 
-- `pnt ∈ box` yields whether the point `pnt` is inside the bounding-box `box`.
+- `A ∈ B` yields whether `A`, a point or a bounding-box, is inside the
+  bounding-box `B`.
 
 - Unary plus can be applied to a point or to a bounding-box.
 
