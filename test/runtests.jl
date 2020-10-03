@@ -251,6 +251,15 @@ end
         @test area(BoundingBox(2,4,5,8)) == 6
         @test area(BoundingBox(2.0,4.0,5.0,8.0)) == 6.0
 
+        @test (Point(2,4) ∈ BoundingBox(1,2,3,4)) == true
+        @test (Point(3,4) ∈ BoundingBox(1,2,3,4)) == false
+        @test (Point(2,5) ∈ BoundingBox(1,2,3,4)) == false
+        @test (Point(3,5) ∈ BoundingBox(1,2,3,4)) == false
+        @test (WeightedPoint(1,2,4) ∈ BoundingBox(1,2,3,4)) == true
+        @test (WeightedPoint(1,3,4) ∈ BoundingBox(1,2,3,4)) == false
+        @test (WeightedPoint(1,2,5) ∈ BoundingBox(1,2,3,4)) == false
+        @test (WeightedPoint(1,3,5) ∈ BoundingBox(1,2,3,4)) == false
+
         C = Point(x = 0.5*(B.xmin + B.xmax), y = 0.5*(B.ymin + B.ymax))
         @test center(B) === C
         @test center(BoundingBox{Float64}(B)) === C

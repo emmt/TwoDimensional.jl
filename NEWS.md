@@ -1,4 +1,11 @@
-# Changes in TwoDimensional package
+# User visible changes in TwoDimensional package
+
+## Version master
+
+- `pnt ∈ box` yields whether the point `pnt` is inside the bounding-box `box`.
+
+- Unary plus can be applied to a point or to a bounding-box.
+
 
 ## Version 0.2.0
 

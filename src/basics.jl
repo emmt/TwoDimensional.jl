@@ -24,10 +24,7 @@ See also: [`Point`](@ref), [`WeightedPoint`](@ref).
 abstract type AbstractPoint{T<:Real} end
 
 """
-
-```julia
-Point(x,y)
-```
+    Point(x,y)
 
 yields an instance of a 2D point of coordinates `(x,y)`.
 
@@ -37,18 +34,18 @@ coordinates.
 
 Coordinates can be specified by keywords:
 
-```julia
-Point(x=xval, y=yval)
-```
+    Point(x=xval, y=yval)
 
 There are no default values for keywords `x` and `y` so both must be specified.
 
 The coordinates of a `Point`, say `pnt`, can be retrieved as follows:
 
-```julia
-pnt.x  or  pnt[1]  ->  x
-pnt.y  or  pnt[2]  ->  y
-```
+    pnt.x  or  pnt[1]  ->  x
+    pnt.y  or  pnt[2]  ->  y
+
+or:
+
+    x, y = Tuple(pnt)
 
 See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
 
@@ -81,37 +78,36 @@ struct WeightedPoint{T<:AbstractFloat}  <: AbstractPoint{T}
 end
 
 """
+    BoundingBox(xmin,xmax,ymin,ymax)
 
-`BoundingBox(xmin,xmax,ymin,ymax)` yields an instance of a 2D rectangular
-bounding-box whose sides are aligned with the coordinate axes and containing
-points of coordinates `(x,y)` such that `xmin ≤ x ≤ xmax` and `ymin ≤ y ≤
-ymax`.  The box is *empty* if `xmin > xmax` or `ymin > ymax`.
+yields an instance of a 2D rectangular bounding-box whose sides are aligned
+with the coordinate axes and containing points of coordinates `(x,y)` such that
+`xmin ≤ x ≤ xmax` and `ymin ≤ y ≤ ymax`.  The box is *empty* if `xmin > xmax`
+or `ymin > ymax`.
 
 A bounding-box can be constructed from the first and last points (i.e. at the
 lower-left and upper right opposite corners) of the box:
 
-```julia
-BoundingBox(P0::Point, P1::Point)
-BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})
-```
+    BoundingBox(P0::Point, P1::Point)
+    BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})
 
 Coordinates can be specified by keywords:
 
-```julia
-BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
-```
+    BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
 
 There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
 all must be specified.
 
 The coordinates of a `BoundingBox`, say `box`, can be retrieved as follows:
 
-```julia
-box.xmin  or  box[1]  ->  xmin
-box.xmax  or  box[2]  ->  xmax
-box.ymin  or  box[3]  ->  ymin
-box.ymax  or  box[4]  ->  ymax
-```
+    box.xmin  or  box[1]  ->  xmin
+    box.xmax  or  box[2]  ->  xmax
+    box.ymin  or  box[3]  ->  ymin
+    box.ymax  or  box[4]  ->  ymax
+
+or:
+
+    xmin, xmax, umy, ymax = Tuple(box)
 
 See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
@@ -184,9 +180,7 @@ Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} 
 
 """
 
-```julia
-round([T,] obj)
-```
+    round([T,] obj::Union{Point,BoundingBox})
 
 yields the object that is the nearest to `obj` by rounding its coordinates to
 the nearest integer.  Argument `T` can be the type of the result (a point or a
@@ -236,9 +230,7 @@ Base.round(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
 
 """
 
-```julia
-floor([T,] P)
-```
+    floor([T,] P::Point)
 
 yields the point with the largest integer coordinates smaller or equal those of
 the point `P`.  Argument `T` can be the type of the result or the type of the
@@ -263,9 +255,7 @@ Base.floor(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
 
 """
 
-```julia
-ceil([T,] P)
-```
+    ceil([T,] P::Point)
 
 yields the point with the smallest integer coordinates larger or equal those of
 the point `P`.  Argument `T` can be the type of the result or the type of the
@@ -300,9 +290,7 @@ Base.atan(P::Point) = atan(P.y, P.x)
 
 """
 
-```julia
-distance(A, B)
-```
+    distance(A, B)
 
 yields the Euclidean distance between the 2 points `A` and `B`.
 
@@ -314,6 +302,10 @@ distance(A::Point{T}, B::Point{T}) where {T<:Unsigned} =
           ifelse(A.y > B.y, A.y - B.y, B.y - A.y))
 distance(A::Point{T}, B::Point{T}) where {T<:Real} =
     hypot(B.x - A.x, B.y - A.y)
+
+Base.in(pnt::AbstractPoint, box::BoundingBox) =
+    (box.xmin ≤ pnt.x ≤ box.xmax &&
+     box.ymin ≤ pnt.y ≤ box.ymax)
 
 # Allowed types to construct (or convert to) a bounding box.
 const BoundingBoxTypes = Union{BoundingBox,NTuple{2,AbstractPoint},

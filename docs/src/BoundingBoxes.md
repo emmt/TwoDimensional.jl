@@ -105,7 +105,7 @@ yields the axes of a bounding-box with integer coordinates, that is
 `(x0:x1,y0:y1)`.  To get the `k`-th axis of a bounding-box `B`, call
 `axes(B,k)`.
 
-To loop over the Cartesian indices edfined by a bounding-box `B` with integer
+To loop over the Cartesian indices defined by a bounding-box `B` with integer
 coordinates, you can just write:
 
 ```julia
@@ -220,3 +220,13 @@ Basic methods `size(B[,k])` and `axes(B[,k])` can be applied to an
 **integer-valued** bounding-box `B`.  These two methods are type-stable:
 `size(B)` yields a 2-tuple of `Int`, `size(B,k)` yields an `Int`, `axes(B)`
 yields a 2-tuple of `UnitRange{Int}` and `axes(B,k)` yields a `UnitRange{Int}`.
+
+
+The `in` (or `∈`) method let you check whether a point `pnt` is inside a
+bounding-box `box`:
+
+```julia
+pnt ∈ box
+```
+
+is the same as `box.xmin ≤ pnt.x ≤ box.xmax && box.ymin ≤ pnt.y ≤ box.ymax`.
