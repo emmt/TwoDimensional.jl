@@ -31,6 +31,18 @@ export
     scale,
     translate
 
+# FIXME: translate -> shift
+
+import Graphics
+import Graphics:
+    isinside,
+    xmin, xmax, ymin, ymax,
+    center,
+    xrange, yrange,
+    aspect_ratio, with_aspect_ratio, diagonal,
+    shift, rotate, deform,
+    width, height
+
 include("basics.jl")
 
 include("xforms.jl")
@@ -39,7 +51,6 @@ import .AffineTransforms:
     compose,
     intercept,
     jacobian,
-    rotate,
     scale,
     translate
 

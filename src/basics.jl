@@ -128,7 +128,8 @@ Base.getindex(obj::BoundingBox, i::Integer) =
      error("out of range index for `BoundingBox` object"))
 
 # Allowed types to construct (or convert to) a point.
-const PointTypes = Union{AbstractPoint,NTuple{2,Real},CartesianIndex{2}}
+const PointTypes = Union{AbstractPoint,NTuple{2,Real},
+                         CartesianIndex{2},Graphics.Point}
 
 # Constructors of points and conversion to/from a Cartesian index.
 Point(P::Point) = P
@@ -142,6 +143,7 @@ Point(I::CartesianIndex{2}) = Point(I[1], I[2])
 Point{T}(I::CartesianIndex{2}) where {T} = Point{T}(I[1], I[2])
 Point(P::NTuple{2,Real}) = Point(P[1], P[2])
 Point{T}(P::NTuple{2,Real}) where {T} = Point{T}(P[1], P[2])
+Point(p::Graphics.Point) = Point(p.x, p.y)
 
 # Conversion to points (rely on constructors).
 Base.convert(::Type{T}, arg::T) where {T<:Point} = arg
@@ -307,7 +309,7 @@ distance(A::Point{T}, B::Point{T}) where {T<:Real} =
 const BoundingBoxTypes = Union{BoundingBox,NTuple{2,AbstractPoint},
                                NTuple{4,Real},NTuple{2,CartesianIndex{2}},
                                NTuple{2,AbstractUnitRange{<:Integer}},
-                               CartesianIndices{2}}
+                               CartesianIndices{2}, Graphics.BoundingBox}
 
 # Constructors of bounding-boxes and conversion.
 function BoundingBox(xmin::Txmin, xmax::Txmax,
@@ -364,6 +366,9 @@ BoundingBox{T}(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer})
 
 BoundingBox(R::CartesianIndices{2}) = BoundingBox(first(R), last(R))
 BoundingBox{T}(R::CartesianIndices{2}) where {T} = BoundingBox{T}(first(R), last(R))
+
+BoundingBox(b::Graphics.BoundingBox) = BoundingBox(xmin(b), xmax(b),
+                                                   ymin(b), ymax(b))
 
 @deprecate BoundingBox(A::AbstractMatrix) BoundingBox(axes(A))
 BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
@@ -673,5 +678,61 @@ Base.:(+)(B::BoundingBox, P::Point) =
 Base.:(-)(B::BoundingBox, P::Point) =
     BoundingBox(B.xmin - P.x, B.xmax - P.x,
                 B.ymin - P.y, B.ymax - P.y)
+
+# FIXME: There is an inconsistency between floating-point boundinx boxes and
+#        integer ones.  This inconsistency can be (partially) solved if the
+#        upper bound (xmax,ymax) is considered as not being inside.  But this
+#        means that a zero-width/height box must be empty.
+
+# Extend Graphics.jl API.
+xmin(b::BoundingBox) = b.xmin
+xmax(b::BoundingBox) = b.xmax
+ymin(b::BoundingBox) = b.ymin
+ymax(b::BoundingBox) = b.ymax
+width(b::BoundingBox{T}) where {T<:Integer} =
+    ifelse(xmax(b) > xmin(b), xmax(b) - xmin(b) + one(T), zero(T))
+#width(b::BoundingBox{T}) where {T<:AbstractFloat} =
+#    ifelse(xmax(b) > xmin(b), xmax(b) - xmin(b), zero(T))
+height(b::BoundingBox{T}) where {T<:Integer} =
+    ifelse(ymax(b) > ymin(b), ymax(b) - ymin(b) + one(T), zero(T))
+#height(b::BoundingBox{T}) where {T<:AbstractFloat} =
+#    ifelse(ymax(b) > ymin(b), ymax(b) - ymin(b), zero(T))
+isinside(b::BoundingBox, x, y) = isinside(b, Point(x, y))
+isinside(b::BoundingBox, p::PointTypes) = Point(p) ∈ b
+# (+) for union
+# (&) for intersection
+# deform, rotate, shift, scale about center
+shift(b::BoundingBox, dx, dy) = shift(b, Point(dx, dy))
+shift(b::BoundingBox, p::PointTypes) = shift(b, Point(p))
+shift(b::BoundingBox, p::Point) = b + p
+
+deform(b::BoundingBox, dl, dr, dt, db) =
+    BoundingBox(xmin(b) + dl, xmax(b) + dr, ymin(b) + dt, ymax(b) + db)
+
+# FIXME: check rotation with AffineTransform
+function rotate(p::Point, angle::Real, o::Point)
+    s, c = sincos(angle)
+    d = p - o
+    return Point(o.x + c*d.x - s*d.y,
+                 o.y + s*d.x + c*d.y)
+end
+
+function rotate(bb::BoundingBox, angle::Real, o::Point)
+    s, c = sincos(angle)
+    x1 = xmin(bb) - p.x
+    x2 = xmax(bb) - p.x
+    y1 = ymin(bb) - p.y
+    y2 = ymax(bb) - p.y
+    xr = (p.x + c*x1 - s*y1,
+          p.x + c*x2 - s*y1,
+          p.x + c*x1 - s*y2,
+          p.x + c*x2 - s*y2)
+    yr = (p.y + s*x1 + c*y1,
+          p.y + s*x2 + c*y1,
+          p.y + s*x1 + c*y2,
+          p.y + s*x2 + c*y2)
+    return BoundingBox(min(xr...), max(xr...),
+                       min(yr...), max(yr...))
+end
 
 #------------------------------------------------------------------------------

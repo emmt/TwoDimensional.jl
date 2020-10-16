@@ -24,6 +24,7 @@ export
     translate
 
 using ..TwoDimensional: AbstractPoint, Point
+import ..TwoDimensional: rotate
 
 # Imports for extension.
 import Base: +, -, *, ∘, /, \, inv, eltype
