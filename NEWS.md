@@ -1,6 +1,6 @@
 # User visible changes in TwoDimensional package
 
-## Version master
+## Version 0.2.1
 
 - Instances of `Point`, `WeightedPoint` or `BoundingBox` are iterable.  Hence
   `x, y = pnt` can be used to extract the coordinates of `pnt` an instance of
