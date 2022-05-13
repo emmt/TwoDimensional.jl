@@ -80,12 +80,16 @@ end
         @test Point(1,2) === Point(y=2, x=1)
         @test Point(CartesianIndex(7,8)) === Point(7,8)
         @test CartesianIndex(Point(2,3)) === CartesianIndex(2,3)
+        @test Point(TwoDimensional.WeightedPoint(2,3,7)) === Point(3.0,7.0)
         #@test convert(CartesianIndex, Point(2,3)) === CartesianIndex(2,3)
         #@test convert(CartesianIndex{2}, Point(2,3)) === CartesianIndex(2,3)
         #@test convert(Tuple, Point(2,3)) === (2,3)
         #@test convert(Tuple{Float64,Int}, Point(2,3)) === (2.0,3)
         @test Point{Float32}(P1) === Float32.(P1)
         @test promote(P1) === (P1,)
+        @test Point{Int}(x=Int16(8),y=Int16(9)) === Point(8,9)
+        @test Point{Float64}(CartesianIndex(8,9)) === Point(8.0,9.0)
+        @test Point{Float64}((8,9)) === Point(8.0,9.0)
         P2 = Point(3,11)
         P3 = Point{Float32}(-2.1,11.8)
         @test promote(P1, P2) === (P1,Float64.(P2))
@@ -97,6 +101,7 @@ end
             @test one(Point{T}) === Point(one(T),one(T))
             @test oneunit(Point{T}) === Point(oneunit(T),oneunit(T))
         end
+        @test ntuple(i -> Point(3,5)[i], 2) == (3,5)
         # round
         @test round(Point(1.2,-0.7)) === Point(1.0,-1.0)
         @test round(Point(1,-7)) === Point(1,-7)
@@ -168,32 +173,54 @@ end
             BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
         @test convert(BoundingBox, B) === B
         @test convert(BoundingBox{Int}, B) === B
+        # Construct a bounding-box from 2 points.
         @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
-        @test BoundingBox{Int32}(Point(2,3),Point(4,5)) ===
-            BoundingBox{Int32}(2,4,3,5)
+        @test BoundingBox{Int16}(Point(2,3),Point(4,5)) ===
+            BoundingBox{Int16}(2,4,3,5)
+        @test BoundingBox((Point(2,3),Point(4,5))) === BoundingBox(2,4,3,5)
+        @test BoundingBox{Int16}((Point(2,3),Point(4,5))) ===
+            BoundingBox{Int16}(2,4,3,5)
+        # Construct a bounding-box from 2 Cartesian indices.
         @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) ===
             BoundingBox(2,4,3,5)
-        @test BoundingBox{Int32}(CartesianIndex(2,3),CartesianIndex(4,5)) ===
-            BoundingBox{Int32}(2,4,3,5)
+        @test BoundingBox{Int16}(CartesianIndex(2,3),CartesianIndex(4,5)) ===
+            BoundingBox{Int16}(2,4,3,5)
+        @test BoundingBox((CartesianIndex(2,3),CartesianIndex(4,5))) ===
+            BoundingBox(2,4,3,5)
+        @test BoundingBox{Int16}((CartesianIndex(2,3),CartesianIndex(4,5))) ===
+            BoundingBox{Int16}(2,4,3,5)
+        # Construct a bounding-box from 2 2-tuple.
         @test BoundingBox((2,3),(4,5)) === BoundingBox(2,4,3,5)
-        @test BoundingBox{Int32}((2,3),(4,5)) === BoundingBox{Int32}(2,4,3,5)
+        @test BoundingBox{Int16}((2,3),(4,5)) === BoundingBox{Int16}(2,4,3,5)
+        # Construct a bounding-box by keywords.
+        @test BoundingBox(xmin=2,ymin=3,xmax=4,ymax=5) ===
+            BoundingBox(2,4,3,5)
+        @test BoundingBox{Float64}(xmin=2,ymin=3,xmax=4,ymax=5) ===
+            BoundingBox(2.0,4.0,3.0,5.0)
+        # Construct a bounding-box from CartesianIndices instance.
+        @test BoundingBox(CartesianIndices((2:4,3:5))) ===
+            BoundingBox(2,4,3,5)
+        @test BoundingBox{Int16}(CartesianIndices((2:4,3:5))) ===
+            BoundingBox{Int16}(2,4,3,5)
+
         @test first(B) === Point(B.xmin,B.ymin)
         @test last(B) === Point(B.xmax,B.ymax)
         @test isempty(typemax(BoundingBox{Int})) == false
         @test isempty(typemin(BoundingBox{Float64})) == true
         @test BoundingBox{Float32}(nothing) === typemin(BoundingBox{Float32})
-        @test size(BoundingBox{Int32}(nothing)) === (0,0)
+        @test size(BoundingBox{Int16}(nothing)) === (0,0)
+        @test ntuple(i -> BoundingBox(3:7,5:8)[i], 4) == (3,7,5,8)
         Rx, Ry = 3:7, -6:-3
         B = BoundingBox(Rx,Ry)
         @test size(B) === (length(Rx),length(Ry))
-        @test size(BoundingBox{Int32}(B)) === size(B)
+        @test size(BoundingBox{Int16}(B)) === size(B)
         @test axes(B) === (Rx,Ry)
-        @test axes(BoundingBox{Int32}(B)) === (Rx,Ry)
+        @test axes(BoundingBox{Int16}(B)) === (Rx,Ry)
         for k in (1,2)
             @test size(B, k) === size(B)[k]
             @test axes(B, k) === axes(B)[k]
-            @test size(BoundingBox{Int32}(B), k) === size(B)[k]
-            @test axes(BoundingBox{Int32}(B), k) === axes(B)[k]
+            @test size(BoundingBox{Int16}(B), k) === size(B)[k]
+            @test axes(BoundingBox{Int16}(B), k) === axes(B)[k]
         end
         @test size(B,40) === 1
         @test_throws ErrorException size(B, 0)
@@ -231,14 +258,14 @@ end
         # round
         @test round(BoundingBox(1.1,2.1,-3.6,7.7)) ===
             BoundingBox(1.0,2.0,-4.0,8.0)
-        @test round(BoundingBox{Int32}, BoundingBox(1.1,2.1,-3.6,7.7)) ===
-            BoundingBox{Int32}(1,2,-4,8)
+        @test round(BoundingBox{Int16}, BoundingBox(1.1,2.1,-3.6,7.7)) ===
+            BoundingBox{Int16}(1,2,-4,8)
         @test round(Int, BoundingBox(1,2,-3,7)) === BoundingBox(1,2,-3,7)
-        @test round(Int32, BoundingBox(1.1,2.1,-3.6,7.7)) ===
-            BoundingBox{Int32}(1,2,-4,8)
-        @test round(Int32, BoundingBox(1,2,-4,8)) ===
-            BoundingBox{Int32}(1,2,-4,8)
-        @test round(Float32, BoundingBox{Int32}(1,2,-4,8)) ===
+        @test round(Int16, BoundingBox(1.1,2.1,-3.6,7.7)) ===
+            BoundingBox{Int16}(1,2,-4,8)
+        @test round(Int16, BoundingBox(1,2,-4,8)) ===
+            BoundingBox{Int16}(1,2,-4,8)
+        @test round(Float32, BoundingBox{Int16}(1,2,-4,8)) ===
             BoundingBox{Float32}(1,2,-4,8)
         @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) ===
             BoundingBox{Float32}(1,3,-5,8)
