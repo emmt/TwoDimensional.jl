@@ -14,9 +14,10 @@
 using Base: @propagate_inbounds
 
 """
+    AbstractPoint{T}
 
-Any object whose type is derived from `AbstractPoint{T}` has at least 2 fields:
-`x` its abscissa and `y` its ordinate, both of type `T`.
+is the abstract type of objects with at least 2 properties: `x` and `y`, their
+respective abscissa and ordinate, both of type `T`.
 
 See also: [`Point`](@ref), [`WeightedPoint`](@ref).
 
@@ -523,10 +524,15 @@ Base.in(pnt::AbstractPoint, box::BoundingBox) =
     ((box.xmin ≤ pnt.x ≤ box.xmax)&
      (box.ymin ≤ pnt.y ≤ box.ymax))
 
-Base.in(A::BoundingBox, B::BoundingBox) =
+# To deprecate `A ∈ B` in favor of `A ⊆ B` for bounding boxes `A` and `B`, the
+# `Base.in` method must be imported.
+import Base: in
+@deprecate in(A::BoundingBox, B::BoundingBox) (A ⊆ B) false
+
+# Extend ⊆ operator.
+Base.issubset(A::BoundingBox, B::BoundingBox) =
     (isempty(A)|((A.xmin ≥ B.xmin)&(A.xmax ≤ B.xmax)&
                  (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
-
 # Union of bounding-boxes:
 Base.:(∪)(A::BoundingBox, B::BoundingBox) =
     BoundingBox(min(A.xmin, B.xmin), max(A.xmax, B.xmax),
@@ -547,7 +553,6 @@ Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     view(A, B.xmin:B.xmax, B.ymin:B.ymax)
 
 """
-
 ```julia
 interior([T,] B)
 ```
@@ -577,7 +582,6 @@ interior(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
     BoundingBox{T}(interior(U, obj))
 
 """
-
 ```julia
 exterior([T,] B)
 ```
@@ -606,7 +610,6 @@ exterior(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
     BoundingBox{T}(exterior(U, obj))
 
 """
-
 ```julia
 center(B::BoundingBox) -> c::Point
 ```

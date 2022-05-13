@@ -276,11 +276,12 @@ end
         @test (WeightedPoint(1,2,5) ∈ BoundingBox(1,2,3,4)) == false
         @test (WeightedPoint(1,3,5) ∈ BoundingBox(1,2,3,4)) == false
 
-        @test (BoundingBox(1,-2,3,4) ∈ BoundingBox{Float32}(nothing)) == true
-        @test (BoundingBox(1,-2,3,4) ∈ BoundingBox(1,2,3,4)) == true
-        @test (BoundingBox(1,2,3,4) ∈ BoundingBox(1,2,3,4)) == true
-        @test (BoundingBox(1,2,3,4) ∈ BoundingBox(1,4,0,3)) == false
-        @test (BoundingBox(0,2,3,4) ∈ BoundingBox(1,2,3,5)) == false
+        @test (BoundingBox(1,-2,3,4) ⊆ BoundingBox{Float32}(nothing)) == true
+        @test (BoundingBox(1,-2,3,4) ⊆ BoundingBox(1,2,3,4)) == true
+        @test (BoundingBox(1,2,3,4) ⊆ BoundingBox(1,2,3,4)) == true
+        @test (BoundingBox(1,2,3,4) ⊆ BoundingBox(1,4,0,3)) == false
+        @test (BoundingBox(0,2,3,4) ⊆ BoundingBox(1,2,3,5)) == false
+        @test_deprecated (BoundingBox(0,2,3,4) ∈ BoundingBox(1,2,3,5)) == false
 
         C = Point(x = 0.5*(B.xmin + B.xmax), y = 0.5*(B.ymin + B.ymax))
         @test center(B) === C

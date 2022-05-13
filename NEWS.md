@@ -1,5 +1,11 @@
 # User visible changes in TwoDimensional package
 
+## Version 0.3.0
+
+- `A ⊆ B` and `issubset(A, B)` yield whether bounding-box `A` is inside the
+  bounding-box `B`.  For bounding-boxes `A` and `B`, `A ∈ B` has been
+  deprecated in favor of `A ⊆ B`.
+
 ## Version 0.2.1
 
 - Instances of `Point`, `WeightedPoint` or `BoundingBox` are iterable.  Hence

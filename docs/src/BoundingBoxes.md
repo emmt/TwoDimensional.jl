@@ -248,8 +248,8 @@ Basic methods `size(B[,k])` and `axes(B[,k])` can be applied to an
 yields a 2-tuple of `UnitRange{Int}` and `axes(B,k)` yields a `UnitRange{Int}`.
 
 
-The `in` (or `∈`) method let you check whether a point `pnt` is inside a
-bounding-box `box`:
+The `in` (or operator `∈`, obtained by `\in`-tab) method let you check whether
+a point `pnt` is inside a bounding-box `box`:
 
 ```julia
 pnt ∈ box
@@ -261,8 +261,9 @@ is a shortcut for:
 (box.xmin ≤ pnt.x ≤ box.xmax) & (box.ymin ≤ pnt.y ≤ box.ymax)
 ```
 
-The same method can be used to check whether a bounding-box, say `A`, is
-inside another one, say `B`.  That is `A in B` or `A ∈ B` is a shortcut for:
+The `issubset` (or operator `⊆`, obtained by `\subseteq`-tab) method can be
+used to check whether a bounding-box, say `A`, is inside another one, say `B`.
+That is `issubset(A, B)` or `A ⊆ B` is a shortcut for:
 
 ```julia
 (isempty(A) | ((A.xmin ≥ B.xmin) & (A.xmax ≤ B.xmax) &
