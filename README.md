@@ -1,8 +1,11 @@
 # TwoDimensional
 
-| **Documentation**               | **License**                     | **Build Status**                                                | **Code Coverage**                                                   |
-|:--------------------------------|:--------------------------------|:----------------------------------------------------------------|:--------------------------------------------------------------------|
-| [![][doc-dev-img]][doc-dev-url] | [![][license-img]][license-url] | [![][travis-img]][travis-url] [![][appveyor-img]][appveyor-url] | [![][coveralls-img]][coveralls-url] [![][codecov-img]][codecov-url] |
+[![License][license-img]][license-url]
+[![Stable][doc-stable-img]][doc-stable-url]
+[![Dev][doc-dev-img]][doc-dev-url]
+[![Build Status][github-ci-img]][github-ci-url]
+[![Build Status][appveyor-img]][appveyor-url]
+[![Coverage][codecov-img]][codecov-url]
 
 **TwoDimensional** is a [Julia][julia-url] package which provides useful types
 and methods to define and manipulate 2-dimensional points, bounding-boxes and
@@ -57,21 +60,6 @@ using Pkg
 Pkg.add("TwoDimensional")
 ```
 
-If you prefer to install and use the master version:
-
-```julia
-pkg> add https://github.com/emmt/TwoDimensional.jl
-```
-
-if you use HTTPS, or:
-
-```julia
-pkg> add git@github.com:emmt/TwoDimensional.jl
-```
-
-if you use SSH.
-
-
 [doc-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [doc-stable-url]: https://emmt.github.io/TwoDimensional.jl/stable
 
@@ -81,17 +69,14 @@ if you use SSH.
 [license-url]: ./LICENSE.md
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
 
-[travis-img]: https://travis-ci.org/emmt/TwoDimensional.jl.svg?branch=master
-[travis-url]: https://travis-ci.org/emmt/TwoDimensional.jl
+[github-ci-img]: https://github.com/emmt/TwoDimensional.jl/actions/workflows/CI.yml/badge.svg?branch=main
+[github-ci-url]: https://github.com/emmt/TwoDimensional.jl/actions/workflows/CI.yml?query=branch%3Amain
 
-[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/emmt/TwoDimensional.jl?branch=master
-[appveyor-url]: https://ci.appveyor.com/project/emmt/TwoDimensional-jl/branch/master
+[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/emmt/TwoDimensional.jl?svg=true
+[appveyor-url]: https://ci.appveyor.com/project/emmt/TwoDimensional-jl
 
-[coveralls-img]: https://coveralls.io/repos/emmt/TwoDimensional.jl/badge.svg?branch=master&service=github
-[coveralls-url]: https://coveralls.io/github/emmt/TwoDimensional.jl?branch=master
-
-[codecov-img]: http://codecov.io/github/emmt/TwoDimensional.jl/coverage.svg?branch=master
-[codecov-url]: http://codecov.io/github/emmt/TwoDimensional.jl?branch=master
+[codecov-img]: https://codecov.io/gh/emmt/TwoDimensional.jl/branch/main/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/emmt/TwoDimensional.jl
 
 [julia-url]: https://julialang.org/
 [julia-pkgs-url]: https://pkg.julialang.org/
