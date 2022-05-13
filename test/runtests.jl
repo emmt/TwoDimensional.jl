@@ -167,18 +167,29 @@ end
         δ = 0.1
         @test eltype(B) === Int
         @test BoundingBox(B) === B
-        @test BoundingBox(2,3,4,5.0) === BoundingBox(2.0,3.0,4.0,5.0)
         @test BoundingBox{eltype(B)}(B) === B
         @test BoundingBox{Float32}(B) ===
             BoundingBox{Float32}(B.xmin, B.xmax, B.ymin, B.ymax)
+        @test BoundingBox(2,3,4,5.0) === BoundingBox(2.0,3.0,4.0,5.0)
         @test convert(BoundingBox, B) === B
-        @test convert(BoundingBox{Int}, B) === B
+        @test convert(BoundingBox{eltype(B)}, B) === B
+        @test convert(BoundingBox{Int16}, B) === BoundingBox{Int16}(B)
+        # Construct a bounding-box from 4-tuple.
+        @test BoundingBox((2,3,4,5)) === BoundingBox(2,3,4,5)
+        @test BoundingBox{Float64}((2,3,4,5)) === BoundingBox(2.0,3.0,4.0,5.0)
+        @test convert(BoundingBox, (2,3,4,5)) === BoundingBox(2,3,4,5)
+        @test convert(BoundingBox{Float64}, (2,3,4,5)) ===
+            BoundingBox(2.0,3.0,4.0,5.0)
         # Construct a bounding-box from 2 points.
         @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox(2,4,3,5)
         @test BoundingBox{Int16}(Point(2,3),Point(4,5)) ===
             BoundingBox{Int16}(2,4,3,5)
         @test BoundingBox((Point(2,3),Point(4,5))) === BoundingBox(2,4,3,5)
         @test BoundingBox{Int16}((Point(2,3),Point(4,5))) ===
+            BoundingBox{Int16}(2,4,3,5)
+        @test convert(BoundingBox,(Point(2,3),Point(4,5))) ===
+            BoundingBox(2,4,3,5)
+        @test convert(BoundingBox{Int16}, (Point(2,3),Point(4,5))) ===
             BoundingBox{Int16}(2,4,3,5)
         # Construct a bounding-box from 2 Cartesian indices.
         @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) ===
@@ -198,10 +209,19 @@ end
         @test BoundingBox{Float64}(xmin=2,ymin=3,xmax=4,ymax=5) ===
             BoundingBox(2.0,4.0,3.0,5.0)
         # Construct a bounding-box from CartesianIndices instance.
-        @test BoundingBox(CartesianIndices((2:4,3:5))) ===
-            BoundingBox(2,4,3,5)
-        @test BoundingBox{Int16}(CartesianIndices((2:4,3:5))) ===
-            BoundingBox{Int16}(2,4,3,5)
+        R = CartesianIndices((2:4,3:5))
+        @test BoundingBox(R) === BoundingBox(2,4,3,5)
+        @test BoundingBox{Int16}(R) === BoundingBox{Int16}(2,4,3,5)
+        @test convert(BoundingBox, R) === BoundingBox(2,4,3,5)
+        @test convert(BoundingBox{Int16}, R) === BoundingBox{Int16}(2,4,3,5)
+        # Construct a bounding-box from 2 ranges.
+        R = (2:4, 3:5)
+        @test BoundingBox(R...) === BoundingBox(2,4,3,5)
+        @test BoundingBox{Int16}(R...) === BoundingBox{Int16}(2,4,3,5)
+        @test BoundingBox(R) === BoundingBox(2,4,3,5)
+        @test BoundingBox{Int16}(R) === BoundingBox{Int16}(2,4,3,5)
+        @test convert(BoundingBox,R) === BoundingBox(2,4,3,5)
+        @test convert(BoundingBox{Int16},R) === BoundingBox{Int16}(2,4,3,5)
 
         @test first(B) === Point(B.xmin,B.ymin)
         @test last(B) === Point(B.xmax,B.ymax)
