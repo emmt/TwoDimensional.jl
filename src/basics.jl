@@ -1,14 +1,14 @@
 #
 # basics.jl --
 #
-# Basic types.
+# Basic types and method for 2-D points and bounding-boxes.
 #
 #-------------------------------------------------------------------------------
 #
 # This file is part of the TwoDimensional Julia package licensed under the MIT
 # license (https://github.com/emmt/TwoDimensional.jl).
 #
-# Copyright (C) 2019, Éric Thiébaut.
+# Copyright (C) 2019-2022, Éric Thiébaut.
 #
 
 using Base: @propagate_inbounds
@@ -63,9 +63,10 @@ Base.getindex(obj::Point, i::Integer) =
      error("out of range index for `Point` object"))
 
 """
+    WeightedPoint{T}(w,x,y)
 
-A `WeightedPoint{T}` has just 3 fields: `w` its weight, `x` its abscissa and
-`y` its ordinate, all of type `T`.  By convention `w ≥ 0` but this is not
+yields a weighted point which has 3 fields: `w` its weight, `x` its abscissa
+and `y` its ordinate, all of type `T`.  By convention `w ≥ 0` but this is not
 checked for efficiency reasons.
 
 See also: [`Point`](@ref), [`AbstractPoint`](@ref).
@@ -180,7 +181,6 @@ Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} 
     WeightedPoint{T}
 
 """
-
     round([T,] obj::Union{Point,BoundingBox})
 
 yields the object that is the nearest to `obj` by rounding its coordinates to
@@ -230,7 +230,6 @@ Base.round(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
     BoundingBox{T}(round(U, obj))
 
 """
-
     floor([T,] P::Point)
 
 yields the point with the largest integer coordinates smaller or equal those of
@@ -255,7 +254,6 @@ Base.floor(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
     Point{T}(floor(U, obj))
 
 """
-
     ceil([T,] P::Point)
 
 yields the point with the smallest integer coordinates larger or equal those of
@@ -290,7 +288,6 @@ Base.hypot(P::Point) = hypot(P.x, P.y)
 Base.atan(P::Point) = atan(P.y, P.x)
 
 """
-
     distance(A, B)
 
 yields the Euclidean distance between the 2 points `A` and `B`.
@@ -440,9 +437,7 @@ function BoundingBox(f::Function, A::AbstractMatrix)
 end
 
 """
-```julia
-getaxisbounds(I) = (i0,i1)
-```
+    getaxisbounds(I) = (i0,i1)
 
 yields the bounds `i0` and `i1` of index range `I` as a 2-tuple of `Int`'s and
 such that `i0:i1` represents the same indices as `I` (although not in the same
@@ -553,9 +548,7 @@ Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     view(A, B.xmin:B.xmax, B.ymin:B.ymax)
 
 """
-```julia
-interior([T,] B)
-```
+    interior([T,] B)
 
 yields the largest bounding-box with integer valued bounds and which is
 contained by the bounding-box `B`.  Optional argument `T` is to specify the
@@ -582,9 +575,7 @@ interior(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
     BoundingBox{T}(interior(U, obj))
 
 """
-```julia
-exterior([T,] B)
-```
+    exterior([T,] B)
 
 yields the smallest bounding-box with integer valued bounds and which contains
 the bounding-box `B`.  Optional argument `T` is to specify the type of the
@@ -610,9 +601,7 @@ exterior(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
     BoundingBox{T}(exterior(U, obj))
 
 """
-```julia
-center(B::BoundingBox) -> c::Point
-```
+    center(B::BoundingBox) -> c::Point
 
 yields the central point of the bounding-box `B`.
 
@@ -625,8 +614,9 @@ center(B::BoundingBox{T}) where {T<:AbstractFloat} =
 half(::Type{T}) where {T<:AbstractFloat} = one(T)/convert(T, 2)
 
 """
+    area(B)
 
-`area(B)` yields the area of the bounding-box `B`.
+yields the area of the bounding-box `B`.
 
 """
 area(B::BoundingBox{T}) where {T<:Real} =
@@ -676,5 +666,3 @@ Base.:(+)(B::BoundingBox, P::Point) =
 Base.:(-)(B::BoundingBox, P::Point) =
     BoundingBox(B.xmin - P.x, B.xmax - P.x,
                 B.ymin - P.y, B.ymax - P.y)
-
-#------------------------------------------------------------------------------
