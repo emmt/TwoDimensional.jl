@@ -69,13 +69,13 @@ Pkg.add("TwoDimensional")
 [license-url]: ./LICENSE.md
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
 
-[github-ci-img]: https://github.com/emmt/TwoDimensional.jl/actions/workflows/CI.yml/badge.svg?branch=main
-[github-ci-url]: https://github.com/emmt/TwoDimensional.jl/actions/workflows/CI.yml?query=branch%3Amain
+[github-ci-img]: https://github.com/emmt/TwoDimensional.jl/actions/workflows/CI.yml/badge.svg?branch=master
+[github-ci-url]: https://github.com/emmt/TwoDimensional.jl/actions/workflows/CI.yml?query=branch%3Amaster
 
 [appveyor-img]: https://ci.appveyor.com/api/projects/status/github/emmt/TwoDimensional.jl?svg=true
 [appveyor-url]: https://ci.appveyor.com/project/emmt/TwoDimensional-jl
 
-[codecov-img]: https://codecov.io/gh/emmt/TwoDimensional.jl/branch/main/graph/badge.svg
+[codecov-img]: https://codecov.io/gh/emmt/TwoDimensional.jl/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/emmt/TwoDimensional.jl
 
 [julia-url]: https://julialang.org/
