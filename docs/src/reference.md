@@ -41,6 +41,8 @@ exterior
 
 ```@docs
 round(::Point)
+floor(::Point)
+ceil(::Point)
 ```
 
 ## Aliases

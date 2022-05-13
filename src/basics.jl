@@ -187,7 +187,7 @@ yields the object that is the nearest to `obj` by rounding its coordinates to
 the nearest integer.  Argument `T` can be the type of the result (a point or a
 bounding-box) or the type of the coordinates of the result.
 
-For points, see also: [`floor`](@ref), [`ceil`](@ref).
+For points, see also: [`floor(::Point)`](@ref), [`ceil(::Point)`](@ref).
 
 For bounding-boxes, see also: [`interior`](@ref), [`exterior`](@ref).
 
