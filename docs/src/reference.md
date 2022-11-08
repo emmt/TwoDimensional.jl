@@ -1,8 +1,8 @@
 # Reference
 
-The following provides detailled documentation about types and methods provided
-by the `TwoDimensional` package.  This information is also available from the
-REPL by typing `?` followed by the name of a method or a type.
+The following summarizes the documentation of types and methods provided by the
+`TwoDimensional` package.  This information is also available from the REPL by
+typing `?` followed by the name of a method or a type.
 
 
 ## Affine 2D Coordinate Transforms
