@@ -18,7 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.5'
+          - '0.7'
+          - '1.0'
           - '1.8'
           - 'nightly'
         os:
