@@ -1,5 +1,9 @@
 # User visible changes in TwoDimensional package
 
+## Version 0.3.2
+
+- `round` has a `r::RoundingMode` optional argument.
+
 ## Version 0.3.1
 
 - Julia 0.7 is supported.

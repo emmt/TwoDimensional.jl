@@ -181,11 +181,11 @@ Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} 
     WeightedPoint{T}
 
 """
-    round([T,] obj::Union{Point,BoundingBox})
+    round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
 
-yields the object that is the nearest to `obj` by rounding its coordinates to
-the nearest integer.  Argument `T` can be the type of the result (a point or a
-bounding-box) or the type of the coordinates of the result.
+yields the object that is the nearest to `obj` by rounding its coordinates. Argument `T` can be the
+type of the result (a point or a bounding-box) or the type of the coordinates of the result.
+Rounding mode is set by optional argument `r` with `RoundNearest` as default.
 
 For points, see also: [`floor(::Point)`](@ref), [`ceil(::Point)`](@ref).
 
@@ -193,41 +193,49 @@ For bounding-boxes, see also: [`interior`](@ref), [`exterior`](@ref).
 
 """
 Base.round(obj::Point{T}) where {T} = round(T, obj)
+Base.round(obj::Point{T}, r::RoundingMode) where {T} = round(T, obj, r)
 Base.round(::Type{Point{T}}, obj::Point) where {T} = round(T, obj)
+Base.round(::Type{Point{T}}, obj::Point, r::RoundingMode) where {T} = round(T, obj, r)
 Base.round(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
-Base.round(::Type{T}, obj::Point{T}) where {T<:Real} =
-    Point(round(obj.x, RoundNearest),
-          round(obj.y, RoundNearest))
+Base.round(::Type{T}, obj::Point{T}, r::RoundingMode=RoundNearest) where {T<:Real} =
+    Point(round(obj.x, r),
+          round(obj.y, r))
 Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
     Point{T}(obj)
-Base.round(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
-    Point(round(T, obj.x, RoundNearest),
-          round(T, obj.y, RoundNearest))
+Base.round(::Type{T}, obj::Point{<:Real}, r::RoundingMode=RoundNearest) where {T<:Integer} =
+    Point(round(T, obj.x, r),
+          round(T, obj.y, r))
 Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
     Point{T}(obj)
 Base.round(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
     Point{T}(round(U, obj))
+Base.round(::Type{T}, obj::Point{U}, r::RoundingMode) where {T<:Real,U<:Real} =
+    Point{T}(round(U, obj, r))
 
 # Extend round for bounding-boxes.
 Base.round(obj::BoundingBox{T}) where {T} = round(T, obj)
+Base.round(obj::BoundingBox{T}, r::RoundingMode) where {T} = round(T, obj, r)
 Base.round(::Type{BoundingBox{T}}, obj::BoundingBox) where {T} = round(T, obj)
+Base.round(::Type{BoundingBox{T}}, obj::BoundingBox, r::RoundingMode) where {T} = round(T, obj, r)
 Base.round(::Type{T}, obj::BoundingBox{T}) where {T<:Integer} = obj
-Base.round(::Type{T}, obj::BoundingBox{T}) where {T<:Real} =
-    BoundingBox(round(obj.xmin, RoundNearest),
-                round(obj.xmax, RoundNearest),
-                round(obj.ymin, RoundNearest),
-                round(obj.ymax, RoundNearest))
+Base.round(::Type{T}, obj::BoundingBox{T}, r::RoundingMode=RoundNearest) where {T<:Real} =
+    BoundingBox(round(obj.xmin, r),
+                round(obj.xmax, r),
+                round(obj.ymin, r),
+                round(obj.ymax, r))
 Base.round(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Integer} =
     BoundingBox{T}(obj)
-Base.round(::Type{T}, obj::BoundingBox{<:Real}) where {T<:Integer} =
-    BoundingBox(round(T, obj.xmin, RoundNearest),
-                round(T, obj.xmax, RoundNearest),
-                round(T, obj.ymin, RoundNearest),
-                round(T, obj.ymax, RoundNearest))
+Base.round(::Type{T}, obj::BoundingBox{<:Real}, r::RoundingMode=RoundNearest) where {T<:Integer} =
+    BoundingBox(round(T, obj.xmin, r),
+                round(T, obj.xmax, r),
+                round(T, obj.ymin, r),
+                round(T, obj.ymax, r))
 Base.round(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Real} =
     BoundingBox{T}(obj)
 Base.round(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
     BoundingBox{T}(round(U, obj))
+Base.round(::Type{T}, obj::BoundingBox{U}, r::RoundingMode) where {T<:Real,U<:Real} =
+    BoundingBox{T}(round(U, obj, r))
 
 """
     floor([T,] P::Point)

@@ -181,12 +181,13 @@ distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)
 The nearest point to an instance `obj` of [`Point`](@ref) is given by:
 
 ```julia
-round([T,] obj)
+round([T,] obj, [r::RoundingMode])
 ```
 
 which rounds the coordinates of `obj` to the nearest integer.  Optional
 argument `T` is to specify the type of the result or the type of the
-coordinates of the result.
+coordinates of the result. Optional argument `r` is to set the rounding
+mode, the default is `RoundNearest`.
 
 Similarly, `floor([T,],P)` and `ceil([T,],P)` yield the point with integer
 coordinates immediately (inclusively) before and after [`Point`](@ref) `P`.

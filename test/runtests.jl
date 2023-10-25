@@ -114,6 +114,10 @@ end
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
+        @test round(Point(1.5, 2.5)) === Point(2.0, 2.0)
+        @test round(Point(1.5, 2.5), RoundNearestTiesUp) === Point(2.0, 3.0)
+        @test round(Float32, Point{Float64}(1.5e0, 2.5e0), RoundNearestTiesUp) ===
+            Point{Float32}(2f0, 3f0)
         # floor
         @test floor(Point(-1,3)) === Point(-1,3)
         @test floor(Int, Point(-1,3)) === Point(-1,3)
@@ -289,6 +293,11 @@ end
             BoundingBox{Float32}(1,2,-4,8)
         @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) ===
             BoundingBox{Float32}(1,3,-5,8)
+        @test round(BoundingBox(1.5, 2.5, 3.5, 9.9)) === BoundingBox(2.0, 2.0, 4.0, 10.0)
+        @test round(BoundingBox(1.5, 2.5, 3.5, 9.9), RoundNearestTiesUp) ===
+            BoundingBox(2.0, 3.0, 4.0, 10.0)
+        @test round(Float32, BoundingBox{Float64}(1.5e0, 2.5e0, 3.5e0, 9.9e0), RoundNearestTiesUp) ===
+            BoundingBox{Float32}(2f0, 3f0, 4f0, 10f0)
         # exterior
         @test exterior(B) === B
         @test exterior(Int, B) === B
