@@ -40,7 +40,7 @@ exterior
 ## Methods
 
 ```@docs
-round(::Point)
+round(::Union{Point,BoundingBox})
 floor(::Point)
 ceil(::Point)
 ```

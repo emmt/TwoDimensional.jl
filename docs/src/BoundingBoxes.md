@@ -208,9 +208,9 @@ Given the bounding-box `B`, [`interior(B)`](@ref interior) and
 [`exterior(B)`](@ref exterior) respectively yield the largest interior and
 smallest exterior bounding-boxes with integer bounds.
 
-[`round(B)`](@ref round) or [`round(T,B)`](@ref round) yield a bounding-box
-whose limits are those of the bounding-box `B` rounded to the nearest integer
-values.
+[`round(B)`](@ref round) or [`round(T,B)`](@ref round)  or [`round(T,B,r)`](@ref round) yield a
+bounding-box whose limits are those of the bounding-box `B` rounded to the nearest integer
+values, with rounding mode `r` (default is `RoundNearest`).
 
 [`center(B)`](@ref center) yields the `Point` whose coordinates are the
 geometrical center of the bounding-box `B`.
