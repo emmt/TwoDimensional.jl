@@ -180,6 +180,10 @@ Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{U}}) where {T,U
 Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} =
     WeightedPoint{T}
 
+for Class in (:Point, :BoundingBox)
+    @eval Base.map(f, obj::$Class) = $Class(map(f, Tuple(obj)))
+end
+
 """
     round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
 
@@ -195,6 +199,8 @@ For bounding-boxes, see also: [`interior`](@ref), [`exterior`](@ref).
 
 """ Base.round
 
+# NOTE: Using the following functor is a bit faster than map with an anonymous
+#       function.
 struct Round{T,R}
     r::R
     Round{T}(r::R) where {T,R} = new{T,R}(r)
@@ -207,23 +213,15 @@ Round{T}() where {T} = Round{T}(nothing)
 
 for Class in (:Point, :BoundingBox)
     @eval begin
-        Base.round(obj::$Class) =
-            $Class(map(round, Tuple(obj)))
-        Base.round(obj::$Class, r::RoundingMode) =
-            $Class(map(Round{Nothing}(r), Tuple(obj)))
-        Base.round(::Type{T}, obj::$Class) where {T<:Number} =
-            $Class(map(Round{T}(), Tuple(obj)))
-        Base.round(::Type{T}, obj::$Class, r::RoundingMode) where {T<:Number} =
-            $Class(map(Round{T}(r), Tuple(obj)))
+        Base.round(obj::$Class) = map(round, obj)
+        Base.round(obj::$Class, r::RoundingMode) = map(Round{Nothing}(r), obj)
+        Base.round(::Type{T}, obj::$Class) where {T<:Number} = map(Round{T}(), obj)
+        Base.round(::Type{T}, obj::$Class, r::RoundingMode) where {T<:Number} = map(Round{T}(r), obj)
 
-        Base.round(::Type{$Class}, obj::$Class) =
-            round(obj)
-        Base.round(::Type{$Class}, obj::$Class, r::RoundingMode) =
-            round(obj, r)
-        Base.round(::Type{$Class{T}}, obj::$Class) where {T} =
-            round(T, obj)
-        Base.round(::Type{$Class{T}}, obj::$Class, r::RoundingMode) where {T} =
-            round(T, obj, r)
+        Base.round(::Type{$Class}, obj::$Class) = round(obj)
+        Base.round(::Type{$Class}, obj::$Class, r::RoundingMode) = round(obj, r)
+        Base.round(::Type{$Class{T}}, obj::$Class) where {T} = round(T, obj)
+        Base.round(::Type{$Class{T}}, obj::$Class, r::RoundingMode) where {T} = round(T, obj, r)
     end
 end
 
@@ -251,9 +249,8 @@ See also: [`round`](@ref), [`floor`](@ref).
 
 for Class in (:Point, :BoundingBox), func in (:floor, :ceil)
     @eval begin
-        Base.$func(obj::$Class) = $Class(map($func, Tuple(obj)))
-        Base.$func(::Type{T}, obj::$Class) where {T<:Number} =
-            $Class(map(x -> $func(T, x), Tuple(obj)))
+        Base.$func(obj::$Class) = map($func, obj)
+        Base.$func(::Type{T}, obj::$Class) where {T<:Number} = map(x -> $func(T, x), obj)
 
         Base.$func(::Type{$Class}, obj::$Class) = $func(obj)
         Base.$func(::Type{$Class{T}}, obj::$Class) where {T} = $func(T, obj)

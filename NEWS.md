@@ -2,12 +2,17 @@
 
 ## Version 0.4.0
 
+- Extend `map` for `Point` and `BoundingBox` objects.
+
 - `round` for a `Point` or a `BoundingBox` has an optional `r::RoundingMode`
   argument.
+
+- Extend `ceil`, and `floor` methods for `BoundingBox` objects.
 
 - Unify extends for `Point` and `BoundingBox` of the `round`, `ceil`, and
   `floor` methods and make their rules more consistent with the corresponding
   method for scalar values.
+
 
 ## Version 0.3.1
 
