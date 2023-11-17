@@ -89,6 +89,7 @@ end
         @test promote(P1) === (P1,)
         @test Point{Int}(x=Int16(8),y=Int16(9)) === Point(8,9)
         @test Point{Float64}(CartesianIndex(8,9)) === Point(8.0,9.0)
+        @test Point{Float64}(2, 3) === Point(2.0, 3.0)
         @test Point{Float64}((8,9)) === Point(8.0,9.0)
         P2 = Point(3,11)
         P3 = Point{Float32}(-2.1,11.8)
@@ -105,19 +106,17 @@ end
         # round
         @test round(Point(1.2,-0.7)) === Point(1.0,-1.0)
         @test round(Point(1,-7)) === Point(1,-7)
-        @test round(Float32, Point(1,-7)) === Point{Float32}(1,-7)
-        @test round(Float32, Point(1.0,-7.6)) === Point{Float32}(1,-8)
+        @test_throws Exception round(Float32, Point(1,-7))
         @test round(Int32, Point(1,-7)) === Point{Int32}(1,-7)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test round(Int, Point(1,-4)) === Point(1,-4)
-        @test round(Point{Float64}, P1) === Point(map(round, Tuple(P1)))
+        @test round(Point, P1) === Point(map(round, Tuple(P1)))
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Point(1.5, 2.5)) === Point(2.0, 2.0)
         @test round(Point(1.5, 2.5), RoundNearestTiesUp) === Point(2.0, 3.0)
-        @test round(Float32, Point{Float64}(1.5e0, 2.5e0), RoundNearestTiesUp) ===
-            Point{Float32}(2f0, 3f0)
+        @test_throws Exception round(Float32, Point(1.5e0, 2.5e0), RoundNearestTiesUp)
         # floor
         @test floor(Point(-1,3)) === Point(-1,3)
         @test floor(Int, Point(-1,3)) === Point(-1,3)
@@ -126,8 +125,6 @@ end
         @test floor(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
         @test floor(Point(-1.7,3.2)) === Point(-2.0,3.0)
         @test floor(Int, Point(-1.7,3.2)) === Point(-2,3)
-        @test floor(Float32, Point(-1,3)) === Point{Float32}(-1,3)
-        @test floor(Point{Float32}, Point(-1.7,3.2)) === Point{Float32}(-2,3)
         # ceil
         @test ceil(Point(-1,3)) === Point(-1,3)
         @test ceil(Int, Point(-1,3)) === Point(-1,3)
@@ -136,8 +133,6 @@ end
         @test ceil(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
         @test ceil(Point(-1.7,3.2)) === Point(-1.0,4.0)
         @test ceil(Int, Point(-1.7,3.2)) === Point(-1,4)
-        @test ceil(Float32, Point(-1,3)) === Point{Float32}(-1,3)
-        @test ceil(Point{Float32}, Point(-1.7,3.2)) === Point{Float32}(-1,4)
         # other methods
         @test clamp(Point(-1.1, 6.3), BoundingBox(1,4,1,5)) === Point(1.0,5.0)
         @test hypot(P1) == hypot(P1.x, P1.y)
@@ -289,15 +284,11 @@ end
             BoundingBox{Int16}(1,2,-4,8)
         @test round(Int16, BoundingBox(1,2,-4,8)) ===
             BoundingBox{Int16}(1,2,-4,8)
-        @test round(Float32, BoundingBox{Int16}(1,2,-4,8)) ===
-            BoundingBox{Float32}(1,2,-4,8)
-        @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) ===
-            BoundingBox{Float32}(1,3,-5,8)
+        @test_throws Exception round(Float32, BoundingBox{Int16}(1,2,-4,8))
+        @test_throws Exception round(Float32, BoundingBox(1.1,2.7,-4.6,8.3))
         @test round(BoundingBox(1.5, 2.5, 3.5, 9.9)) === BoundingBox(2.0, 2.0, 4.0, 10.0)
         @test round(BoundingBox(1.5, 2.5, 3.5, 9.9), RoundNearestTiesUp) ===
             BoundingBox(2.0, 3.0, 4.0, 10.0)
-        @test round(Float32, BoundingBox{Float64}(1.5e0, 2.5e0, 3.5e0, 9.9e0), RoundNearestTiesUp) ===
-            BoundingBox{Float32}(2f0, 3f0, 4f0, 10f0)
         # exterior
         @test exterior(B) === B
         @test exterior(Int, B) === B

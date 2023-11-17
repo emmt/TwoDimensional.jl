@@ -184,10 +184,10 @@ The nearest point to an instance `obj` of [`Point`](@ref) is given by:
 round([T,] obj, [r::RoundingMode])
 ```
 
-which rounds the coordinates of `obj` to the nearest integer.  Optional
+which rounds the coordinates of `obj` to the nearest integral value. Optional
 argument `T` is to specify the type of the result or the type of the
-coordinates of the result. Optional argument `r` is to set the rounding
-mode, the default is `RoundNearest`.
+coordinates of the result. Optional argument `r` is the rounding mode, the
+default is the same as `round` for a scalar value.
 
 Similarly, `floor([T,],P)` and `ceil([T,],P)` yield the point with integer
 coordinates immediately (inclusively) before and after [`Point`](@ref) `P`.

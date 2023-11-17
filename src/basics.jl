@@ -183,59 +183,49 @@ Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} 
 """
     round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
 
-yields the object that is the nearest to `obj` by rounding its coordinates. Argument `T` can be the
-type of the result (a point or a bounding-box) or the type of the coordinates of the result.
-Rounding mode is set by optional argument `r` with `RoundNearest` as default.
+yields the object that is the nearest to `obj` by rounding its coordinates to
+nearest integral values. Argument `T` can be the type of the result (a point or
+a bounding-box) or the type of the coordinates of the result. Rounding mode may
+be specified by optional argument `r`, the default being the same as the
+`round` method for a scalar value.
 
 For points, see also: [`floor(::Point)`](@ref), [`ceil(::Point)`](@ref).
 
 For bounding-boxes, see also: [`interior`](@ref), [`exterior`](@ref).
 
-"""
-Base.round(obj::Point{T}) where {T} = round(T, obj)
-Base.round(obj::Point{T}, r::RoundingMode) where {T} = round(T, obj, r)
-Base.round(::Type{Point{T}}, obj::Point) where {T} = round(T, obj)
-Base.round(::Type{Point{T}}, obj::Point, r::RoundingMode) where {T} = round(T, obj, r)
-Base.round(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
-Base.round(::Type{T}, obj::Point{T}, r::RoundingMode=RoundNearest) where {T<:Real} =
-    Point(round(obj.x, r),
-          round(obj.y, r))
-Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
-    Point{T}(obj)
-Base.round(::Type{T}, obj::Point{<:Real}, r::RoundingMode=RoundNearest) where {T<:Integer} =
-    Point(round(T, obj.x, r),
-          round(T, obj.y, r))
-Base.round(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
-    Point{T}(obj)
-Base.round(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
-    Point{T}(round(U, obj))
-Base.round(::Type{T}, obj::Point{U}, r::RoundingMode) where {T<:Real,U<:Real} =
-    Point{T}(round(U, obj, r))
+""" Base.round
 
-# Extend round for bounding-boxes.
-Base.round(obj::BoundingBox{T}) where {T} = round(T, obj)
-Base.round(obj::BoundingBox{T}, r::RoundingMode) where {T} = round(T, obj, r)
-Base.round(::Type{BoundingBox{T}}, obj::BoundingBox) where {T} = round(T, obj)
-Base.round(::Type{BoundingBox{T}}, obj::BoundingBox, r::RoundingMode) where {T} = round(T, obj, r)
-Base.round(::Type{T}, obj::BoundingBox{T}) where {T<:Integer} = obj
-Base.round(::Type{T}, obj::BoundingBox{T}, r::RoundingMode=RoundNearest) where {T<:Real} =
-    BoundingBox(round(obj.xmin, r),
-                round(obj.xmax, r),
-                round(obj.ymin, r),
-                round(obj.ymax, r))
-Base.round(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Integer} =
-    BoundingBox{T}(obj)
-Base.round(::Type{T}, obj::BoundingBox{<:Real}, r::RoundingMode=RoundNearest) where {T<:Integer} =
-    BoundingBox(round(T, obj.xmin, r),
-                round(T, obj.xmax, r),
-                round(T, obj.ymin, r),
-                round(T, obj.ymax, r))
-Base.round(::Type{T}, obj::BoundingBox{<:Integer}) where {T<:Real} =
-    BoundingBox{T}(obj)
-Base.round(::Type{T}, obj::BoundingBox{U}) where {T<:Real,U<:Real} =
-    BoundingBox{T}(round(U, obj))
-Base.round(::Type{T}, obj::BoundingBox{U}, r::RoundingMode) where {T<:Real,U<:Real} =
-    BoundingBox{T}(round(U, obj, r))
+struct Round{T,R}
+    r::R
+    Round{T}(r::R) where {T,R} = new{T,R}(r)
+end
+Round{T}() where {T} = Round{T}(nothing)
+(f::Round{Nothing,Nothing})(x) = round(x)
+(f::Round{Nothing,<:RoundingMode})(x) = round(x, f.r)
+(f::Round{T,Nothing})(x) where {T<:Number} = round(T, x)
+(f::Round{T,<:RoundingMode})(x) where {T<:Number} = round(T, x, f.r)
+
+for Class in (:Point, :BoundingBox)
+    @eval begin
+        Base.round(obj::$Class) =
+            $Class(map(round, Tuple(obj)))
+        Base.round(obj::$Class, r::RoundingMode) =
+            $Class(map(Round{Nothing}(r), Tuple(obj)))
+        Base.round(::Type{T}, obj::$Class) where {T<:Number} =
+            $Class(map(Round{T}(), Tuple(obj)))
+        Base.round(::Type{T}, obj::$Class, r::RoundingMode) where {T<:Number} =
+            $Class(map(Round{T}(r), Tuple(obj)))
+
+        Base.round(::Type{$Class}, obj::$Class) =
+            round(obj)
+        Base.round(::Type{$Class}, obj::$Class, r::RoundingMode) =
+            round(obj, r)
+        Base.round(::Type{$Class{T}}, obj::$Class) where {T} =
+            round(T, obj)
+        Base.round(::Type{$Class{T}}, obj::$Class, r::RoundingMode) where {T} =
+            round(T, obj, r)
+    end
+end
 
 """
     floor([T,] P::Point)
@@ -246,20 +236,7 @@ coordinates of the result.
 
 See also: [`round`](@ref), [`ceil`](@ref).
 
-"""
-Base.floor(obj::Point{T}) where {T} = floor(T, obj)
-Base.floor(::Type{Point{T}}, obj::Point) where {T} = floor(T, obj)
-Base.floor(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
-Base.floor(::Type{T}, obj::Point{T}) where {T<:Real} =
-    Point(floor(obj.x), floor(obj.y))
-Base.floor(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
-    Point{T}(obj)
-Base.floor(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
-    Point(floor(T, obj.x), floor(T, obj.y))
-Base.floor(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
-    Point{T}(obj)
-Base.floor(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
-    Point{T}(floor(U, obj))
+""" Base.floor
 
 """
     ceil([T,] P::Point)
@@ -270,20 +247,18 @@ coordinates of the result.
 
 See also: [`round`](@ref), [`floor`](@ref).
 
-"""
-Base.ceil(obj::Point{T}) where {T} = ceil(T, obj)
-Base.ceil(::Type{Point{T}}, obj::Point) where {T} = ceil(T, obj)
-Base.ceil(::Type{T}, obj::Point{T}) where {T<:Integer} = obj
-Base.ceil(::Type{T}, obj::Point{T}) where {T<:Real} =
-    Point(ceil(obj.x), ceil(obj.y))
-Base.ceil(::Type{T}, obj::Point{<:Integer}) where {T<:Integer} =
-    Point{T}(obj)
-Base.ceil(::Type{T}, obj::Point{<:Real}) where {T<:Integer} =
-    Point(ceil(T, obj.x), ceil(T, obj.y))
-Base.ceil(::Type{T}, obj::Point{<:Integer}) where {T<:Real} =
-    Point{T}(obj)
-Base.ceil(::Type{T}, obj::Point{U}) where {T<:Real,U<:Real} =
-    Point{T}(ceil(U, obj))
+""" Base.ceil
+
+for Class in (:Point, :BoundingBox), func in (:floor, :ceil)
+    @eval begin
+        Base.$func(obj::$Class) = $Class(map($func, Tuple(obj)))
+        Base.$func(::Type{T}, obj::$Class) where {T<:Number} =
+            $Class(map(x -> $func(T, x), Tuple(obj)))
+
+        Base.$func(::Type{$Class}, obj::$Class) = $func(obj)
+        Base.$func(::Type{$Class{T}}, obj::$Class) where {T} = $func(T, obj)
+    end
+end
 
 function Base.clamp(P::Point{T1}, B::BoundingBox{T2}) where {T1,T2}
     T = promote_type(T1, T2)

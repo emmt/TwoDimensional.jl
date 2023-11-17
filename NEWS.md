@@ -1,8 +1,13 @@
 # User visible changes in TwoDimensional package
 
-## Version 0.3.2
+## Version 0.4.0
 
-- `round` has a `r::RoundingMode` optional argument.
+- `round` for a `Point` or a `BoundingBox` has an optional `r::RoundingMode`
+  argument.
+
+- Unify extends for `Point` and `BoundingBox` of the `round`, `ceil`, and
+  `floor` methods and make their rules more consistent with the corresponding
+  method for scalar values.
 
 ## Version 0.3.1
 

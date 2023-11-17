@@ -16,7 +16,7 @@ The type of the bounds, say `T`, can be explicitly specified:
 BoundingBox{T}(xmin,xmax,ymin,ymax)
 ```
 
-If unspecified, it is assimed to be he types of the bounds promoted to a common
+If unspecified, it is assumed to be he types of the bounds promoted to a common
 type.  The type of the bounds and can be retrieved by the `eltype` method.
 
 
@@ -202,15 +202,16 @@ yields the same result as `typemin(BoundingBox{T})`.
 The method `isempty(B)` yields whether a bounding-box `B` is empty or not.
 
 
-## Interrior, Exterior, Nearest, etc.
+## Interior, Exterior, Nearest, etc.
 
 Given the bounding-box `B`, [`interior(B)`](@ref interior) and
 [`exterior(B)`](@ref exterior) respectively yield the largest interior and
 smallest exterior bounding-boxes with integer bounds.
 
-[`round(B)`](@ref round) or [`round(T,B)`](@ref round)  or [`round(T,B,r)`](@ref round) yield a
-bounding-box whose limits are those of the bounding-box `B` rounded to the nearest integer
-values, with rounding mode `r` (default is `RoundNearest`).
+[`round(B)`](@ref round), [`round(T,B)`](@ref round), or [`round(T,B,r)`](@ref
+round) yield a bounding-box whose limits are those of the bounding-box `B`
+rounded to the nearest integral values with rounding mode `r` if specified
+(default is the same as `round` for a scalar).
 
 [`center(B)`](@ref center) yields the `Point` whose coordinates are the
 geometrical center of the bounding-box `B`.
