@@ -175,6 +175,28 @@ Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{T}}) where 
 
 (A::AffineTransform{T})(x::Real, y::Real) where {T<:AbstractFloat} =
     A(convert(T, x), convert(T, y))
+# Make affine transform objects indexable and iterable.
+Base.Tuple(A::AffineTransform) = (A.xx, A.xy, A.x, A.yx, A.yy, A.y)
+
+Base.getindex(A::AffineTransform, i::Integer) =
+    i == 1 ? A.xx :
+    i == 2 ? A.xy :
+    i == 3 ? A.x  :
+    i == 4 ? A.yx :
+    i == 5 ? A.yy :
+    i == 6 ? A.y  : throw(BoundsError(A, i))
+
+Base.iterate(A::AffineTransform, i::Int=1) =
+    i == 1 ? (A.xx, 2) :
+    i == 2 ? (A.xy, 3) :
+    i == 3 ? (A.x,  4) :
+    i == 4 ? (A.yx, 5) :
+    i == 5 ? (A.yy, 6) :
+    i == 6 ? (A.y,  7) : nothing
+
+Base.IteratorSize(A::AffineTransform) = Base.IteratorSize(typeof(A))
+Base.IteratorSize(::Type{<:AffineTransform}) = Base.HasLength()
+Base.length(A::AffineTransform) = 6
 
 (A::AffineTransform)(v::Tuple{Real,Real}) = A(v[1], v[2])
 

@@ -20,6 +20,9 @@ Base.getindex(pnt::Point, i::Integer) =
 Base.iterate(pnt::Point, i::Int=1) =
     i == 1 ? (pnt.x, 2) :
     i == 2 ? (pnt.y, 3) : nothing
+Base.IteratorSize(pnt::Point) = Base.IteratorSize(typeof(pnt))
+Base.IteratorSize(::Type{<:Point}) = Base.HasLength()
+Base.length(pnt::Point) = 2
 
 Base.Tuple(pnt::WeightedPoint) = (pnt.w, pnt.x, pnt.y)
 Base.getindex(pnt::WeightedPoint, i::Integer) =
@@ -30,6 +33,9 @@ Base.iterate(pnt::WeightedPoint, i::Int=1) =
     i == 1 ? (pnt.w, 2) :
     i == 2 ? (pnt.x, 3) :
     i == 3 ? (pnt.y, 4) : nothing
+Base.IteratorSize(pnt::WeightedPoint) = Base.IteratorSize(typeof(pnt))
+Base.IteratorSize(::Type{<:WeightedPoint}) = Base.HasLength()
+Base.length(pnt::WeightedPoint) = 3
 
 Base.Tuple(box::BoundingBox) = (box.xmin, box.xmax, box.ymin, box.ymax)
 Base.getindex(box::BoundingBox, i::Integer) =
@@ -42,6 +48,9 @@ Base.iterate(box::BoundingBox, i::Int=1) =
     i == 2 ? (box.xmax, 3) :
     i == 3 ? (box.ymin, 4) :
     i == 4 ? (box.ymax, 5) : nothing
+Base.IteratorSize(box::BoundingBox) = Base.IteratorSize(typeof(box))
+Base.IteratorSize(::Type{<:BoundingBox}) = Base.HasLength()
+Base.length(box::BoundingBox) = 4
 
 for Class in (:Point, :BoundingBox)
     @eval Base.map(f, obj::$Class) = $Class(map(f, Tuple(obj)))
