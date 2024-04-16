@@ -270,8 +270,8 @@ Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{T}}) where {T} =
 # for the basic ideas under the following algorithm.
 function BoundingBox(f::Function, A::AbstractMatrix)
     I, J = axes(A)
-    i0, i1 = getaxisbounds(I)
-    j0, j1 = getaxisbounds(J)
+    i0, i1 = get_axis_bounds(I)
+    j0, j1 = get_axis_bounds(J)
     imin = jmin = typemax(Int)
     imax = jmax = typemin(Int)
     # Assuming column-major order, first start by scanning rows to narrow the
@@ -322,15 +322,15 @@ function BoundingBox(f::Function, A::AbstractMatrix)
 end
 
 """
-    getaxisbounds(I) = (i0,i1)
+    TwoDimensional.get_axis_bounds(I) = (i0,i1)
 
 yields the bounds `i0` and `i1` of index range `I` as a 2-tuple of `Int`'s and
 such that `i0:i1` represents the same indices as `I` (although not in the same
-order if `step(I) < 0`).  If `step(I)` is not equal to ±1, an `ArgumentError`
+order if `step(I) < 0`). If `step(I)` is not equal to ±1, an `ArgumentError`
 exception is thrown.
 
 """
-@inline function getaxisbounds(I::AbstractRange{<:Integer})
+@inline function get_axis_bounds(I::AbstractRange{<:Integer})
     i0, i1, s = Int(first(I)), Int(last(I)), step(I)
     return (s == +oneunit(s) ? (i0,i1) :
             s == -oneunit(s) ? (i1,i0) :
