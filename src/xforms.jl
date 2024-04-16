@@ -326,24 +326,22 @@ See also: [`AffineTransform`](@ref), [`scale`](@ref), [`translate`](@ref).
 
 """
 function rotate(θ::T, A::AffineTransform{T}) where {T<:AbstractFloat}
-    cs = cos(θ)
-    sn = sin(θ)
-    return AffineTransform{T}(cs*A.xx - sn*A.yx,
-                              cs*A.xy - sn*A.yy,
-                              cs*A.x  - sn*A.y,
-                              cs*A.yx + sn*A.xx,
-                              cs*A.yy + sn*A.xy,
-                              cs*A.y  + sn*A.x)
+    sin(θ), cosθ = sincos(θ)
+    return AffineTransform{T}(cosθ*A.xx - sinθ*A.yx,
+                              cosθ*A.xy - sinθ*A.yy,
+                              cosθ*A.x  - sinθ*A.y,
+                              cosθ*A.yx + sinθ*A.xx,
+                              cosθ*A.yy + sinθ*A.xy,
+                              cosθ*A.y  + sinθ*A.x)
 end
 
 function rotate(A::AffineTransform{T}, θ::T) where {T<:AbstractFloat}
-    cs = cos(θ)
-    sn = sin(θ)
-    return AffineTransform{T}(A.xx*cs + A.xy*sn,
-                              A.xy*cs - A.xx*sn,
+    sin(θ), cosθ = sincos(θ)
+    return AffineTransform{T}(A.xx*cosθ + A.xy*sinθ,
+                              A.xy*cosθ - A.xx*sinθ,
                               A.x,
-                              A.yx*cs + A.yy*sn,
-                              A.yy*cs - A.yx*sn,
+                              A.yx*cosθ + A.yy*sinθ,
+                              A.yy*cosθ - A.yx*sinθ,
                               A.y)
 end
 
