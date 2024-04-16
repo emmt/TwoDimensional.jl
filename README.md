@@ -16,6 +16,8 @@ Other related packages:
   for coordinate transformations;
 - [GeometryBasics](https://github.com/JuliaGeometry/GeometryBasics.jl) for
   basic geometric types;
+- [Graphics](https://github.com/JuliaGraphics/Graphics.jl) for basic graphical
+  objects and methods;
 
 ## Usage
 

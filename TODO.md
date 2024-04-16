@@ -1,3 +1,9 @@
+- Coordinates can have units.
+
+- Add geometrical shape objects: `Rectangle`, `Polygon`, `Circle`, and `Ellipse`.
+
+- Add masks.
+
 - Extending `convert` for other purpose of type conversion is potentially
   dangerous as this method is called by type constructors to set fields:
   ```julia
