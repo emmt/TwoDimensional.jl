@@ -9,7 +9,7 @@
 # This file if part of the TwoDimensional Julia package licensed under the MIT
 # license (https://github.com/emmt/TwoDimensional.jl).
 #
-# Copyright (C) 2016-2019, Éric Thiébaut.
+# Copyright (c) 2016-2024, Éric Thiébaut.
 #
 
 module AffineTransforms
@@ -374,14 +374,13 @@ jacobian(A::AffineTransform) = abs(det(A))
 """
 function inv(A::AffineTransform{T}) where {T}
     Δ = det(A)
-    Δ == zero(T) && error("transformation is not invertible")
-    α = one(T)/Δ
-    Txx =  α*A.yy
-    Txy = α*A.xy
-    Tyx = α*A.yx
-    Tyy =  α*A.xx
-    return AffineTransform{T}(+Txx, -Txy, Txy*A.y - Txx*A.x,
-                              -Tyx, +Tyy, Tyx*A.x - Tyy*A.y)
+    iszero(Δ) && error("transformation is not invertible")
+    Rxx = A.yy/Δ
+    Rxy = A.xy/Δ
+    Ryx = A.yx/Δ
+    Ryy = A.xx/Δ
+    return AffineTransform{T}(+Rxx, -Rxy, Rxy*A.y - Rxx*A.x,
+                              -Ryx, +Ryy, Ryx*A.x - Ryy*A.y)
 end
 
 """
@@ -420,15 +419,13 @@ transform `A` by the affine transform `B`.
 """
 rightdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} = begin
     Δ = det(B)
-    Δ == zero(T) && error("right operand is not invertible")
-    α = one(T)/Δ
-    Rxx = α*(A.xx*B.yy - A.xy*B.yx)
-    Rxy = α*(A.xy*B.xx - A.xx*B.xy)
-    Ryx = α*(A.yx*B.yy - A.yy*B.yx)
-    Ryy = α*(A.yy*B.xx - A.yx*B.xy)
-    AffineTransform{T}(Rxx, Rxy, A.x - (Rxx*B.x + Rxy*B.y),
-                       Ryx, Ryy, A.y - (Ryx*B.y + Ryy*B.y))
-
+    iszero(Δ) && error("right operand is not invertible")
+    Rxx = (A.xx*B.yy - A.xy*B.yx)/Δ
+    Rxy = (A.xy*B.xx - A.xx*B.xy)/Δ
+    Ryx = (A.yx*B.yy - A.yy*B.yx)/Δ
+    Ryy = (A.yy*B.xx - A.yx*B.xy)/Δ
+    return AffineTransform{T}(Rxx, Rxy, A.x - (Rxx*B.x + Rxy*B.y),
+                              Ryx, Ryy, A.y - (Ryx*B.y + Ryy*B.y))
 end
 
 rightdivide(A::AffineTransform, B::AffineTransform) =
@@ -440,20 +437,19 @@ transform `A` by the affine transform `B`.
 """
 leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} = begin
     Δ = det(B)
-    Δ == zero(T) && error("left operand is not invertible")
-    α = one(T)/Δ
-    Txx = α*A.yy
-    Txy = α*A.xy
-    Tyx = α*A.yx
-    Tyy = α*A.xx
-    Tx = B.x - A.x
-    Ty = B.y - A.y
-    AffineTransform{T}(Txx*B.xx - Txy*B.yx,
-                       Txx*B.xy - Txy*B.yy,
-                       Txx*Tx   - Txy*Ty,
-                       Tyy*B.yx - Tyx*B.xx,
-                       Tyy*B.yy - Tyx*B.xy,
-                       Tyy*Ty   - Tyx*Tx)
+    iszero(Δ) && error("left operand is not invertible")
+    Rxx = A.yy/Δ
+    Rxy = A.xy/Δ
+    Ryx = A.yx/Δ
+    Ryy = A.xx/Δ
+    Rx = B.x - A.x
+    Ry = B.y - A.y
+    return AffineTransform{T}(Rxx*B.xx - Rxy*B.yx,
+                              Rxx*B.xy - Rxy*B.yy,
+                              Rxx*Rx   - Rxy*Ry,
+                              Ryy*B.yx - Ryx*B.xx,
+                              Ryy*B.yy - Ryx*B.xy,
+                              Ryy*Ry   - Ryx*Rx)
 end
 
 leftdivide(A::AffineTransform, B::AffineTransform) =
@@ -466,9 +462,8 @@ leftdivide(A::AffineTransform, B::AffineTransform) =
 """
 function intercept(A::AffineTransform{T}) where {T}
     Δ = det(A)
-    Δ == zero(T) && error("transformation is not invertible")
-    α = one(T)/Δ
-    return (α*(A.xy*A.y - A.yy*A.x), α*(A.yx*A.x - A.xx*A.y))
+    iszero(Δ) && error("transformation is not invertible")
+    return ((A.xy*A.y - A.yy*A.x)/Δ, (A.yx*A.x - A.xx*A.y)/Δ)
 end
 
 intercept(T::Type{<:Point}, A::AffineTransform) = T(intercept(A)...)
