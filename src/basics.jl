@@ -57,8 +57,8 @@ Point(; x::Real, y::Real) = Point(x, y)
 Point{T}(; x::Real, y::Real) where {T} = Point{T}(x, y)
 Point(I::CartesianIndex{2}) = Point(I[1], I[2])
 Point{T}(I::CartesianIndex{2}) where {T} = Point{T}(I[1], I[2])
-Point(P::NTuple{2,Real}) = Point(P[1], P[2])
-Point{T}(P::NTuple{2,Real}) where {T} = Point{T}(P[1], P[2])
+Point((x,y)::NTuple{2,Real}) = Point(x, y)
+Point{T}((x,y)::NTuple{2,Real}) where {T} = Point{T}(x, y)
 
 # Conversion to points (rely on constructors).
 Base.convert(::Type{T}, arg::T) where {T<:Point} = arg
@@ -89,10 +89,11 @@ WeightedPoint(w::Tw, x::Tx, y::Ty) where {Tw<:Real,Tx<:Real,Ty<:Real} =
     WeightedPoint{float(promote_type(Tw,Tx,Ty))}(w, x, y)
 WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
 WeightedPoint(P::Point{T}) where {T} = WeightedPoint(one(T), P.x, P.y)
-WeightedPoint(P::NTuple{3,Real}) = WeightedPoint(P[1], P[2], P[3])
 Base.Tuple(P::WeightedPoint) = (P.w, P.x, P.y)
 Broadcast.broadcasted(::Type{T}, obj::WeightedPoint) where {T<:AbstractFloat} =
     WeightedPoint{T}(obj)
+WeightedPoint((w,x,y)::NTuple{3,Real}) = WeightedPoint(w, x, y)
+WeightedPoint{T}((w,x,y)::NTuple{3,Real}) where {T} = WeightedPoint{T}(w, x, y)
 Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{U}}) where {T,U} =
     WeightedPoint{promote_type(T,U)}
 Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} =
@@ -229,14 +230,15 @@ BoundingBox(P0::AbstractPoint, P1::AbstractPoint) =
 BoundingBox{T}(P0::AbstractPoint, P1::AbstractPoint) where {T} =
     BoundingBox{T}(P0.x, P1.x, P0.y, P1.y)
 
-BoundingBox(P0::NTuple{2,Real}, P1::NTuple{2,Real}) =
-    BoundingBox(P0[1], P1[1], P0[2], P1[2])
-BoundingBox{T}(P0::NTuple{2,Real}, P1::NTuple{2,Real}) where {T} =
-    BoundingBox{T}(P0[1], P1[1], P0[2], P1[2])
+BoundingBox((x0,y0)::NTuple{2,Real}, (x1,y1)::NTuple{2,Real}) =
+    BoundingBox(x0,x1,y0,y1)
+BoundingBox{T}((x0,y0)::NTuple{2,Real}, (x1,y1)::NTuple{2,Real}) where {T} =
+    BoundingBox{T}(x0,x1,y0,y1)
 
-BoundingBox(P::NTuple{4,Real}) = BoundingBox(P[1], P[2], P[3], P[4])
-BoundingBox{T}(P::NTuple{4,Real}) where {T} =
-    BoundingBox{T}(P[1], P[2], P[3], P[4])
+BoundingBox((xmin,xmax,ymin,ymax)::NTuple{4,Real}) =
+    BoundingBox(xmin,xmax,ymin,ymax)
+BoundingBox{T}((xmin,xmax,ymin,ymax)::NTuple{4,Real}) where {T} =
+    BoundingBox{T}(xmin,xmax,ymin,ymax)
 
 BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
     BoundingBox(inds[1], inds[2])
