@@ -98,9 +98,13 @@ end
         @test convert(Point, P1) === P1
         @test convert(Point{Float32}, P1) === Float32.(P1)
         for T in (Float32, Int16)
-            @test zero(Point{T}) === Point(zero(T),zero(T))
-            @test one(Point{T}) === Point(one(T),one(T))
-            @test oneunit(Point{T}) === Point(oneunit(T),oneunit(T))
+            pnt = Point{T}(1,2)
+            @test @inferred(zero(Point{T})) === Point(zero(T),zero(T))
+            @test @inferred(one(Point{T})) === Point(one(T),one(T))
+            @test @inferred(oneunit(Point{T})) === Point(oneunit(T),oneunit(T))
+            @test @inferred(zero(pnt)) === Point(zero(T),zero(T))
+            @test @inferred(one(pnt)) === Point(one(T),one(T))
+            @test @inferred(oneunit(pnt)) === Point(oneunit(T),oneunit(T))
         end
         @test ntuple(i -> Point(3,5)[i], 2) == (3,5)
         # round

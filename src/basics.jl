@@ -55,6 +55,10 @@ Base.promote_type(::Type{Point{T}}, ::Type{Point{U}}) where {T,U} =
     Point{promote_type(T,U)}
 Base.promote_type(::Type{Point{T}}, ::Type{Point{T}}) where {T} =
     Point{T}
+
+for func in (:one, :oneunit, :zero)
+    @eval Base.$func(pnt::Point) = $func(typeof(pnt))
+end
 Base.zero(::Type{Point{T}}) where {T} = Point(zero(T),zero(T))
 Base.one(::Type{Point{T}}) where {T} = Point(one(T),one(T))
 Base.oneunit(::Type{Point{T}}) where {T} = Point(oneunit(T),oneunit(T))
