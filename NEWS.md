@@ -6,6 +6,10 @@
 - Fix documentation.
 
 
+- Non-exported aliases `TwoDimensional.PointLike` and
+  `TwoDimensional.BoundingBoxLike` for unions of types that can be used to
+  specify a `Point` or a `BoundingBox`.
+
 ## Version 0.4.0
 
 - Extend `map` for `Point` and `BoundingBox` objects.

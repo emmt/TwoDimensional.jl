@@ -56,6 +56,15 @@ struct Point{T} <: AbstractPoint{T}
 end
 
 """
+    TwoDimensional.PointLike
+
+is the union of types that may be used to specify a point in `TwoDimensional`
+package.
+
+"""
+const PointLike = Union{AbstractPoint,NTuple{2,Real},CartesianIndex{2}}
+
+"""
     WeightedPoint{T}(w,x,y)
 
 yields a weighted point which has 3 fields: `w` its weight, `x` its abscissa
@@ -114,3 +123,15 @@ struct BoundingBox{T<:Real}
     ymin::T
     ymax::T
 end
+
+"""
+    TwoDimensional.BoundingBoxLike
+
+is the union of types that may be used to specify a bounding-box in
+`TwoDimensional` package.
+
+"""
+const BoundingBoxLike = Union{BoundingBox,NTuple{2,AbstractPoint},
+                              NTuple{4,Real},NTuple{2,CartesianIndex{2}},
+                              NTuple{2,AbstractUnitRange{<:Integer}},
+                              CartesianIndices{2}}

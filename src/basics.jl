@@ -24,9 +24,8 @@ Base.getindex(obj::BoundingBox, i::Integer) =
      i == 3 ? obj.ymin :
      i == 4 ? obj.ymax :
      error("out of range index for `BoundingBox` object"))
-
-# Allowed types to construct (or convert to) a point.
-const PointTypes = Union{AbstractPoint,NTuple{2,Real},CartesianIndex{2}}
+for Class in (:Point, :BoundingBox)
+    @eval Base.map(f, obj::$Class) = $Class(map(f, Tuple(obj)))
 
 # Constructors of points and conversion to/from a Cartesian index.
 Point(P::Point) = P
@@ -43,7 +42,7 @@ Point{T}(P::NTuple{2,Real}) where {T} = Point{T}(P[1], P[2])
 
 # Conversion to points (rely on constructors).
 Base.convert(::Type{T}, arg::T) where {T<:Point} = arg
-Base.convert(::Type{T}, arg::PointTypes) where {T<:Point} = T(arg)
+Base.convert(::Type{T}, arg::PointLike) where {T<:Point} = T(arg)
 
 # Other basic methods.
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
@@ -181,12 +180,6 @@ distance(A::Point{T}, B::Point{T}) where {T<:Unsigned} =
 distance(A::Point{T}, B::Point{T}) where {T<:Real} =
     hypot(B.x - A.x, B.y - A.y)
 
-# Allowed types to construct (or convert to) a bounding box.
-const BoundingBoxTypes = Union{BoundingBox,NTuple{2,AbstractPoint},
-                               NTuple{4,Real},NTuple{2,CartesianIndex{2}},
-                               NTuple{2,AbstractUnitRange{<:Integer}},
-                               CartesianIndices{2}}
-
 # Constructors of bounding-boxes and conversion.
 function BoundingBox(xmin::Txmin, xmax::Txmax,
                      ymin::Tymin, ymax::Tymax) where {Txmin,Txmax,Tymin,Tymax}
@@ -248,7 +241,7 @@ BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
 
 # Conversion to bounding-boxes (rely on constructors).
 Base.convert(::Type{T}, arg::T) where {T<:BoundingBox} = arg
-Base.convert(::Type{T}, arg::BoundingBoxTypes) where {T<:BoundingBox} = T(arg)
+Base.convert(::Type{T}, arg::BoundingBoxLike) where {T<:BoundingBox} = T(arg)
 
 # Other basic methods.
 Base.eltype(::BoundingBox{T}) where {T} = T
