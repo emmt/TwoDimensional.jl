@@ -332,8 +332,8 @@ exception is thrown.
 """
 @inline function getaxisbounds(I::AbstractRange{<:Integer})
     i0, i1, s = Int(first(I)), Int(last(I)), step(I)
-    return (s == +1 ? (i0,i1) :
-            s == -1 ? (i1,i0) :
+    return (s == +oneunit(s) ? (i0,i1) :
+            s == -oneunit(s) ? (i1,i0) :
             throw(ArgumentError("expecting a range with a step equal to ±1")))
 end
 
