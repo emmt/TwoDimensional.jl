@@ -110,7 +110,11 @@ end
         # round
         @test round(Point(1.2,-0.7)) === Point(1.0,-1.0)
         @test round(Point(1,-7)) === Point(1,-7)
-        @test_throws Exception round(Float32, Point(1,-7))
+        if VERSION < v"1.11.0-beta1"
+            @test_throws Exception round(Float32, Point(1,-7))
+        else
+            @test round(Float32, Point(1,-7)) === Point{Float32}(1,-7)
+        end
         @test round(Int32, Point(1,-7)) === Point{Int32}(1,-7)
         @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
         @test round(Int, Point(1,-4)) === Point(1,-4)
@@ -120,7 +124,11 @@ end
         @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
         @test round(Point(1.5, 2.5)) === Point(2.0, 2.0)
         @test round(Point(1.5, 2.5), RoundNearestTiesUp) === Point(2.0, 3.0)
-        @test_throws Exception round(Float32, Point(1.5e0, 2.5e0), RoundNearestTiesUp)
+        if VERSION < v"1.11.0-beta1"
+            @test_throws Exception round(Float32, Point(1.5e0, 2.5e0), RoundNearestTiesUp)
+        else
+            @test round(Float32, Point(1.5e0, 2.5e0), RoundNearestTiesUp) === Point{Float32}(2, 3)
+        end
         # floor
         @test floor(Point(-1,3)) === Point(-1,3)
         @test floor(Int, Point(-1,3)) === Point(-1,3)
@@ -288,8 +296,13 @@ end
             BoundingBox{Int16}(1,2,-4,8)
         @test round(Int16, BoundingBox(1,2,-4,8)) ===
             BoundingBox{Int16}(1,2,-4,8)
-        @test_throws Exception round(Float32, BoundingBox{Int16}(1,2,-4,8))
-        @test_throws Exception round(Float32, BoundingBox(1.1,2.7,-4.6,8.3))
+        if VERSION < v"1.11.0-beta1"
+            @test_throws Exception round(Float32, BoundingBox{Int16}(1,2,-4,8))
+            @test_throws Exception round(Float32, BoundingBox(1.1,2.7,-4.6,8.3))
+        else
+            @test round(Float32, BoundingBox{Int16}(1,2,-4,8)) === BoundingBox{Float32}(1,2,-4,8)
+            @test round(Float32, BoundingBox(1.1,2.7,-4.6,8.3)) === BoundingBox{Float32}(1,3,-5,8)
+        end
         @test round(BoundingBox(1.5, 2.5, 3.5, 9.9)) === BoundingBox(2.0, 2.0, 4.0, 10.0)
         @test round(BoundingBox(1.5, 2.5, 3.5, 9.9), RoundNearestTiesUp) ===
             BoundingBox(2.0, 3.0, 4.0, 10.0)

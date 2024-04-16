@@ -2,6 +2,8 @@
 
 ## Version 0.4.1
 
+- Tests run on Julia 1.11.
+
 - Fix documentation.
 
 - Add missing specialization for `zero`, `one`, and `oneunit` for `Point`
