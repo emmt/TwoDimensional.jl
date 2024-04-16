@@ -1,13 +1,13 @@
 name = "TwoDimensional"
 uuid = "1907e7ba-7586-4310-a2ba-dd01462aeb50"
 authors = ["Éric Thiébaut <https://github.com/emmt>"]
-version = "0.4.0"
-
-[compat]
-julia = "0.7, 1.0"
+version = "0.4.1"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[compat]
+julia = "0.7, 1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
