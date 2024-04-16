@@ -1,7 +1,7 @@
 #
 # basics.jl --
 #
-# Basic types and method for 2-D points and bounding-boxes.
+# Basic methods points and bounding-boxes.
 #
 #-------------------------------------------------------------------------------
 #
@@ -354,36 +354,15 @@ Base.last(box::BoundingBox) = Point(box.xmax, box.ymax)
 
 Base.isempty(box::BoundingBox) = (box.xmin > box.xmax)|(box.ymin > box.ymax)
 
-Base.size(box::BoundingBox{Int}) =
-    isempty(box) ? (0, 0) : (box.xmax - box.xmin + 1, box.ymax - box.ymin + 1)
-Base.size(box::BoundingBox{Int}, k::Integer) =
-    isempty(box) ? (k ≥ 1 ? 0 : throw_bad_dimension_index()) :
-    k == 1 ? box.xmax - box.xmin + 1 :
-    k == 2 ? box.ymax - box.ymin + 1 :
-    k > 2 ? 1 : throw_bad_dimension_index()
+Base.size(box::BoundingBox{<:Integer}) = map(length, axes(box))
+Base.size(box::BoundingBox{<:Integer}, d::Integer) = length(axes(box, d))
 
-Base.size(box::BoundingBox{<:Integer}) =
-    isempty(box) ? (0, 0) :
-    (Int(box.xmax) - Int(box.xmin) + 1, Int(box.ymax) - Int(box.ymin) + 1)
-
-Base.size(box::BoundingBox{<:Integer}, k::Integer) =
-    isempty(box) ? (k ≥ 1 ? 0 : throw_bad_dimension_index()) :
-    k == 1 ? Int(box.xmax) - Int(box.xmin) + 1 :
-    k == 2 ? Int(box.ymax) - Int(box.ymin) + 1 :
-    k > 2 ? 1 : throw_bad_dimension_index()
-
-Base.axes(box::BoundingBox{Int}) = (box.xmin:box.xmax, box.ymin:box.ymax)
-Base.axes(box::BoundingBox{Int}, k::Integer) =
-    k == 1 ? (box.xmin:box.xmax) :
-    k == 2 ? (box.ymin:box.ymax) :
-    k > 2 ? (1:1) : throw_bad_dimension_index()
-
-Base.axes(box::BoundingBox{<:Integer}) = (Int(box.xmin):Int(box.xmax),
-                                          Int(box.ymin):Int(box.ymax))
-Base.axes(box::BoundingBox{<:Integer}, k::Integer) =
-    k == 1 ? (Int(box.xmin):Int(box.xmax)) :
-    k == 2 ? (Int(box.ymin):Int(box.ymax)) :
-    k > 2 ? (1:1) : throw_bad_dimension_index()
+Base.axes(box::BoundingBox{<:Integer}) = (UnitRange{Int}(box.xmin, box.xmax),
+                                          UnitRange{Int}(box.ymin, box.ymax))
+Base.axes(box::BoundingBox{<:Integer}, d::Integer) =
+    d == 1 ? UnitRange{Int}(box.xmin, box.xmax) :
+    d == 2 ? UnitRange{Int}(box.ymin, box.ymax) :
+    d > 2 ? (1:1) : throw_bad_dimension_index()
 
 @noinline throw_bad_dimension_index() =
     error("invalid dimension index")
