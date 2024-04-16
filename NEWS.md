@@ -10,6 +10,9 @@
   `TwoDimensional.BoundingBoxLike` for unions of types that can be used to
   specify a `Point` or a `BoundingBox`.
 
+- Out of bounds indices in point and bounding-box instances throw `BoundError`
+  (was `ErrorException`).
+
 ## Version 0.4.0
 
 - Extend `map` for `Point` and `BoundingBox` objects.

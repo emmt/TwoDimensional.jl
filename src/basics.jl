@@ -13,19 +13,39 @@
 
 using Base: @propagate_inbounds
 
-Base.getindex(obj::Point, i::Integer) =
-    (i == 1 ? obj.x :
-     i == 2 ? obj.y :
-     error("out of range index for `Point` object"))
+Base.Tuple(pnt::Point) = (pnt.x, pnt.y)
+Base.getindex(pnt::Point, i::Integer) =
+    i == 1 ? pnt.x :
+    i == 2 ? pnt.y : throw(BoundsError(pnt, i))
+Base.iterate(pnt::Point, i::Int=1) =
+    i == 1 ? (pnt.x, 2) :
+    i == 2 ? (pnt.y, 3) : nothing
 
-Base.getindex(obj::BoundingBox, i::Integer) =
-    (i == 1 ? obj.xmin :
-     i == 2 ? obj.xmax :
-     i == 3 ? obj.ymin :
-     i == 4 ? obj.ymax :
-     error("out of range index for `BoundingBox` object"))
+Base.Tuple(pnt::WeightedPoint) = (pnt.w, pnt.x, pnt.y)
+Base.getindex(pnt::WeightedPoint, i::Integer) =
+    i == 1 ? pnt.w :
+    i == 2 ? pnt.x :
+    i == 3 ? pnt.y : throw(BoundsError(pnt, i))
+Base.iterate(pnt::WeightedPoint, i::Int=1) =
+    i == 1 ? (pnt.w, 2) :
+    i == 2 ? (pnt.x, 3) :
+    i == 3 ? (pnt.y, 4) : nothing
+
+Base.Tuple(box::BoundingBox) = (box.xmin, box.xmax, box.ymin, box.ymax)
+Base.getindex(box::BoundingBox, i::Integer) =
+    i == 1 ? box.xmin :
+    i == 2 ? box.xmax :
+    i == 3 ? box.ymin :
+    i == 4 ? box.ymax : throw(BoundsError(box, i))
+Base.iterate(box::BoundingBox, i::Int=1) =
+    i == 1 ? (box.xmin, 2) :
+    i == 2 ? (box.xmax, 3) :
+    i == 3 ? (box.ymin, 4) :
+    i == 4 ? (box.ymax, 5) : nothing
+
 for Class in (:Point, :BoundingBox)
     @eval Base.map(f, obj::$Class) = $Class(map(f, Tuple(obj)))
+end
 
 # Constructors of points and conversion to/from a Cartesian index.
 Point(P::Point) = P
@@ -46,7 +66,6 @@ Base.convert(::Type{T}, arg::PointLike) where {T<:Point} = T(arg)
 
 # Other basic methods.
 Base.CartesianIndex(P::Point{<:Integer}) = CartesianIndex(P.x, P.y)
-Base.Tuple(P::Point) = (P.x, P.y)
 Base.eltype(::AbstractPoint{T}) where {T} = T
 Broadcast.broadcasted(::Type{T}, obj::Point) where {T<:Real} =
     Point{T}(obj)
@@ -78,10 +97,6 @@ Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{U}}) where {T,U
     WeightedPoint{promote_type(T,U)}
 Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} =
     WeightedPoint{T}
-
-for Class in (:Point, :BoundingBox)
-    @eval Base.map(f, obj::$Class) = $Class(map(f, Tuple(obj)))
-end
 
 """
     round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
@@ -245,7 +260,6 @@ Base.convert(::Type{T}, arg::BoundingBoxLike) where {T<:BoundingBox} = T(arg)
 
 # Other basic methods.
 Base.eltype(::BoundingBox{T}) where {T} = T
-Base.Tuple(B::BoundingBox) = (B.xmin, B.xmax, B.ymin, B.ymax)
 Broadcast.broadcasted(::Type{T}, obj::BoundingBox) where {T<:Real} =
     BoundingBox{T}(obj)
 Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{U}}) where {T,U} =
@@ -376,17 +390,6 @@ Base.axes(B::BoundingBox{<:Integer}, k::Integer) =
 
 @noinline throw_bad_dimension_index() =
     error("invalid dimension index")
-
-function Base.iterate(itr::Union{AbstractPoint,BoundingBox})
-    vals = Tuple(itr)
-    return (vals[1], (vals, 2))
-end
-
-function Base.iterate(itr::Union{AbstractPoint,BoundingBox},
-                      state::Tuple{Tuple,Int})
-    vals, i = state
-    return (i ≤ length(vals) ? (vals[i], (vals, i+1)) : nothing)
-end
 
 Base.in(pnt::AbstractPoint, box::BoundingBox) =
     ((box.xmin ≤ pnt.x ≤ box.xmax)&
