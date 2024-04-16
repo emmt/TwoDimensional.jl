@@ -175,7 +175,7 @@ atan(Point(x,y))   # yields atan(y, x)
 The distance between two points is given by the [`distance`](@ref) method:
 
 ```julia
-distance(Point(x1,y1),Point(x2,y2)  # yields hypot(x1-x2,y1-y2)
+distance(Point(x1,y1),Point(x2,y2))  # yields hypot(x1-x2,y1-y2)
 ```
 
 The nearest point to an instance `obj` of [`Point`](@ref) is given by:

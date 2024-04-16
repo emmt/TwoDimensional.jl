@@ -1,5 +1,11 @@
 # User visible changes in TwoDimensional package
 
+
+## Version 0.4.1
+
+- Fix documentation.
+
+
 ## Version 0.4.0
 
 - Extend `map` for `Point` and `BoundingBox` objects.

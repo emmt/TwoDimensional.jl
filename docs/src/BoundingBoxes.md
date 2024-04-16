@@ -175,8 +175,8 @@ B1 ∪ B2 ∪ ...
 union(B1, B2, ...)
 ```
 
-wich both yield the smallest bounding-box containing the bounding-boxes `B1`,
-`B2`, ...
+which both yield the largest bounding-box contained into the bounding-boxes
+`B1`, `B2`, ...
 
 The intersection of bounding-boxes `B1`, `B2`, ... is given by one of:
 
@@ -185,13 +185,13 @@ B1 ∩ B2 ∩ ...
 intersect(B1, B2, ...)
 ```
 
-wich both yield the largest bounding-box contained into the bounding-boxes
-`B1`, `B2`, ...
+which both yield the smallest bounding-box containing the bounding-boxes `B1`,
+`B2`, ...
 
 The maximal or minimal bounding-box with coordinates of type `T` that can be
 constructed are respectively given by `typemax(BoundingBox{T})` and
-`typemin(BoundingBox{T})`.  These can be useful to initiate a shrinking ar a
-growing bounding-box.  The call:
+`typemin(BoundingBox{T})`. These can be useful to initiate a shrinking or a
+growing bounding-box. The call:
 
 ```julia
 BoundingBox{T}(nothing)
@@ -210,8 +210,9 @@ smallest exterior bounding-boxes with integer bounds.
 
 [`round(B)`](@ref round), [`round(T,B)`](@ref round), or [`round(T,B,r)`](@ref
 round) yield a bounding-box whose limits are those of the bounding-box `B`
-rounded to the nearest integral values with rounding mode `r` if specified
-(default is the same as `round` for a scalar).
+rounded to the nearest integral values of type `T` with rounding-mode `r`.
+Default type `T` is `eltype(B)` and default rounding-mode `r` is
+`RoundingNearest`.
 
 [`center(B)`](@ref center) yields the `Point` whose coordinates are the
 geometrical center of the bounding-box `B`.
@@ -225,20 +226,20 @@ Adding or subtracting a scalar `δ` to a bounding-box `B` adds or removes a
 margin `δ` to the bounding-box `B`:
 
 ```julia
-BoundingBox(x0,x1,y0,y1) + δ # yields BoundingBox(x0-δ,x1+δ,y0-δ,y1+δ)
-BoundingBox(x0,x1,y0,y1) - δ # yields BoundingBox(x0+δ,x1-δ,y0+δ,y1-δ)
+BoundingBox((x0,y0),(x1,y1)) + δ -> BoundingBox((x0-δ,y0-δ),(x1+δ,y1+δ))
+BoundingBox((x0,y0),(x1,y1)) - δ -> BoundingBox((x0+δ,y0+δ),(x1-δ,y1-δ))
 ```
 
 Adding or subtracting a point `P` to a bounding-box `B` shifts the limits of
 the bounding-box `B`:
 
 ```julia
-BoundingBox(x0,x1,y0,y1) + Point(x,y) # yields BoundingBox(x0+x,x1+x,y0+y,y1+y)
+BoundingBox((x0,y0),(x1,y1)) + Point(x,y) -> BoundingBox((x0+x,y0+y),(x1+x,y1+y))
 ```
 
 A bounding-box `B` can be negated:
 ```julia
--BoundingBox(x0,x1,y0,y1) # yields BoundingBox(-x1, -x0, -y1, -y0)
+-BoundingBox((x0,y0),(x1,y1)) -> BoundingBox((-x1,-y1),(-x0,-y0))
 ```
 
 `eltype(B)` yields the type of the coordinates of a bounding-box `B`.
@@ -248,9 +249,8 @@ Basic methods `size(B[,k])` and `axes(B[,k])` can be applied to an
 `size(B)` yields a 2-tuple of `Int`, `size(B,k)` yields an `Int`, `axes(B)`
 yields a 2-tuple of `UnitRange{Int}` and `axes(B,k)` yields a `UnitRange{Int}`.
 
-
-The `in` (or operator `∈`, obtained by `\in`-tab) method let you check whether
-a point `pnt` is inside a bounding-box `box`:
+Method `in` and operator `∈`, obtained by `\in`-tab, yield whether a point
+`pnt` is inside a bounding-box `box`:
 
 ```julia
 pnt ∈ box
@@ -262,9 +262,9 @@ is a shortcut for:
 (box.xmin ≤ pnt.x ≤ box.xmax) & (box.ymin ≤ pnt.y ≤ box.ymax)
 ```
 
-The `issubset` (or operator `⊆`, obtained by `\subseteq`-tab) method can be
-used to check whether a bounding-box, say `A`, is inside another one, say `B`.
-That is `issubset(A, B)` or `A ⊆ B` is a shortcut for:
+Method `issubset` or operator `⊆`, obtained by `\subseteq`-tab, yield whether a
+bounding-box, say `A`, is inside another one, say `B`. That is `issubset(A, B)`
+and `A ⊆ B` are shortcuts for:
 
 ```julia
 (isempty(A) | ((A.xmin ≥ B.xmin) & (A.xmax ≤ B.xmax) &

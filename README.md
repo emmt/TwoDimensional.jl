@@ -8,12 +8,14 @@
 [![Coverage][codecov-img]][codecov-url]
 
 **TwoDimensional** is a [Julia][julia-url] package which provides useful types
-and methods to define and manipulate 2-dimensional points, bounding-boxes and
-affine coordinate transforms.
+and methods to define and manipulate 2-dimensional objects (points,
+bounding-boxes) and affine coordinate transforms.
 
 Other related packages:
 - [CoordinateTransformations](https://github.com/FugroRoames/CoordinateTransformations.jl)
-
+  for coordinate transformations;
+- [GeometryBasics](https://github.com/JuliaGeometry/GeometryBasics.jl) for
+  basic geometric types;
 
 ## Usage
 
