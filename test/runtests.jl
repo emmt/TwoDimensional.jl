@@ -62,7 +62,7 @@ _relative_precision(rtol, ::Type{T}, args...) where {T} =
     _relative_precision(max(rtol, relative_precision(T)), args...)
 
 # This is very similar to `isapprox` but with our custom settings.
-function ≃(a, b; atol = false, rtol = 4*relative_precision(a, b), norm=sum_abs)
+function ≈(a, b; atol = false, rtol = 4*relative_precision(a, b), norm=sum_abs)
     d = norm === sum_abs ? sum_abs_diff(a, b) :
         norm === max_abs ? max_abs_diff(a, b) : error("unknown norm")
     if iszero(rtol)
@@ -543,7 +543,7 @@ end
                 @test factors_type(H) === T
                 @test offsets_type(H) === T
                 @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≃ map(T, Tuple(G))
+                @test Tuple(H) ≈ map(T, Tuple(G))
                 H = @inferred convert(AffineTransform{T}, G)
                 @test typeof(H) <: AffineTransform{T}
                 @test bare_type(H) === T
@@ -552,7 +552,7 @@ end
                 @test factors_type(H) === T
                 @test offsets_type(H) === T
                 @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≃ map(T, Tuple(G))
+                @test Tuple(H) ≈ map(T, Tuple(G))
                 H = @inferred convert_bare_type(T, G)
                 @test typeof(H) <: AffineTransform{T}
                 @test bare_type(H) === T
@@ -561,7 +561,7 @@ end
                 @test factors_type(H) === T
                 @test offsets_type(H) === T
                 @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≃ map(T, Tuple(G))
+                @test Tuple(H) ≈ map(T, Tuple(G))
                 H = @inferred convert_real_type(T, G)
                 @test typeof(H) <: AffineTransform{T}
                 @test bare_type(H) === T
@@ -570,7 +570,7 @@ end
                 @test factors_type(H) === T
                 @test offsets_type(H) === T
                 @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≃ map(T, Tuple(G))
+                @test Tuple(H) ≈ map(T, Tuple(G))
                 H = @inferred convert_floating_point_type(T, G)
                 @test typeof(H) <: AffineTransform{T}
                 @test bare_type(H) === T
@@ -579,26 +579,26 @@ end
                 @test factors_type(H) === T
                 @test offsets_type(H) === T
                 @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≃ map(T, Tuple(G))
+                @test Tuple(H) ≈ map(T, Tuple(G))
             end
         end
     end
 
     @testset "identity" begin
         @test isone(det(I))
-        @test inv(I) ≃ I
+        @test inv(I) ≈ I
         for v in vectors
-            @test I(v) ≃ v
+            @test I(v) ≈ v
         end
     end
 
     @testset "apply" begin
         for G in (I, A, B),
             v in vectors
-            @test G(v...) ≃ G(v)
-            @test G*v ≃ G(v)
-            @test G(Point(v)) ≃ Point(G(v))
-            @test G*Point(v) ≃ Point(G(v))
+            @test G(v...) ≈ G(v)
+            @test G*v ≈ G(v)
+            @test G(Point(v)) ≈ Point(G(v))
+            @test G*Point(v) ≈ Point(G(v))
         end
     end
 
@@ -606,11 +606,11 @@ end
         for G in (I, B, A)
             @test G === @inferred compose(G)
             for H in (A, B)
-                @test G*H ≃ compose(G,H)
-                @test G⋅H ≃ compose(G,H)
-                @test G∘H ≃ compose(G,H)
+                @test G*H ≈ compose(G,H)
+                @test G⋅H ≈ compose(G,H)
+                @test G∘H ≈ compose(G,H)
                 for v in vectors
-                    @test (G*H)(v) ≃ G(H(v))
+                    @test (G*H)(v) ≈ G(H(v))
                 end
             end
         end
@@ -619,10 +619,10 @@ end
             @test bare_type(AffineTransform{T1}(A)*AffineTransform{T2}(B)) == T
         end
         for v in vectors
-            @test compose(A,B,C)(v) ≃ A(B(C(v)))
-            @test (A*B*C)(v) ≃ A(B(C(v)))
-            @test compose(A,C,B,C)(v) ≃ A(C(B(C(v))))
-            @test (A*C*B*C)(v) ≃ A(C(B(C(v))))
+            @test compose(A,B,C)(v) ≈ A(B(C(v)))
+            @test (A*B*C)(v) ≈ A(B(C(v)))
+            @test compose(A,C,B,C)(v) ≈ A(C(B(C(v))))
+            @test (A*C*B*C)(v) ≈ A(C(B(C(v))))
         end
     end
 
@@ -637,16 +637,16 @@ end
             if det(M) == 0
                 continue
             end
-            @test det(inv(M)) ≃ 1/det(M)
-            @test M/M ≃ M*inv(M)
-            @test M\M ≃ inv(M)*M
-            @test M\M ≃ I
-            @test M/M ≃ I
+            @test det(inv(M)) ≈ 1/det(M)
+            @test M/M ≈ M*inv(M)
+            @test M\M ≈ inv(M)*M
+            @test M\M ≈ I
+            @test M/M ≈ I
             for v in vectors
-                @test M(inv(M)(v)) ≃ v
-                @test inv(M)(M(v)) ≃ v
-                @test (M\M)(v) ≃ v
-                @test (M/M)(v) ≃ v
+                @test M(inv(M)(v)) ≈ v
+                @test inv(M)(M(v)) ≈ v
+                @test (M\M)(v) ≈ v
+                @test (M/M)(v) ≈ v
             end
         end
         for T1 in types, T2 in types
@@ -658,8 +658,8 @@ end
 
     @testset "scale" begin
         for M in (A, B, C), α in scales, v in vectors
-            @test (α*M)(v) ≃ α.*M(v)
-            @test (M*α)(v) ≃ M(α.*v)
+            @test (α*M)(v) ≈ α.*M(v)
+            @test (M*α)(v) ≈ M(α.*v)
             for T in types
                 @test bare_type(T(α)*M) === promote_type(T, bare_type(M))
                 @test bare_type(M*T(α)) === promote_type(T, bare_type(M))
@@ -672,16 +672,16 @@ end
 
     @testset "translation" begin
         for M in (B, A), t in vectors, v in vectors
-            @test translate(t, M)(v) ≃ t .+ M(v)
-            @test translate(t, M)(v) ≃ (t + M)(v)
-            @test translate(M, t)(v) ≃ M(v .+ t)
-            @test translate(M, t)(v) ≃ (M + t)(v)
+            @test translate(t, M)(v) ≈ t .+ M(v)
+            @test translate(t, M)(v) ≈ (t + M)(v)
+            @test translate(M, t)(v) ≈ M(v .+ t)
+            @test translate(M, t)(v) ≈ (M + t)(v)
         end
         for v in vectors
-            @test A - v ≃ A + (-v[1], -v[2])
-            @test A + Point(v) ≃ translate(A, v...)
-            @test Point(v) + A ≃ translate(v..., A)
-            @test A - Point(v) ≃ A - v
+            @test A - v ≈ A + (-v[1], -v[2])
+            @test A + Point(v) ≈ translate(A, v...)
+            @test Point(v) + A ≈ translate(v..., A)
+            @test A - Point(v) ≈ A - v
         end
         for G in (A, B, C), v in vectors, T in types
             @test bare_type(T.(v) + G) === promote_type(T, bare_type(G))
@@ -696,11 +696,11 @@ end
         for θ in angles
             R = @inferred rotate(+θ, I)
             Q = @inferred rotate(-θ, I)
-            @test R*Q ≃ I
-            @test Q*R ≃ I
+            @test R*Q ≈ I
+            @test Q*R ≈ I
             for G in (A, B, C), v in vectors
-                @test rotate(θ, G)(v) ≃ (R*G)(v)
-                @test rotate(G, θ)(v) ≃ (G*R)(v)
+                @test rotate(θ, G)(v) ≈ (R*G)(v)
+                @test rotate(G, θ)(v) ≈ (G*R)(v)
             end
         end
         for G in (A, B, C), θ in angles, T in types
@@ -715,9 +715,9 @@ end
     @testset "intercept" begin
         for M in (I, A, B)
             x, y = intercept(M)
-            @test M(x, y) ≃ (0,0) atol=16*eps(Float64)
+            @test M(x, y) ≈ (0,0) atol=16*eps(Float64)
             P = intercept(Point, M)
-            @test M*P ≃ Point(0,0) atol=16*eps(Float64)
+            @test M*P ≈ Point(0,0) atol=16*eps(Float64)
         end
     end
 
