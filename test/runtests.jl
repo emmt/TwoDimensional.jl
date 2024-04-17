@@ -260,7 +260,7 @@ end
         B3 = BoundingBox{Float32}(1.1,3.2,4.5,5.8)
         @test promote(B1, B2) === (Float64.(B1),B2)
         @test promote(B1, B2, B3) === (Float64.(B1),B2,Float64.(B3))
-        @test_deprecated BoundingBox(ones(5,7)) === BoundingBox(1,5, 1,7)
+        @test_throws MethodError BoundingBox(ones(5,7))
         @test BoundingBox(-2:6,8:11) === BoundingBox(-2,6, 8,11)
         @test BoundingBox((2:4,-1:7)) === BoundingBox(2,4, -1,7)
         @test CartesianIndices(BoundingBox(2:4,-1:7)) ===

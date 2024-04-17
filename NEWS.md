@@ -1,5 +1,9 @@
 # User visible changes in TwoDimensional package
 
+## Version 0.4.2
+
+- Remove deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))`.
+
 ## Version 0.4.1
 
 - Tests run on Julia 1.11.

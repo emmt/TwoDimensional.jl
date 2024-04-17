@@ -258,7 +258,6 @@ BoundingBox{T}(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer})
 BoundingBox(R::CartesianIndices{2}) = BoundingBox(first(R), last(R))
 BoundingBox{T}(R::CartesianIndices{2}) where {T} = BoundingBox{T}(first(R), last(R))
 
-@deprecate BoundingBox(A::AbstractMatrix) BoundingBox(axes(A))
 BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
 
 # Conversion to bounding-boxes (rely on constructors).
