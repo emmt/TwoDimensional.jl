@@ -23,50 +23,62 @@ export
     scale,
     translate
 
-using ..TwoDimensional: AbstractPoint, Point
+using Unitless
+
+using ..TwoDimensional: AbstractPoint, Point, PointLike, get_x, get_y
 
 # Imports for extension.
-import Base: +, -, *, ∘, /, \, inv, eltype
+import Base: +, -, *, ∘, /, \, inv
 import Base: Float16, Float32, Float64
 import Base.MPFR: BigFloat
 import LinearAlgebra: ⋅, det
 
 """
-# Affine 2D Transforms
+    AffineTransform(Axx, Axy, Ax, Ayx, Ayy, Ay) -> A
 
-An affine 2D transform `A` is defined by 6 real coefficients, `Axx`, `Axy`,
-`Ax`, `Ayx`, `Ayy` and `Ay`.  Such a transform maps `(x,y)` as `(xp,yp)` given
-by:
+yields a callable object implementing a 2-dimensional affine transform such
+that:
 
-```julia
-xp = Axx*x + Axy*y + Ax
-yp = Ayx*x + Ayy*y + Ay
-```
+    A(x, y) -> (Axx*x + Axy*y + Ax, Ayx*x + Ayy*y + Ay)
+    A((x, y)) -> (Axx*x + Axy*y + Ax, Ayx*x + Ayy*y + Ay)
+    A(pnt::Point) -> Point(A(pnt.x, pnt.y))
+    A(pnt::CartesianIndex{2}) -> Point(A(pnt[1], pnt[2]))
 
-The immutable type `AffineTransform` is used to store an affine 2D transform
-`A`, it can be created by:
+The constructor takes one or three parameters:
 
-```julia
-I = AffineTransform{T}() # yields the identity with type T
-A = AffineTransform{T}(Axx, Axy, Ax, Ayx, Ayy, Ay)
-```
+    AffineTransform{T}(Axx, Axy, Ax, Ayx, Ayy, Ay)
+    AffineTransform{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay)
 
-The parameter `T` above is used to specify the floating-point type for the
-coefficients; if omitted it is guessed from the types of the coefficients.
+where `T` is the concrete floating-point type of the coefficients (`Float64` by
+default), `R` is the type for storing the factors `Axx`, `Axy`, `Ayx`, and
+`Ayy`, and `S` is the type for storing the offsets `Ax` and `Ay`. The bare type
+of `R` and `S` must be `T` but they may have units.
 
+Changing the floating-point type of an existing 2-dimensional affine transform
+`A` can be done by one of:
 
-## Operations with affine 2D transforms
+    B = AffineTransform{T}(A)
+    B = convert(AffineTransform{T}, A)
+    B = convert_bare_type(T, A)
+    B = convert_real_type(T, A)
+    B = convert_floating_point_type(T, A)
 
-Many operations are available to manage or apply affine transforms:
+the 3 last assume `using Unitless`. Using `Unitless` API, the floating-point
+type `T` can be retrieved by either of `bare_type(A)`, real_type(A)`, or
+`floating_point_type(A)` with `A` a 2-dimensional affine transform instance or
+type.
+
+Applying the 2-dimensional affine transform `A` can be done by:
 
 ```julia
 (xp, yp) = A(x,y)       # apply affine transform A to coordinates (x,y)
 (xp, yp) = A*(x,y)      # idem
-(xp, yp) = A(v)         # idem, with v = (x,y)
-(xp, yp) = A*v          # idem
+(xp, yp) = A((x,y))     # idem, with pnt = (x,y)
+(xp, yp) = A*(x,y)      # idem
 
 A(Point(x,y)) -> Point(xp, yp)
 A*Point(x,y)  -> Point(xp, yp)
+A⋅Point(x,y)  -> Point(xp, yp)
 
 C = compose(A, B, ...)  # compose 2 (or more) transforms, C = apply B then A
 C = A∘B                 # idem
@@ -74,12 +86,12 @@ C = A*B                 # idem
 C = A⋅B                 # idem
 
 B = translate(x, y, A)  # B = apply A then translate by (x,y)
-B = translate(v, A)     # idem with v = (x,y)
-B = v + A               # idem
+B = translate(pnt, A)   # idem with pnt = (x,y)
+B = pnt + A             # idem
 
 B = translate(A, x, y)  # B = translate by (x,y) then apply A
-B = translate(A, v)     # idem with v = (x,y)
-B = A + v               # idem
+B = translate(A, pnt)   # idem with pnt = (x,y)
+B = A + pnt             # idem
 
 B = rotate(θ, A)   # B = apply A then rotate by angle θ
 C = rotate(A, θ)   # C = rotate by angle θ then apply A
@@ -96,64 +108,112 @@ C = A\\B            # left division, same as: C = compose(inv(A), B)
 
 "`∘`" and "`⋅`" can be typed by `\\circ<tab>` and `\\cdot<tab>`.
 
-
-## Type conversion
-
-As a general rule, the floating-point type `T` of an `AffineTransform{T}` is
-imposed for all operations and for the result.  The floating-point type of the
-composition of several coordinate transforms is the promoted type of the
-transforms which have been composed.
-
-Calling `eltype(A)` yields floating-point type of the coefficients of the 2D
-affine transform `A`.  To convert the floating-point type of the coefficients
-of `A` to be `T`, do one of:
-
-```julia
-B = T.(A)
-B = AffineTransform{T}(A)
-B = convert(AffineTransform{T}, A)
-```
-
 """
-struct AffineTransform{T<:AbstractFloat} <: Function
-    xx::T
-    xy::T
-    x ::T
-    yx::T
-    yy::T
-    y ::T
-    AffineTransform{T}() where T = new{T}(1,0,0, 0,1,0)
-    function AffineTransform{T}(Axx::Real, Axy::Real, Ax::Real,
-                                Ayx::Real, Ayy::Real, Ay::Real) where T
-        new{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+struct AffineTransform{T<:AbstractFloat,R,S} <: Function
+    xx::R
+    xy::R
+    x ::S
+    yx::R
+    yy::R
+    y ::S
+    function AffineTransform{T,R,S}(args::Vararg{Any,6}) where {T<:AbstractFloat,R,S}
+        isconcretetype(T) || throw(ArgumentError(
+            "type parameter `T = $T` is not a concrete floating-point type"))
+        bare_type(R) === T || throw(ArgumentError(
+            "bare type of parameter `R = $R` is not `T = $T`, got `bare_type(R) = $(bare_type(R))`"))
+        bare_type(S) === T || throw(ArgumentError(
+            "bare type of parameter `S = $S` is not `T = $T`, got `bare_type(S) = $(bare_type(S))`"))
+        return new{T,R,S}(args...)
     end
 end
 
-eltype(::AffineTransform{T}) where {T} = T
+"""
+    AffineTransform() -> Id
+    AffineTransform{T}() -> Id
+    AffineTransform{T,R,S}() -> Id
 
+yields a 2-dimensional affine transform corresponding to the identity (up to
+possible change of type and units). Parameter `T` is the floating-point type of
+the coefficients (`Float64` by default). Parameters `R` and `S` are the types
+of the factors and of the offsets (by default both are assumed to be `T`).
+These are shortcuts to:
+
+     AffineTransform(oneunit(R),zero(R),zero(S), zero(R),oneunit(R),zero(S))
+
+"""
 AffineTransform() = AffineTransform{Float64}()
-function AffineTransform(Axx::Txx, Axy::Txy, Ax::Tx,
-                         Ayx::Tyx, Ayy::Tyy, Ay::Ty
-                         ) where {Txx<:Real,Txy<:Real,Tx<:Real,
-                                  Tyx<:Real,Tyy<:Real,Ty<:Real}
-    T = float(promote_type(Txx, Txy, Tx, Tyx, Tyy, Ty))
-    AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+AffineTransform{T}() where {T<:AbstractFloat} = AffineTransform{T,T,T}()
+AffineTransform{T,R,S}() where {T<:AbstractFloat,R,S} =
+    AffineTransform{T,R,S}(oneunit(R),zero(R),zero(S),
+                           zero(R),oneunit(R),zero(S))
+
+function AffineTransform(Axx, Axy, Ax,
+                         Ayx, Ayy, Ay)
+    Axx, Axy, Ayx, Ayy = promote(Axx, Axy, Ayx, Ayy)
+    Ax, Ay = promote(Ax, Ay)
+    return AffineTransform(Axx,Axy,Ax, Ayx,Ayy,Ay)
 end
 
-function AffineTransform(Axx::T, Axy::T, Ax::T,
-                         Ayx::T, Ayy::T, Ay::T) where {T<:AbstractFloat}
-    AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+function AffineTransform{T}(Axx, Axy, Ax,
+                            Ayx, Ayy, Ay) where {T<:AbstractFloat}
+    Axx, Axy, Ayx, Ayy = promote(Axx, Axy, Ayx, Ayy)
+    Ax, Ay = promote(Ax, Ay)
+    return AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+end
+
+function AffineTransform(Axx::R, Axy::R, Ax::S,
+                         Ayx::R, Ayy::R, Ay::S) where {R,S}
+    T = float(promote_type(real_type(R), real_type(S)))
+    return AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+end
+
+function AffineTransform{T}(Axx::R, Axy::R, Ax::S,
+                            Ayx::R, Ayy::R, Ay::S) where {T<:AbstractFloat,R,S}
+    Rc = convert_real_type(T, R)
+    Sc = convert_real_type(T, S)
+    return AffineTransform{T,Rc,Sc}(Axx,Axy,Ax, Ayx,Ayy,Ay)
 end
 
 AffineTransform(A::AffineTransform) = A
 AffineTransform{T}(A::AffineTransform{T}) where {T<:AbstractFloat} = A
 AffineTransform{T}(A::AffineTransform) where {T<:AbstractFloat} =
-    AffineTransform{T}(A.xx, A.xy, A.x,
-                       A.yx, A.yy, A.y)
+    AffineTransform{T}(Tuple(A)...)
 
-# Allow for `T.(obj)` to work with `T` a floating-point type.
-Broadcast.broadcasted(::Type{T}, A::AffineTransform) where {T<:AbstractFloat} =
-    AffineTransform{T}(A)
+# Extend Unitless.bare_type, Unitless.real_type, Unitless.floating_point_type,
+# Unitless.convert_bare_type, Unitless.convert_real_type, and
+# Unitless.convert_floating_point_type,
+for func in (:bare_type, :real_type, :floating_point_type)
+    conv = Symbol("convert_",func)
+    @eval begin
+        Unitless.$func(A::AffineTransform) = $func(typeof(A))
+        Unitless.$func(::Type{<:AffineTransform{T}}) where {T} = T
+        Unitless.$conv(::Type{T}, A::AffineTransform{T}) where {T} = A
+        Unitless.$conv(::Type{T}, A::AffineTransform) where {T<:AbstractFloat} =
+            AffineTransform{T}(A)
+    end
+end
+
+"""
+    TwoDimensional.factors_type(A) -> R
+
+yields the type of the factors of the 2-dimensional affine transform `A`. The
+factors of `A` are the coefficients `A.xx`, `A,xy`, `A.yx`, and `A.yy`.
+Argument may also be the type of an affine transform.
+
+"""
+factors_type(A::AffineTransform) = factors_type(typeof(A))
+factors_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = R
+
+"""
+    TwoDimensional.offsets_type(A) -> R
+
+yields the type of the offsets of the 2-dimensional affine transform `A`. The
+offsets of `A` are the coefficients `A.x` and `A.y`. Argument may also be the
+type of an affine transform.
+
+"""
+offsets_type(A::AffineTransform) = offsets_type(typeof(A))
+offsets_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = S
 
 Base.convert(::Type{T}, A::AffineTransform) where {T<:AffineTransform} = T(A)
 Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{U}}) where {T,U} =
@@ -161,20 +221,6 @@ Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{U}}) where 
 Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{T}}) where {T} =
     AffineTransform{T}
 
-@deprecate(Float16(A::AffineTransform),  AffineTransform{Float16}(A))
-@deprecate(Float32(A::AffineTransform),  AffineTransform{Float32}(A))
-@deprecate(Float64(A::AffineTransform),  AffineTransform{Float64}(A))
-@deprecate(BigFloat(A::AffineTransform), AffineTransform{BigFloat}(A))
-
-#------------------------------------------------------------------------------
-# apply the transform to some coordinates:
-
-(A::AffineTransform{T})(x::T, y::T) where {T<:AbstractFloat} =
-    (A.xx*x + A.xy*y + A.x,
-     A.yx*x + A.yy*y + A.y)
-
-(A::AffineTransform{T})(x::Real, y::Real) where {T<:AbstractFloat} =
-    A(convert(T, x), convert(T, y))
 # Make affine transform objects indexable and iterable.
 Base.Tuple(A::AffineTransform) = (A.xx, A.xy, A.x, A.yx, A.yy, A.y)
 
@@ -198,266 +244,222 @@ Base.IteratorSize(A::AffineTransform) = Base.IteratorSize(typeof(A))
 Base.IteratorSize(::Type{<:AffineTransform}) = Base.HasLength()
 Base.length(A::AffineTransform) = 6
 
-(A::AffineTransform)(v::Tuple{Real,Real}) = A(v[1], v[2])
+#------------------------------------------------------------------------------
+# Apply the transform to some coordinates (promoted to the same type).
+(A::AffineTransform)(pnt::Union{Point,CartesianIndex{2}}) = Point(A(get_x(pnt), get_y(pnt)))
+(A::AffineTransform)((x, y)::Tuple{Any,Any}) = A(x, y)
+(A::AffineTransform)(x, y) = A(promote(x, y)...)
+(A::AffineTransform)(x::T, y::T) where {T} = (A.xx*x + A.xy*y + A.x,
+                                              A.yx*x + A.yy*y + A.y)
 
-(A::AffineTransform)(v::Point) = Point(A(v.x, v.y)...)
+*(A::AffineTransform, pnt::PointLike) = A(pnt)
+⋅(A::AffineTransform, pnt::PointLike) = A(pnt)
 
 #------------------------------------------------------------------------------
 # Combine a translation with an affine transform.
 
 """
-### Translating an affine transform
+    B = translate(x, y, A)
+    B = translate((x,y), A)
+    B = translate(pnt, A)
+    B = (x,y) + A
+    B = pnt + A
 
-Affine transforms can be letf- or right-translated.
+perform a left-translation of the 2-dimensional affine transform `A`. Applying
+`B` yields the same result as if coordinates `(x,y)` are added to the output of
+`A`. Here, `pnt = Point(x,y)` or `pnt = CartesianIndex(x,y)`.
 
-```julia
-translate(x, y, A)
-```
-or
-```julia
-translate((x,y), A)
-```
+    C = translate(A, x, y)
+    C = translate(A, (x,y))
+    C = translate(A, pnt)
+    C = A + (x,y)
+    C = A + pnt
 
-yield an affine transform which translate the output of affine transform `A` by
-offsets `x` and `y`.
-
-```julia
-translate(A, x, y)
-```
-or
-```julia
-translate(A, (x,y))
-```
-
-yield an affine transform which translate the input of affine transform `A` by
-offsets `x` and `y`.
-
-The same results can be obtained with the `+` operator:
-
-```julia
-B = (x,y) + A    # same as: B = translate((x,y), A)
-B = A + (x,y)    # same as: B = translate(A, (x,y))
-```
+perform a right-translation of the 2-dimensional affine transform `A`. Applying
+`B` yields the same result as if coordinates `(x,y)` are added to the input of
+`A`.
 
 See also: [`AffineTransform`](@ref), [`rotate`](@ref), [`scale`](@ref).
 
 """ translate
 
 # Left-translating results in translating the output of the transform.
-translate(x::T, y::T, A::AffineTransform{T}) where {T<:AbstractFloat} =
-    AffineTransform{T}(A.xx, A.xy, A.x + x,
-                       A.yx, A.yy, A.y + y)
-
-translate(x::Real, y::Real, A::AffineTransform{T}) where {T<:AbstractFloat} =
-    translate(convert(T, x), convert(T, y), A)
-
-translate(v::Tuple{Real,Real}, A::AffineTransform) =
-    translate(v[1], v[2], A)
-
-translate(v::AbstractPoint, A::AffineTransform) =
-    translate(v.x, v.y, A)
++(pnt::PointLike, A::AffineTransform) = translate(pnt, A)
+-(pnt::PointLike, A::AffineTransform) = pnt + (-A)
+translate(pnt::PointLike, A::AffineTransform) = translate(get_x(pnt), get_y(pnt), A)
+translate(x, y, A::AffineTransform) = AffineTransform(A.xx, A.xy, A.x + x,
+                                                      A.yx, A.yy, A.y + y)
 
 # Right-translating results in translating the input of the transform.
-translate(A::AffineTransform{T}, x::T, y::T) where {T<:AbstractFloat} =
-    AffineTransform{T}(A.xx, A.xy, A.xx*x + A.xy*y + A.x,
-                       A.yx, A.yy, A.yx*x + A.yy*y + A.y)
++(A::AffineTransform, pnt::PointLike) = translate(A, pnt)
+-(A::AffineTransform, pnt::PointLike) = A + (-get_x(pnt), -get_y(pnt))
+translate(A::AffineTransform, pnt::PointLike) = translate(A, get_x(pnt), get_y(pnt))
+translate(A::AffineTransform, x, y) = AffineTransform(A.xx, A.xy, A.xx*x + A.xy*y + A.x,
+                                                      A.yx, A.yy, A.yx*x + A.yy*y + A.y)
 
-translate(A::AffineTransform{T}, x::Real, y::Real) where {T<:AbstractFloat} =
-    translate(A, convert(T, x), convert(T, y))
-
-translate(A::AffineTransform, v::Tuple{Real,Real}) =
-    translate(A, v[1], v[2])
-
-translate(A::AffineTransform, v::AbstractPoint) =
-    translate(A, v.x, v.y)
-
-#------------------------------------------------------------------------------
 """
-### Scaling an affine transform
+    B = scale(ρ, A)
+    B = ρ*A
+    C = scale(A, ρ)
+    C = A*ρ
 
-There are two ways to combine a scaling by a factor `ρ` with an affine
-transform `A`.  Left-scaling as in:
+yield 2-dmensional affine transforms `B` and `C` such that:
 
-```julia
-B = scale(ρ, A)
-```
-
-results in scaling the output of the transform; while right-scaling as in:
-
-```julia
-C = scale(A, ρ)
-```
-
-results in scaling the input of the transform.  The above examples yield
-transforms which behave as:
-
-```julia
-B(v) = ρ.*A(v)
-C(v) = A(ρ.*v)
-```
-
-where `v` is any 2-element tuple.
-
-The same results can be obtained with the `*` operator:
-
-```julia
-B = ρ*A    # same as: B = scale(ρ, A)
-C = A*ρ    # same as: B = scale(A, ρ)
-```
+    B(x,y) -> ρ*A(x,y)
+    C(x,y) -> A(ρ*x,ρ*y)
 
 See also: [`AffineTransform`](@ref), [`rotate`](@ref), [`translate`](@ref).
 
+""" scale
+
+*(ρ::Number, A::AffineTransform) = scale(ρ, A)
+scale(ρ, A::AffineTransform) = AffineTransform(ρ*A.xx, ρ*A.xy, ρ*A.x,
+                                               ρ*A.yx, ρ*A.yy, ρ*A.y)
+
+*(A::AffineTransform, ρ::Number) = scale(A, ρ)
+scale(A::AffineTransform, ρ) = AffineTransform(ρ*A.xx, ρ*A.xy, A.x,
+                                               ρ*A.yx, ρ*A.yy, A.y)
+
+# Negating (unary minus) of a transform amounts to negating its output or to
+# left-multiply the transform by -1. Hence, it is sufficient to negate all its
+# coefficients.
+-(A::AffineTransform) = AffineTransform(map(-, Tuple(A))...)
+
 """
-scale(ρ::T, A::AffineTransform{T}) where {T<:AbstractFloat} =
-    AffineTransform{T}(ρ*A.xx, ρ*A.xy, ρ*A.x,
-                       ρ*A.yx, ρ*A.yy, ρ*A.y)
+    B = rotate(θ, A)
+    C = rotate(A, θ)
 
-scale(A::AffineTransform{T}, ρ::T) where {T<:AbstractFloat} =
-    AffineTransform{T}(ρ*A.xx, ρ*A.xy, A.x,
-                       ρ*A.yx, ρ*A.yy, A.y)
+yield 2-dmensional affine transforms `B` and `C` such that:
 
-#------------------------------------------------------------------------------
-"""
-### Rotating an affine transform
+    B(x,y) = (R∘A)(x,y) = R(A(x,y))
+    C(x,y) = (A∘R)(x,y) = A(R(x,y))
 
-There are two ways to combine a rotation by angle `θ` (in radians
-counterclockwise) with an affine transform `A`.  Left-rotating as in:
-
-```julia
-B = rotate(θ, A)
-```
-
-results in rotating the output of the transform; while right-rotating as in:
-
-```julia
-C = rotate(A, θ)
-```
-
-results in rotating the input of the transform.  The above examples are
-similar to:
-
-```julia
-B = R∘A
-C = A∘R
-```
-
-where `R` implements rotation by angle `θ` around `(0,0)`.
-
+where `R` implements rotation by angle `θ` counterclockwise around the origin
+at coordimates `(0,0)`. The rotation angle `θ` is assumed to be in radians if
+it has no units.
 
 See also: [`AffineTransform`](@ref), [`scale`](@ref), [`translate`](@ref).
 
 """
-function rotate(θ::T, A::AffineTransform{T}) where {T<:AbstractFloat}
-    sin(θ), cosθ = sincos(θ)
-    return AffineTransform{T}(cosθ*A.xx - sinθ*A.yx,
-                              cosθ*A.xy - sinθ*A.yy,
-                              cosθ*A.x  - sinθ*A.y,
-                              cosθ*A.yx + sinθ*A.xx,
-                              cosθ*A.yy + sinθ*A.xy,
-                              cosθ*A.y  + sinθ*A.x)
+function rotate(θ, A::AffineTransform)
+    sinθ, cosθ = sincos(θ)
+    return AffineTransform(cosθ*A.xx - sinθ*A.yx,
+                           cosθ*A.xy - sinθ*A.yy,
+                           cosθ*A.x  - sinθ*A.y,
+                           cosθ*A.yx + sinθ*A.xx,
+                           cosθ*A.yy + sinθ*A.xy,
+                           cosθ*A.y  + sinθ*A.x)
 end
 
-function rotate(A::AffineTransform{T}, θ::T) where {T<:AbstractFloat}
-    sin(θ), cosθ = sincos(θ)
-    return AffineTransform{T}(A.xx*cosθ + A.xy*sinθ,
-                              A.xy*cosθ - A.xx*sinθ,
-                              A.x,
-                              A.yx*cosθ + A.yy*sinθ,
-                              A.yy*cosθ - A.yx*sinθ,
-                              A.y)
+function rotate(A::AffineTransform, θ)
+    sinθ, cosθ = sincos(θ)
+    return AffineTransform(A.xx*cosθ + A.xy*sinθ,
+                           A.xy*cosθ - A.xx*sinθ,
+                           A.x,
+                           A.yx*cosθ + A.yy*sinθ,
+                           A.yy*cosθ - A.yx*sinθ,
+                           A.y)
 end
-
-# Make sure the floating-point type of an affine transform is preserved.
-for func in (:scale, :rotate)
-    @eval begin
-        $func(α::Real, A::AffineTransform{T}) where {T<:AbstractFloat} =
-            $func(convert(T, α), A)
-        $func(A::AffineTransform{T}, α::Real) where {T<:AbstractFloat} =
-            $func(A, convert(T, α))
-    end
-end
-
-#------------------------------------------------------------------------------
 
 """
-`det(A)` returns the determinant of the linear part of the affine
-transform `A`.
+    det(A::TwoDimensional.AffineTransform)
+
+yields the determinant of the linear part of the affine transform `A`.
+
 """
 det(A::AffineTransform) = A.xx*A.yy - A.xy*A.yx
 
 """
-`jacobian(A)` returns the Jacobian of the affine transform `A`, that is the
-absolute value of the determinant of its linear part.
+    jacobian(A::TwoDimensional.AffineTransform)
+
+yields the Jacobian of the affine transform `A`, that is the absolute value of
+the determinant of its linear part.
+
 """
 jacobian(A::AffineTransform) = abs(det(A))
 
 """
-`inv(A)` returns the inverse of the affine transform `A`.
+    inv(A::TwoDimensional.AffineTransform)
+
+yields the inverse of the affine transform `A`.
+
 """
-function inv(A::AffineTransform{T}) where {T}
+function inv(A::AffineTransform)
     Δ = det(A)
     iszero(Δ) && error("transformation is not invertible")
     Rxx = A.yy/Δ
     Rxy = A.xy/Δ
     Ryx = A.yx/Δ
     Ryy = A.xx/Δ
-    return AffineTransform{T}(+Rxx, -Rxy, Rxy*A.y - Rxx*A.x,
-                              -Ryx, +Ryy, Ryx*A.x - Ryy*A.y)
+    return AffineTransform(+Rxx, -Rxy, Rxy*A.y - Rxx*A.x,
+                           -Ryx, +Ryy, Ryx*A.x - Ryy*A.y)
 end
 
 """
+    compose(A::TwoDimensional.AffineTransform, B::TwoDimensional.AffineTransform)
 
-`compose(A,B)` yields the affine transform which combines the two affine
-transforms `A` and `B`, that is the affine transform which applies `B` and then
-`A`.  Composition is accessible via: `A∘B`, `A*B` or `A⋅B` ("`∘`" and "`⋅`" can
-be typed by `\\circ<tab>` and `\\cdot<tab>`).
+yields the affine transform which combines the two affine transforms `A` and
+`B`, that is the affine transform which applies `B` and then `A`. Composition
+is accessible via: `A∘B`, `A*B` or `A⋅B` ("`∘`" and "`⋅`" can be typed by
+`\\circ<tab>` and `\\cdot<tab>`).
 
-It is possible to compose more than two affine transforms.  For instance,
+It is possible to compose more than two affine transforms. For instance,
 `compose(A,B,C)` yields the affine transform which applies `C` then `B`, then
 `A`.
 
 """
 compose(A::AffineTransform) = A
 
-compose(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} =
-    AffineTransform{T}(A.xx*B.xx + A.xy*B.yx,
-                       A.xx*B.xy + A.xy*B.yy,
-                       A.xx*B.x  + A.xy*B.y + A.x,
-                       A.yx*B.xx + A.yy*B.yx,
-                       A.yx*B.xy + A.yy*B.yy,
-                       A.yx*B.x  + A.yy*B.y + A.y)
-
 compose(A::AffineTransform, B::AffineTransform) =
-    compose(promote(A, B)...)
+    AffineTransform(A.xx*B.xx + A.xy*B.yx,
+                    A.xx*B.xy + A.xy*B.yy,
+                    A.xx*B.x  + A.xy*B.y + A.x,
+                    A.yx*B.xx + A.yy*B.yx,
+                    A.yx*B.xy + A.yy*B.yy,
+                    A.yx*B.x  + A.yy*B.y + A.y)
 
-compose(A::AffineTransform, B::AffineTransform, C::AffineTransform, args::AffineTransform...) =
-    compose(compose(A, B), C, args...)
+@inline compose(A::AffineTransform, B::AffineTransform, C::AffineTransform...) =
+    compose(compose(A, B), C...)
+
+for op in (:∘, :*, :⋅)
+    @eval begin
+        $op(A::AffineTransform, B::AffineTransform) = compose(A, B)
+    end
+end
 
 """
+    rightdivide(A, B)
 
-`rightdivide(A,B)` yields `A/B`, the right division of the affine
-transform `A` by the affine transform `B`.
+yields `A/B`, the right division of the affine transform `A` by the affine
+transform `B`.
 
-"""
-rightdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} = begin
+""" rightdivide
+
+/(A::AffineTransform, B::AffineTransform) = rightdivide(A, B)
+
+rightdivide(A::AffineTransform, B::AffineTransform) = begin
     Δ = det(B)
     iszero(Δ) && error("right operand is not invertible")
     Rxx = (A.xx*B.yy - A.xy*B.yx)/Δ
     Rxy = (A.xy*B.xx - A.xx*B.xy)/Δ
     Ryx = (A.yx*B.yy - A.yy*B.yx)/Δ
     Ryy = (A.yy*B.xx - A.yx*B.xy)/Δ
-    return AffineTransform{T}(Rxx, Rxy, A.x - (Rxx*B.x + Rxy*B.y),
-                              Ryx, Ryy, A.y - (Ryx*B.y + Ryy*B.y))
+    return AffineTransform(Rxx, Rxy, A.x - (Rxx*B.x + Rxy*B.y),
+                           Ryx, Ryy, A.y - (Ryx*B.y + Ryy*B.y))
 end
 
-rightdivide(A::AffineTransform, B::AffineTransform) =
-    rightdivide(promote(A, B)...)
+"""
 
-"""
-`leftdivide(A,B)` yields `A\\B`, the left division of the affine
-transform `A` by the affine transform `B`.
-"""
-leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat} = begin
+    leftdivide(A, B)
+
+yields `A\\B`, the left division of the affine transform `A` by the affine
+transform `B`.
+
+""" leftdivide
+
+\(A::AffineTransform, B::AffineTransform) = leftdivide(A, B)
+
+leftdivide(A::AffineTransform, B::AffineTransform) = begin
     Δ = det(B)
     iszero(Δ) && error("left operand is not invertible")
     Rxx = A.yy/Δ
@@ -466,54 +468,27 @@ leftdivide(A::AffineTransform{T}, B::AffineTransform{T}) where {T<:AbstractFloat
     Ryy = A.xx/Δ
     Rx = B.x - A.x
     Ry = B.y - A.y
-    return AffineTransform{T}(Rxx*B.xx - Rxy*B.yx,
-                              Rxx*B.xy - Rxy*B.yy,
-                              Rxx*Rx   - Rxy*Ry,
-                              Ryy*B.yx - Ryx*B.xx,
-                              Ryy*B.yy - Ryx*B.xy,
-                              Ryy*Ry   - Ryx*Rx)
+    return AffineTransform(Rxx*B.xx - Rxy*B.yx,
+                           Rxx*B.xy - Rxy*B.yy,
+                           Rxx*Rx   - Rxy*Ry,
+                           Ryy*B.yx - Ryx*B.xx,
+                           Ryy*B.yy - Ryx*B.xy,
+                           Ryy*Ry   - Ryx*Rx)
 end
-
-leftdivide(A::AffineTransform, B::AffineTransform) =
-    leftdivide(promote(A, B)...)
 
 """
 
 `intercept(A)` returns the tuple `(x,y)` such that `A(x,y) = (0,0)`.
 
 """
-function intercept(A::AffineTransform{T}) where {T}
+function intercept(A::AffineTransform)
     Δ = det(A)
     iszero(Δ) && error("transformation is not invertible")
     return ((A.xy*A.y - A.yy*A.x)/Δ, (A.yx*A.x - A.xx*A.y)/Δ)
 end
 
-intercept(T::Type{<:Point}, A::AffineTransform) = T(intercept(A)...)
+intercept(::Type{T}, A::AffineTransform) where {T<:Point} = T(intercept(A)...)
 
-+(v::Union{AbstractPoint,Tuple{Real,Real}}, A::AffineTransform) =
-    translate(v, A)
-
-+(A::AffineTransform, v::Union{AbstractPoint,Tuple{Real,Real}}) =
-    translate(A, v)
-
--(A::AffineTransform, v::Tuple{Real,Real}) = A + (-v[1], -v[2])
--(A::AffineTransform, v::AbstractPoint) = A + (-v.x, -v.y)
-
-for op in (:∘, :*, :⋅)
-    @eval begin
-        $op(A::AffineTransform, B::AffineTransform) = compose(A, B)
-    end
-end
-
-*(A::AffineTransform, v::Union{Point,Tuple{Real,Real}}) = A(v)
-
-*(ρ::Real, A::AffineTransform) = scale(ρ, A)
-
-*(A::AffineTransform, ρ::Real) = scale(A, ρ)
-
-\(A::AffineTransform, B::AffineTransform) = leftdivide(A, B)
-
-/(A::AffineTransform, B::AffineTransform) = rightdivide(A, B)
 
 Base.show(io::IO, ::MIME"text/plain", A::AffineTransform) =
     print(io, typeof(A),

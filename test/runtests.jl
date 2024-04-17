@@ -1,21 +1,76 @@
 module TwoDimensionalTests
 
 using TwoDimensional
-using TwoDimensional: WeightedPoint, half, getaxisbounds
-import TwoDimensional: distance
-using Test, LinearAlgebra
+using TwoDimensional: WeightedPoint, PointLike, compose, get_x, get_y, get_xy, factors_type, offsets_type
+using TwoDimensional: half, get_axis_bounds
+using Test, LinearAlgebra, TypeUtils, Unitless
 import Base.MathConstants: φ
 
-distance(a::Real, b::Real) = distance(promote(a, b)...)
-distance(a::T, b::T) where {T<:Unsigned} = ifelse(a < b, b - a, a - b)
-distance(a::T, b::T) where {T<:Real} = abs(a - b)
+# abs_diff(a, b) yields absolute difference.
+# max_abs_diff(a, b) yields maximum absolute difference.
+# sum_abs_diff(a, b) yields sum of absolute differences.
+abs_diff(a::Number, b::Number) = abs_diff(promote(a, b)...)
+abs_diff(a::T, b::T) where {T<:Unsigned} = a < b ? b - a : a - b
+abs_diff(a::T, b::T) where {T<:Real} = abs(a - b)
+for (pfx, op) in ((:max, :max), (:sum, :(+)))
+    norm = Symbol(pfx,"_abs")
+    @eval begin
+        $norm(a::Number) = abs(a)
+        $norm(a::Tuple) = mapreduce($norm, $op, a)
+        function $norm(a::AbstractArray)
+            init = $norm(zero(eltype(a)))
+            return mapreduce($norm, $op, a, b; init = init)
+        end
+        $norm(a::AbstractPoint) = $norm(Tuple(a))
+        $norm(a::BoundingBox) = $norm(Tuple(a))
+        $norm(a::AffineTransform) = $norm(Tuple(a))
+    end
+    norm_diff = Symbol(norm,"_diff")
+    @eval begin
+        $norm_diff(a::Number, b::Number) = abs_diff(a, b)
+        function $norm_diff(a::Tuple, b::Tuple)
+            @assert length(a) == length(b)
+            return mapreduce(abs_diff, $op, a, b)
+        end
+        function $norm_diff(a::AbstractArray, b::AbstractArray)
+            @assert axes(a) == axes(b)
+            init = abs_diff(zero(eltype(a)), zero(eltype(b)))
+            return mapreduce(abs_diff, $op, a, b; init = init)
+        end
+        $norm_diff(a::AbstractPoint, b::AbstractPoint) = $norm_diff(Tuple(a), Tuple(b))
+        $norm_diff(a::BoundingBox, b::BoundingBox) = $norm_diff(Tuple(a), Tuple(b))
+        $norm_diff(a::AffineTransform, b::AffineTransform) = $norm_diff(Tuple(a), Tuple(b))
+    end
+end
 
-distance(A::NTuple{2,Real}, B::NTuple{2,Real}) =
-    hypot(A[1] - B[1], A[2] - B[2])
+# Default relative tolerance is eps.
+relative_precision(x, y) = max(relative_precision(x), relative_precision(y))
+relative_precision(x) = relative_precision(typeof(x))
+relative_precision() = false
+relative_precision(::Type{T}) where {T} = error("relative tolerance not defined for type $T")
+relative_precision(::Type{T}) where {T<:AbstractFloat} = eps(T)
+relative_precision(::Type{T}) where {T<:Real} = false
+relative_precision(::Type{T}) where {T<:AbstractArray} = relative_precision(eltype(T))
+relative_precision(::Type{T}) where {T<:AbstractPoint} = relative_precision(eltype(T))
+relative_precision(::Type{T}) where {T<:BoundingBox} = relative_precision(eltype(T))
+relative_precision(::Type{T}) where {T<:AffineTransform} = relative_precision(bare_type(T))
+relative_precision(::Type{T}) where {T<:Number} = relative_precision(real_type(T))
+relative_precision(::Type{<:NTuple{N,T}}) where {N,T} = relative_precision(T)
+relative_precision(::Type{T}) where {T<:Tuple} = _relative_precision(false, (T.parameters)...)
+_relative_precision(rtol) = rtol # end of recursion
+_relative_precision(rtol, ::Type{T}, args...) where {T} =
+    _relative_precision(max(rtol, relative_precision(T)), args...)
 
-distance(A::AffineTransform, B::AffineTransform) =
-    max(abs(A.xx - B.xx), abs(A.xy - B.xy), abs(A.x - B.x),
-        abs(A.yx - B.yx), abs(A.yy - B.yy), abs(A.y - B.y))
+# This is very similar to `isapprox` but with our custom settings.
+function ≃(a, b; atol = false, rtol = 4*relative_precision(a, b), norm=sum_abs)
+    d = norm === sum_abs ? sum_abs_diff(a, b) :
+        norm === max_abs ? max_abs_diff(a, b) : error("unknown norm")
+    if iszero(rtol)
+        return d ≤ atol
+    else
+        return d ≤ max(atol, rtol*max(norm(a), norm(b)))
+    end
+end
 
 function randomize!(A::Matrix{Bool}, bits::Int)
     @inbounds @simd for i in eachindex(A)
@@ -265,10 +320,10 @@ end
         @test BoundingBox((2:4,-1:7)) === BoundingBox(2,4, -1,7)
         @test CartesianIndices(BoundingBox(2:4,-1:7)) ===
             CartesianIndices((2:4,-1:7))
-        @test getaxisbounds(9:13) === (9,13)
-        @test getaxisbounds(13:9) === (13,12)
-        @test getaxisbounds(13:-1:9) === (9,13)
-        @test_throws ArgumentError getaxisbounds(13:-2:9)
+        @test get_axis_bounds(9:13) === (9,13)
+        @test get_axis_bounds(13:9) === (13,12)
+        @test get_axis_bounds(13:-1:9) === (9,13)
+        @test_throws ArgumentError get_axis_bounds(13:-2:9)
         let A = ones(7,8)
             A[1:2,:] .= 0
             A[4,:] .= 0
@@ -459,65 +514,106 @@ end
     types = (BigFloat, Float64, Float32, Float16)
 
     @testset "construction/conversion" begin
-        @test_deprecated BigFloat(A) === BigFloat.(A)
-        @test_deprecated Float32(A) === Float32.(A)
+        @testset "T = $T" for T in types
+            @test_throws MethodError T(A)
+            @test_throws MethodError T.(A)
+        end
         for T1 in types, T2 in types
             @test promote_type(AffineTransform{T1}, AffineTransform{T2}) ===
                 AffineTransform{promote_type(T1,T2)}
         end
         @test AffineTransform(A) === A
-        @test AffineTransform{eltype(A)}(A) === A
+        @test AffineTransform{bare_type(A)}(A) === A
         for G in (I, A, B)
-            @test eltype(G) == Float64
             for T in types
-                @test typeof(AffineTransform{T}(G)) == AffineTransform{T}
-                @test typeof(convert(AffineTransform{T}, G)) ==
-                    AffineTransform{T}
-                @test eltype(AffineTransform{T}(G)) == T
-                @test eltype(T.(G)) == T
+                H = @inferred AffineTransform{T}(G)
+                @test typeof(H) <: AffineTransform{T}
+                @test bare_type(H) === T
+                @test real_type(H) === T
+                @test floating_point_type(H) === T
+                @test factors_type(H) === T
+                @test offsets_type(H) === T
+                @test (H === G) == (bare_type(H) === bare_type(G))
+                @test Tuple(H) ≃ map(T, Tuple(G))
+                H = @inferred convert(AffineTransform{T}, G)
+                @test typeof(H) <: AffineTransform{T}
+                @test bare_type(H) === T
+                @test real_type(H) === T
+                @test floating_point_type(H) === T
+                @test factors_type(H) === T
+                @test offsets_type(H) === T
+                @test (H === G) == (bare_type(H) === bare_type(G))
+                @test Tuple(H) ≃ map(T, Tuple(G))
+                H = @inferred convert_bare_type(T, G)
+                @test typeof(H) <: AffineTransform{T}
+                @test bare_type(H) === T
+                @test real_type(H) === T
+                @test floating_point_type(H) === T
+                @test factors_type(H) === T
+                @test offsets_type(H) === T
+                @test (H === G) == (bare_type(H) === bare_type(G))
+                @test Tuple(H) ≃ map(T, Tuple(G))
+                H = @inferred convert_real_type(T, G)
+                @test typeof(H) <: AffineTransform{T}
+                @test bare_type(H) === T
+                @test real_type(H) === T
+                @test floating_point_type(H) === T
+                @test factors_type(H) === T
+                @test offsets_type(H) === T
+                @test (H === G) == (bare_type(H) === bare_type(G))
+                @test Tuple(H) ≃ map(T, Tuple(G))
+                H = @inferred convert_floating_point_type(T, G)
+                @test typeof(H) <: AffineTransform{T}
+                @test bare_type(H) === T
+                @test real_type(H) === T
+                @test floating_point_type(H) === T
+                @test factors_type(H) === T
+                @test offsets_type(H) === T
+                @test (H === G) == (bare_type(H) === bare_type(G))
+                @test Tuple(H) ≃ map(T, Tuple(G))
             end
         end
     end
 
     @testset "identity" begin
-        @test det(I) == 1
-        @test distance(inv(I), I) ≤ 0
+        @test isone(det(I))
+        @test inv(I) ≃ I
         for v in vectors
-            @test distance(I(v), eltype(I).(v)) ≤ 0
+            @test I(v) ≃ v
         end
     end
 
     @testset "apply" begin
         for G in (I, A, B),
             v in vectors
-            @test distance(G(v...), G(v)) ≤ 0
-            @test distance(G*v, G(v)) ≤ 0
-            @test distance(G(Point(v)), Point(G(v))) ≤ 0
-            @test distance(G*Point(v), Point(G(v))) ≤ 0
+            @test G(v...) ≃ G(v)
+            @test G*v ≃ G(v)
+            @test G(Point(v)) ≃ Point(G(v))
+            @test G*Point(v) ≃ Point(G(v))
         end
     end
 
     @testset "composition" begin
         for G in (I, B, A)
-            @test distance(G, compose(G)) ≤ 0
+            @test G === @inferred compose(G)
             for H in (A, B)
-                @test distance(G*H, compose(G,H)) ≤ 0
-                @test distance(G⋅H, compose(G,H)) ≤ 0
-                @test distance(G∘H, compose(G,H)) ≤ 0
+                @test G*H ≃ compose(G,H)
+                @test G⋅H ≃ compose(G,H)
+                @test G∘H ≃ compose(G,H)
                 for v in vectors
-                    @test distance((G*H)(v), G(H(v))) ≤ tol
+                    @test (G*H)(v) ≃ G(H(v))
                 end
             end
         end
         for T1 in types, T2 in types
             T = promote_type(T1, T2)
-            @test eltype(T1.(A)*T2.(B)) == T
+            @test bare_type(AffineTransform{T1}(A)*AffineTransform{T2}(B)) == T
         end
         for v in vectors
-            @test distance(compose(A,B,C)(v), A(B(C(v)))) ≤ tol
-            @test distance((A*B*C)(v), A(B(C(v)))) ≤ tol
-            @test distance(compose(A,C,B,C)(v), A(C(B(C(v))))) ≤ tol
-            @test distance((A*C*B*C)(v), A(C(B(C(v))))) ≤ tol
+            @test compose(A,B,C)(v) ≃ A(B(C(v)))
+            @test (A*B*C)(v) ≃ A(B(C(v)))
+            @test compose(A,C,B,C)(v) ≃ A(C(B(C(v))))
+            @test (A*C*B*C)(v) ≃ A(C(B(C(v))))
         end
     end
 
@@ -532,102 +628,93 @@ end
             if det(M) == 0
                 continue
             end
-            @test distance(det(inv(M)), 1/det(M)) ≤ tol
-            @test distance(M/M, M*inv(M)) ≤ tol
-            @test distance(M\M, inv(M)*M) ≤ tol
-            @test distance(M\M, I) ≤ tol
-            @test distance(M/M, I) ≤ tol
+            @test det(inv(M)) ≃ 1/det(M)
+            @test M/M ≃ M*inv(M)
+            @test M\M ≃ inv(M)*M
+            @test M\M ≃ I
+            @test M/M ≃ I
             for v in vectors
-                @test distance(M(inv(M)(v)), v) ≤ tol
-                @test distance(inv(M)(M(v)), v) ≤ tol
-                @test distance((M\M)(v), v) ≤ tol
-                @test distance((M/M)(v), v) ≤ tol
+                @test M(inv(M)(v)) ≃ v
+                @test inv(M)(M(v)) ≃ v
+                @test (M\M)(v) ≃ v
+                @test (M/M)(v) ≃ v
             end
         end
         for T1 in types, T2 in types
             T = promote_type(T1, T2)
-            @test eltype(T1.(A)/T2.(B)) == T
-            @test eltype(T1.(A)\T2.(B)) == T
+            @test bare_type(AffineTransform{T1}(A)/AffineTransform{T2}(B)) == T
+            @test bare_type(AffineTransform{T1}(A)\AffineTransform{T2}(B)) == T
         end
     end
 
     @testset "scale" begin
-        for M in (A, B, C),
-            α in scales,
-            v in vectors
-            @test distance((α*M)(v), α.*M(v)) ≤ tol
-            @test distance((M*α)(v), M(α.*v)) ≤ tol
-        end
-        for G in (A, B, C),
-            α in scales,
-            T in types
-            @test eltype(T(α)*G) == eltype(G)
-            @test eltype(G*T(α)) == eltype(G)
-            H = T.(G)
-            @test eltype(α*H) == eltype(H)
-            @test eltype(H*α) == eltype(H)
+        for M in (A, B, C), α in scales, v in vectors
+            @test (α*M)(v) ≃ α.*M(v)
+            @test (M*α)(v) ≃ M(α.*v)
+            for T in types
+                @test bare_type(T(α)*M) === promote_type(T, bare_type(M))
+                @test bare_type(M*T(α)) === promote_type(T, bare_type(M))
+                H = @inferred AffineTransform{T}(M)
+                @test bare_type(T(α)*H) === bare_type(H)
+                @test bare_type(H*T(α)) === bare_type(H)
+            end
         end
     end
 
     @testset "translation" begin
-        for M in (B, A),
-            t in vectors,
-            v in vectors
-            @test distance(translate(t, M)(v), t .+ M(v)) ≤ tol
-            @test distance(translate(t, M)(v), (t + M)(v)) ≤ tol
-            @test distance(translate(M, t)(v), M(v .+ t)) ≤ tol
-            @test distance(translate(M, t)(v), (M + t)(v)) ≤ tol
+        for M in (B, A), t in vectors, v in vectors
+            @test translate(t, M)(v) ≃ t .+ M(v)
+            @test translate(t, M)(v) ≃ (t + M)(v)
+            @test translate(M, t)(v) ≃ M(v .+ t)
+            @test translate(M, t)(v) ≃ (M + t)(v)
         end
         for v in vectors
-            @test distance(A - v, A + (-v[1], -v[2])) ≤ tol
-            @test distance(A + Point(v), translate(A, v...)) ≤ tol
-            @test distance(Point(v) + A, translate(v..., A)) ≤ tol
-            @test distance(A - Point(v), A - v) ≤ tol
+            @test A - v ≃ A + (-v[1], -v[2])
+            @test A + Point(v) ≃ translate(A, v...)
+            @test Point(v) + A ≃ translate(v..., A)
+            @test A - Point(v) ≃ A - v
         end
-        for G in (A, B, C),
-            v in vectors,
-            T in types
-            @test eltype(T.(v) + G) == eltype(G)
-            @test eltype(G + T.(v)) == eltype(G)
-            H = T.(G)
-            @test eltype(v + H) == eltype(H)
-            @test eltype(H + v) == eltype(H)
+        for G in (A, B, C), v in vectors, T in types
+            @test bare_type(T.(v) + G) === promote_type(T, bare_type(G))
+            @test bare_type(G + T.(v)) === promote_type(T, bare_type(G))
+            H = @inferred AffineTransform{T}(G)
+            @test bare_type(T.(v) + H) === T
+            @test bare_type(H + T.(v)) === T
         end
     end
 
     @testset "rotation" begin
-        for θ in angles,
-            v in vectors
-            R = rotate(+θ, I)
-            Q = rotate(-θ, I)
-            @test distance(R*Q, I) ≤ tol
-            @test distance(Q*R, I) ≤ tol
-            @test distance(rotate(θ, B)(v), (R*B)(v)) ≤ tol
-            @test distance(rotate(B, θ)(v), (B*R)(v)) ≤ tol
+        for θ in angles
+            R = @inferred rotate(+θ, I)
+            Q = @inferred rotate(-θ, I)
+            @test R*Q ≃ I
+            @test Q*R ≃ I
+            for G in (A, B, C), v in vectors
+                @test rotate(θ, G)(v) ≃ (R*G)(v)
+                @test rotate(G, θ)(v) ≃ (G*R)(v)
+            end
         end
-        for G in (A, B, C),
-            θ in angles,
-            T in types
-            @test eltype(rotate(T(θ), G)) == eltype(G)
-            @test eltype(rotate(G, T(θ))) == eltype(G)
-            H = T.(G)
-            @test eltype(rotate(T.(θ), H)) == eltype(H)
-            @test eltype(rotate(H, T.(θ))) == eltype(H)
+        for G in (A, B, C), θ in angles, T in types
+            @test bare_type(rotate(T(θ), G)) === promote_type(T, bare_type(G))
+            @test bare_type(rotate(G, T(θ))) === promote_type(T, bare_type(G))
+            H = @inferred AffineTransform{T}(G)
+            @test bare_type(rotate(T(θ), H)) === T
+            @test bare_type(rotate(H, T(θ))) === T
         end
     end
 
     @testset "intercept" begin
         for M in (I, A, B)
             x, y = intercept(M)
-            @test distance(M(x, y), (0,0)) ≤ tol
+            @test M(x, y) ≃ (0,0) atol=16*eps(Float64)
             P = intercept(Point, M)
-            @test distance(M*P, Point(0,0)) ≤ tol
+            @test M*P ≃ Point(0,0) atol=16*eps(Float64)
         end
     end
 
     @testset "show" begin
         for M in (I, A, B, C)
-            @test occursin(r"AffineTransform{Float64}", string(M))
+            @test occursin(r"\bAffineTransform\b", string(M))
         end
     end
 end

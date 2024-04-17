@@ -1,23 +1,26 @@
 # Affine Coordinate Transforms
 
-TwoDimensional provides types and methods to deal with 2-dimensional affine
+`TwoDimensional` provides types and methods to deal with 2-dimensional affine
 coordinate transforms.
 
-An affine 2D transform `C` is defined by 6 real coefficients, `Cxx`, `Cxy`,
-`Cx`, `Cyx`, `Cyy` and `Cy`.  Such a transform maps `(x,y)` as `(xp,yp)` given
+An affine 2D transform `A` is defined by 6 real coefficients, `Axx`, `Axy`,
+`Ax`, `Ayx`, `Ayy` and `Ay`. Such a transform maps `(x,y)` as `(xp,yp)` given
 by:
 
 ```julia
-xp = Cxx*x + Cxy*y + Cx
-yp = Cyx*x + Cyy*y + Cy
+xp = Axx*x + Axy*y + Ax
+yp = Ayx*x + Ayy*y + Ay
 ```
+
+coefficients `Axx`, `Axy`, `Ayx`, and `Ayy` are *factors* while coefficients `Ax`
+and `Ay` are *offsets*.
 
 The immutable type `AffineTransform{T}` is used to store an affine 2D transform
 with coefficients of floating-point type `T`, it can be created by:
 
 ```julia
 I = AffineTransform{T}() # yields the identity with type T
-C = AffineTransform{T}(Cxx, Cxy, Cx, Cyx, Cyy, Cy)
+A = AffineTransform{T}(Axx, Axy, Ax, Ayx, Ayy, Ay)
 ```
 
 If the parameter `T` is omitted, it is guessed from the types of the
@@ -88,36 +91,68 @@ following statements:
 
 ```julia
 B = translate(x, y, A)
-B = translate(v, A)
-B = v + A
+B = translate(pnt, A)
+B = pnt + A
 ```
 
-where `v` is a 2-tuple of coordinates, *i.e.* `v = (x,y)` or a `Point`, *i.e.*
-`v = Point(x,y)`.
+where `pnt` is a 2-tuple of coordinates, `pnt = (x,y)`, a `Point`, `pnt =
+Point(x,y)`, or 2-dimensional Cartesian index, `CartesianIndex{2}(x,y)`.
 
 To perform the translation *before* the coordinate transform `A`, do:
 
 ```julia
 B = translate(A, x, y)
-B = translate(A, v)
-B = A + v
+B = translate(A, pnt)
+B = A + pnt
 ```
 
-### Rotation of coordinates
+### Rotating an affine transform
+
+There are two ways to combine a rotation by angle `θ` (in radians
+counterclockwise) with an affine transform `A`. Left-rotating as in:
 
 ```julia
-B = rotate(θ, A)   # B = apply A then rotate by angle θ
-C = rotate(A, θ)   # C = rotate by angle θ then apply A
+B = rotate(θ, A)
 ```
+
+results in rotating the output of the transform; while right-rotating as in:
+
+```julia
+C = rotate(A, θ)
+```
+
+results in rotating the input of the transform. The above examples are similar
+to:
+
+```julia
+B = R∘A
+C = A∘R
+```
+
+where `R` implements rotation by angle `θ` counterclockwise around the origin
+at coordinates `(0,0)`. The rotation angle `θ` is assumed to be in radians if
+it has no units.
+
 
 ### Scaling of coordinates
 
+There are two ways to combine a scaling by a factor `ρ` with an affine
+transform `A`. Left-scaling as in:
+
 ```julia
-B = scale(ρ, A)    # B = apply A then scale by ρ
-B = ρ*A            # idem
-C = scale(A, ρ)    # C = scale by ρ then apply A
-C = A*ρ            # idem
+B = scale(ρ, A)
+B = ρ*A
 ```
+
+which yields `B` such that `B(x,y) = ρ*A(x,y)`; or right-scaling as in:
+
+```julia
+C = scale(A, ρ)
+C = A*ρ
+```
+
+which yields `C` such that `C(x,y) = A(ρ*x,ρ*y)`; or right-scaling as in:
+
 
 ### Miscellaneous
 

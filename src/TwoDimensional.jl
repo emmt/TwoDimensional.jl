@@ -21,7 +21,7 @@ export
     Point,
     area,
     center,
-    compose,
+    # FIXME: compose,
     distance,
     exterior,
     intercept,
@@ -29,7 +29,14 @@ export
     jacobian,
     rotate,
     scale,
-    translate
+    translate,
+    # Re-export from LinearAlgebra
+    det
+
+#using TypeUtils
+using Unitless
+using Base: @propagate_inbounds
+using LinearAlgebra
 
 include("types.jl")
 include("basics.jl")
@@ -37,8 +44,10 @@ include("xforms.jl")
 import .AffineTransforms:
     AffineTransform,
     compose,
+    factors_type,
     intercept,
     jacobian,
+    offsets_type,
     rotate,
     scale,
     translate

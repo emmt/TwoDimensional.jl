@@ -20,7 +20,7 @@ respective abscissa and ordinate, both of type `T`.
 See also: [`Point`](@ref), [`WeightedPoint`](@ref).
 
 """
-abstract type AbstractPoint{T<:Real} end
+abstract type AbstractPoint{T} end
 
 """
     Point(x,y)
@@ -53,6 +53,7 @@ See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
 struct Point{T} <: AbstractPoint{T}
     x::T
     y::T
+    Point{T}(x, y) where {T} = new{T}(x, y)
 end
 
 """
@@ -61,8 +62,13 @@ end
 is the union of types that may be used to specify a point in `TwoDimensional`
 package.
 
+[`Point`](@ref) constructor can build an instance from any argument of these
+types. Accessors [`TwoDimensional.get_x`](@ref) and
+[`TwoDimensional.get_y`](@ref) may be used on objects of such type to retrieve
+their abscissa and ordinate.
+
 """
-const PointLike = Union{AbstractPoint,NTuple{2,Real},CartesianIndex{2}}
+const PointLike = Union{AbstractPoint,Tuple{Any,Any},CartesianIndex{2}}
 
 """
     WeightedPoint{T}(w,x,y)
@@ -80,6 +86,18 @@ struct WeightedPoint{T<:AbstractFloat}  <: AbstractPoint{T}
     x::T # abscissa
     y::T # ordinate
 end
+
+"""
+    TwoDimensional.WeightedPointLike
+
+is the union of types that may be used to specify a weighted point in
+`TwoDimensional` package.
+
+[`WeightedPoint`](@ref) constructor can build an instance from any argument of
+these types.
+
+"""
+const WeightedPointLike = Union{WeightedPoint,Tuple{Any,Any,Any}}
 
 """
     BoundingBox(xmin,xmax,ymin,ymax)
@@ -117,11 +135,12 @@ or:
 See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
 """
-struct BoundingBox{T<:Real}
+struct BoundingBox{T}
     xmin::T
     xmax::T
     ymin::T
     ymax::T
+    BoundingBox{T}(xmin, xmax, ymin, ymax) where {T} = new{T}(xmin, xmax, ymin, ymax)
 end
 
 """
@@ -130,8 +149,13 @@ end
 is the union of types that may be used to specify a bounding-box in
 `TwoDimensional` package.
 
+[`BoundingBox`](@ref) constructor can build an instance from any argument of
+these types.
+
 """
 const BoundingBoxLike = Union{BoundingBox,NTuple{2,AbstractPoint},
-                              NTuple{4,Real},NTuple{2,CartesianIndex{2}},
+                              Tuple{Tuple{Any,Any},Tuple{Any,Any}},
+                              Tuple{Any,Any,Any,Any},
+                              NTuple{2,CartesianIndex{2}},
                               NTuple{2,AbstractUnitRange{<:Integer}},
                               CartesianIndices{2}}

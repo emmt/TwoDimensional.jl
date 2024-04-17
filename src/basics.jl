@@ -11,8 +11,10 @@
 # Copyright (c) 2019-2024, Éric Thiébaut.
 #
 
-using Base: @propagate_inbounds
+# FIXME: use TypeUtils
+as(::Type{T}, x) where {T} = convert(T, x)::T
 
+# 2D objects as iterators.
 Base.Tuple(pnt::Point) = (pnt.x, pnt.y)
 Base.getindex(pnt::Point, i::Integer) =
     i == 1 ? pnt.x :
@@ -57,35 +59,25 @@ for Class in (:Point, :BoundingBox)
 end
 
 # Constructors of points and conversion to/from a Cartesian index.
+Point(x, y) = Point(promote(x, y)...)
+Point(x::T, y::T) where {T} = Point{T}(x, y)
+
+Point(; x, y) = Point(x, y)
+Point{T}(; x, y) where {T} = Point{T}(x, y)
+
 Point(pnt::Point) = pnt
 Point{T}(pnt::Point{T}) where {T} = pnt
-Point(pnt::AbstractPoint) = Point(pnt.x, pnt.y)
-Point{T}(pnt::AbstractPoint) where {T} = Point{T}(pnt.x, pnt.y)
-Point(x::Tx, y::Ty) where {Tx<:Real,Ty<:Real} = Point{promote_type(Tx,Ty)}(x, y)
-Point(; x::Real, y::Real) = Point(x, y)
-Point{T}(; x::Real, y::Real) where {T} = Point{T}(x, y)
-Point(I::CartesianIndex{2}) = Point(I[1], I[2])
-Point{T}(I::CartesianIndex{2}) where {T} = Point{T}(I[1], I[2])
-Point((x,y)::NTuple{2,Real}) = Point(x, y)
-Point{T}((x,y)::NTuple{2,Real}) where {T} = Point{T}(x, y)
 
-# Conversion to points (rely on constructors).
-Base.convert(::Type{T}, arg::T) where {T<:Point} = arg
-Base.convert(::Type{T}, arg::PointLike) where {T<:Point} = T(arg)
+Point(pnt::PointLike) = Point(get_xy(pnt)...)
+Point{T}(pnt::PointLike) where {T} = Point{T}(get_xy(pnt)...)
 
-# Other basic methods.
-Base.CartesianIndex(pnt::Point{<:Integer}) = CartesianIndex(pnt.x, pnt.y)
-Base.eltype(::AbstractPoint{T}) where {T} = T
-Broadcast.broadcasted(::Type{T}, pnt::Point) where {T<:Real} = Point{T}(pnt)
-Base.promote_type(::Type{Point{T}}, ::Type{Point{U}}) where {T,U} = Point{promote_type(T,U)}
-Base.promote_type(::Type{Point{T}}, ::Type{Point{T}}) where {T} = Point{T}
-
+# Extend some basic methods for points.
 for func in (:one, :oneunit, :zero)
     @eval Base.$func(pnt::Point) = $func(typeof(pnt))
 end
 Base.zero(::Type{Point{T}}) where {T} = Point(zero(T),zero(T))
-Base.one(::Type{Point{T}}) where {T} = Point(one(T),one(T))
-Base.oneunit(::Type{Point{T}}) where {T} = Point(oneunit(T),oneunit(T))
+Base.one(::Type{Point{T}}) where {T} = Point(one(T),one(T)) # FIXME:
+Base.oneunit(::Type{Point{T}}) where {T} = Point(oneunit(T),oneunit(T)) # FIXME:
 
 # Constructors of weighted points.
 WeightedPoint(pnt::WeightedPoint) = pnt
@@ -97,12 +89,29 @@ WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
 WeightedPoint(pnt::Point{T}) where {T} = WeightedPoint(one(T), pnt.x, pnt.y)
 WeightedPoint((w,x,y)::NTuple{3,Real}) = WeightedPoint(w, x, y)
 WeightedPoint{T}((w,x,y)::NTuple{3,Real}) where {T} = WeightedPoint{T}(w, x, y)
-Broadcast.broadcasted(::Type{T}, pnt::WeightedPoint) where {T<:AbstractFloat} =
-    WeightedPoint{T}(pnt)
-Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{U}}) where {T,U} =
-    WeightedPoint{promote_type(T,U)}
-Base.promote_type(::Type{WeightedPoint{T}}, ::Type{WeightedPoint{T}}) where {T} =
-    WeightedPoint{T}
+
+# Extend basic methods for abstract points.
+Base.eltype(::AbstractPoint{T}) where {T} = T
+Base.CartesianIndex(pnt::AbstractPoint{<:Integer}) = CartesianIndex(get_xy(pnt)...)
+
+# Extend basic methods for points and bounding-boxes.
+for (type, like, n) in ((:Point,         :PointLike,         2),
+                        (:WeightedPoint, :WeightedPointLike, 3),
+                        (:BoundingBox,   :BoundingBoxLike,   4),)
+    @eval begin
+        Base.convert(::Type{T}, obj::T) where {T<:$type} = obj
+        Base.convert(::Type{T}, obj::$like) where {T<:$type} = T(obj)
+        Base.convert(::Type{Tuple}, obj::$type) = Tuple(obj)
+        Base.convert(::Type{NTuple{$n,T}}, obj::$type) where {T} =
+            map(#= FIXME: as(T) =# Base.Fix1(as, T), Tuple(obj))
+        Base.eltype(obj::$type) = eltype(typeof(obj))
+        Base.eltype(::Type{<:$type{T}}) where {T} = T
+        Broadcast.broadcasted(::Type{T}, obj::$type) where {T} = $type{T}(obj)
+        Base.promote_type(::Type{$type{T}}, ::Type{$type{T}}) where {T} = $type{T}
+        Base.promote_type(::Type{$type{T₁}}, ::Type{$type{T₂}}) where {T₁,T₂} =
+            $type{promote_type(T₁,T₂)}
+    end
+end
 
 """
     round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
@@ -177,10 +186,11 @@ for Class in (:Point, :BoundingBox), func in (:floor, :ceil)
     end
 end
 
-function Base.clamp(pnt::Point{T1}, box::BoundingBox{T2}) where {T1,T2}
-    T = promote_type(T1, T2)
-    return Point{T}(clamp(T(pnt.x), T(box.xmin), T(box.xmax)),
-                    clamp(T(pnt.y), T(box.ymin), T(box.ymax)))
+function Base.clamp(pnt::Point, box::BoundingBox)
+    T = promote_type(eltype(pnt), eltype(box))
+    x = clamp(as(T, pnt.x), as(T, box.xmin), as(T, box.xmax))
+    y = clamp(as(T, pnt.y), as(T, box.ymin), as(T, box.ymax))
+    return Point{T}(x, y)
 end
 
 # Methods hypot() and atan() yield the polar coordinates of a point.
@@ -193,89 +203,59 @@ Base.atan(pnt::Point) = atan(pnt.y, pnt.x)
 yields the Euclidean distance between the 2 points `A` and `B`.
 
 """
-distance(A::Point, B::Point) =
-    distance(promote(A, B)...)
-distance(A::Point{T}, B::Point{T}) where {T<:Unsigned} =
-    hypot(ifelse(A.x > B.x, A.x - B.x, B.x - A.x),
-          ifelse(A.y > B.y, A.y - B.y, B.y - A.y))
-distance(A::Point{T}, B::Point{T}) where {T<:Real} =
-    hypot(B.x - A.x, B.y - A.y)
+distance(A::Point, B::Point) = hypot(A - B)
 
-# Constructors of bounding-boxes and conversion.
-function BoundingBox(xmin::Txmin, xmax::Txmax,
-                     ymin::Tymin, ymax::Tymax) where {Txmin,Txmax,Tymin,Tymax}
-    T = promote_type(Txmin, Txmax, Tymin, Tymax)
-    return BoundingBox{T}(xmin, xmax, ymin, ymax)
-end
-
-BoundingBox(; xmin::Real, xmax::Real, ymin::Real, ymax::Real) =
-    BoundingBox(xmin, xmax, ymin, ymax)
-BoundingBox{T}(; xmin::Real, xmax::Real, ymin::Real, ymax::Real) where {T} =
+# Box limits specified by 4 arguments.
+BoundingBox(xmin, xmax, ymin, ymax) = BoundingBox(promote(xmin, xmax, ymin, ymax)...)
+BoundingBox(xmin::T, xmax::T, ymin::T, ymax::T) where {T} =
     BoundingBox{T}(xmin, xmax, ymin, ymax)
 
+# Box limits specified by keywords.
+BoundingBox(; xmin, xmax, ymin, ymax) = BoundingBox(xmin, xmax, ymin, ymax)
+BoundingBox{T}(; xmin, xmax, ymin, ymax) where {T} = BoundingBox{T}(xmin, xmax, ymin, ymax)
+
+# Box specified by a ... box.
 BoundingBox(box::BoundingBox) = box
-BoundingBox{T}(box::BoundingBox{T}) where {T<:Real} = box
-BoundingBox{T}(box::BoundingBox) where {T<:Real} =
-    BoundingBox{T}(box.xmin, box.xmax, box.ymin, box.ymax)
+BoundingBox{T}(box::BoundingBox{T}) where {T} = box
+BoundingBox{T}(box::BoundingBox) where {T} = BoundingBox{T}(Tuple(box)...)
 
-BoundingBox(arg::NTuple{2,CartesianIndex{2}}) = BoundingBox(arg...)
-BoundingBox{T}(arg::NTuple{2,CartesianIndex{2}}) where {T} =
-    BoundingBox{T}(arg...)
+# Box limits specified as unit-ranges.
+let type = :(AbstractUnitRange{<:Integer}),
+    expr = (:(first(xrng)), :(last(xrng)), :(first(yrng)), :(last(yrng)))
+    for args in ((:(xrng::$type), :(yrng::$type)),
+                 (:((xrng,yrng)::Tuple{$type,$type}),))
+        @eval begin
+            BoundingBox($(args...)) = BoundingBox($(expr...))
+            BoundingBox{T}($(args...)) where {T} = BoundingBox{T}($(expr...))
+        end
+    end
+end
 
-BoundingBox(arg::NTuple{2,AbstractPoint}) = BoundingBox(arg...)
-BoundingBox{T}(arg::NTuple{2,AbstractPoint}) where {T} = BoundingBox{T}(arg...)
+# Box limits specified by a pair of points, of Cartesian indices, or of 2-tuple.
+let expr = (:(get_x(min)), :(get_x(max)), :(get_y(min)), :(get_y(max)))
+    for type in (:Point, :(CartesianIndex{2}), :(Tuple{Any,Any}))
+        for args in ((:(min::$type), :(max::$type)),
+                     (:((min,max)::Tuple{$type,$type}),))
+            @eval begin
+                BoundingBox($(args...)) = BoundingBox($(expr...))
+                BoundingBox{T}($(args...)) where {T} = BoundingBox{T}($(expr...))
+            end
+        end
+    end
+end
 
-BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2}) =
-    BoundingBox{Int}(I0, I1)
-BoundingBox{T}(I0::CartesianIndex{2}, I1::CartesianIndex{2}) where {T} =
-    BoundingBox{T}(I0[1], I1[1], I0[2], I1[2])
+# Box limits specified by a 4-tuple.
+BoundingBox(lims::NTuple{4}) = BoundingBox(lims...)
+BoundingBox{T}(lims::NTuple{4}) where {T} = BoundingBox{T}(lims...)
 
-BoundingBox(pnt0::AbstractPoint, pnt1::AbstractPoint) =
-    BoundingBox(pnt0.x, pnt1.x, pnt0.y, pnt1.y)
-BoundingBox{T}(pnt0::AbstractPoint, pnt1::AbstractPoint) where {T} =
-    BoundingBox{T}(pnt0.x, pnt1.x, pnt0.y, pnt1.y)
-
-BoundingBox((x0,y0)::NTuple{2,Real}, (x1,y1)::NTuple{2,Real}) =
-    BoundingBox(x0,x1,y0,y1)
-BoundingBox{T}((x0,y0)::NTuple{2,Real}, (x1,y1)::NTuple{2,Real}) where {T} =
-    BoundingBox{T}(x0,x1,y0,y1)
-
-BoundingBox((xmin,xmax,ymin,ymax)::NTuple{4,Real}) =
-    BoundingBox(xmin,xmax,ymin,ymax)
-BoundingBox{T}((xmin,xmax,ymin,ymax)::NTuple{4,Real}) where {T} =
-    BoundingBox{T}(xmin,xmax,ymin,ymax)
-
-BoundingBox(inds::NTuple{2,AbstractUnitRange{<:Integer}}) =
-    BoundingBox(inds[1], inds[2])
-BoundingBox{T}(inds::NTuple{2,AbstractUnitRange{<:Integer}}) where {T} =
-    BoundingBox{T}(inds[1], inds[2])
-
-BoundingBox(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) =
-    BoundingBox{Int}(X, Y)
-BoundingBox{T}(X::AbstractUnitRange{<:Integer}, Y::AbstractUnitRange{<:Integer}) where {T} =
-    BoundingBox{T}(first(X), last(X), first(Y), last(Y))
-
-BoundingBox(R::CartesianIndices{2}) = BoundingBox(first(R), last(R))
-BoundingBox{T}(R::CartesianIndices{2}) where {T} = BoundingBox{T}(first(R), last(R))
-
-BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
-
-# Conversion to bounding-boxes (rely on constructors).
-Base.convert(::Type{T}, arg::T) where {T<:BoundingBox} = arg
-Base.convert(::Type{T}, arg::BoundingBoxLike) where {T<:BoundingBox} = T(arg)
-
-# Other basic methods.
-Base.eltype(::BoundingBox{T}) where {T} = T
-Broadcast.broadcasted(::Type{T}, obj::BoundingBox) where {T<:Real} =
-    BoundingBox{T}(obj)
-Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{U}}) where {T,U} =
-    BoundingBox{promote_type(T,U)}
-Base.promote_type(::Type{BoundingBox{T}}, ::Type{BoundingBox{T}}) where {T} =
-    BoundingBox{T}
+# Box limits specified by Cartesian indices.
+BoundingBox(inds::CartesianIndices{2}) = BoundingBox(first(inds), last(inds))
+BoundingBox{T}(inds::CartesianIndices{2}) where {T} = BoundingBox{T}(first(inds), last(inds))
 
 # See
 # https://stackoverflow.com/questions/9852159/calculate-bounding-box-of-arbitrary-pixel-based-drawing
 # for the basic ideas under the following algorithm.
+BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
 function BoundingBox(f::Function, A::AbstractMatrix)
     I, J = axes(A)
     i0, i1 = get_axis_bounds(I)
@@ -470,7 +450,7 @@ center(box::BoundingBox{<:Integer}) =
 center(box::BoundingBox{T}) where {T<:AbstractFloat} =
     Point(half(T)*(box.xmin + box.xmax), half(T)*(box.ymin + box.ymax))
 
-half(::Type{T}) where {T<:AbstractFloat} = one(T)/convert(T, 2)
+half(::Type{T}) where {T<:AbstractFloat} = inv(as(T, 2))
 
 """
     area(box)
@@ -525,3 +505,47 @@ Base.:(+)(box::BoundingBox, pnt::Point) =
 Base.:(-)(box::BoundingBox, pnt::Point) =
     BoundingBox(box.xmin - pnt.x, box.xmax - pnt.x,
                 box.ymin - pnt.y, box.ymax - pnt.y)
+
+"""
+    TwoDimensional.get_x(pnt::TwoDimensional.PointLike) -> x
+
+yields the abscissa of point-like object `pnt`.
+
+See also [`TwoDimensional.get_y`](@ref), [`TwoDimensional.get_xy`](@ref), and
+[`TwoDimensional.PointLike`](@ref).
+
+""" get_x
+
+"""
+    TwoDimensional.get_y(pnt::TwoDimensional.PointLike) -> y
+
+yields the ordinate of point-like object `pnt`.
+
+See also [`TwoDimensional.get_x`](@ref), [`TwoDimensional.get_xy`](@ref), and
+[`TwoDimensional.PointLike`](@ref).
+
+""" get_y
+
+for (c, i) in ((:x, 1), (:y, 2))
+    func = Symbol("get_",c)
+    @eval begin
+        $(func)(pnt::AbstractPoint) = pnt.$(c)
+        $(func)(pnt::Union{NTuple{2},CartesianIndex{2}}) = pnt[$(i)]
+        $(func)(pnt::PointLike) = get_xy(pnt)[$(i)]
+    end
+end
+
+"""
+    TwoDimensional.get_xy(pnt::TwoDimensional.PointLike) -> (x::T, y::T)
+
+yields a 2-tuple with the abscissa `x` and ordinate `y` of point-like object
+`pnt`. This is equivalent to, but more economical than,
+`(get_x(pnt),get_y(pnt))`.
+
+See also [`TwoDimensional.get_x`](@ref), [`TwoDimensional.get_y`](@ref) and [`TwoDimensional.PointLike`](@ref).
+
+"""
+get_xy(pnt::AbstractPoint) = (pnt.x, pnt.y)
+get_xy(pnt::CartesianIndex{2}) = Tuple(pnt)
+get_xy(pnt::NTuple{2}) = pnt
+get_xy(pnt::NTuple{2,Any}) = promote(pnt...)

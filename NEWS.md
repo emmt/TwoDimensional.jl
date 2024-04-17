@@ -1,8 +1,35 @@
 # User visible changes in TwoDimensional package
 
-## Version 0.4.2
+## Version 0.5.0
 
-- Remove deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))`.
+- Points, bounding-boxes, and affine transforms coefficients may have units.
+
+- Unary minus is implemented for affine transforms.
+
+- Since the factors and the offsets in an affine transform `A` may have
+  different units, `eltype(A)` is no longer applicable; `bare_type(A)`,
+  `real_type(A)`, or `floating_point_type(A)` may be used to retrieve the
+  floating-point type of the coefficients of `A` (these methods require `using
+  Unitless`). Non-exported methods `TwoDimensional.factors_type(A)` and
+  `TwoDimensional.offsets_type(A)` yield the types of the factors ( the
+  coefficients `A.xx`, `A,xy`, `A.yx`, and `A.yy`) and of the offsets (the
+  coefficients `A.x` and `A.y`) of `A`. For the same reasons, `T(A)` and
+  `T.(A)` with `T` a floating-point type is no longer supported; call any of
+  `convert_bare_type(T,A)`, `convert_real_type(T,A)`, or
+  `convert_floating_point_type(T,A)` may be used to convert the floating-point
+  type of the coefficients of `A` (these methods require `using Unitless`).
+
+- The type of the result of applying an affine transform follows Julia
+  type promotion rules.
+
+- Deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))` has been
+  removed.
+
+- Method `TwoDimensional.compose` is no longer exported. Use `*`, `⋅`
+  (`\cdot<tab>`), or `∘` (`\circ<tab>`) to compose affine transforms.
+
+- Method `TypeUtils.as` is extended to convert points and bounding-boxes
+  to/from tuples.
 
 ## Version 0.4.1
 
