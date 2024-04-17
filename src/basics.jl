@@ -14,52 +14,55 @@
 # FIXME: use TypeUtils
 as(::Type{T}, x) where {T} = convert(T, x)::T
 
-# 2D objects as iterators.
-Base.Tuple(pnt::Point) = (pnt.x, pnt.y)
-Base.getindex(pnt::Point, i::Integer) =
-    i == 1 ? pnt.x :
-    i == 2 ? pnt.y : throw(BoundsError(pnt, i))
-Base.iterate(pnt::Point, i::Int=1) =
-    i == 1 ? (pnt.x, 2) :
-    i == 2 ? (pnt.y, 3) : nothing
-Base.IteratorSize(pnt::Point) = Base.IteratorSize(typeof(pnt))
-Base.IteratorSize(::Type{<:Point}) = Base.HasLength()
-Base.length(pnt::Point) = 2
-
-Base.Tuple(pnt::WeightedPoint) = (pnt.w, pnt.x, pnt.y)
-Base.getindex(pnt::WeightedPoint, i::Integer) =
-    i == 1 ? pnt.w :
-    i == 2 ? pnt.x :
-    i == 3 ? pnt.y : throw(BoundsError(pnt, i))
-Base.iterate(pnt::WeightedPoint, i::Int=1) =
-    i == 1 ? (pnt.w, 2) :
-    i == 2 ? (pnt.x, 3) :
-    i == 3 ? (pnt.y, 4) : nothing
-Base.IteratorSize(pnt::WeightedPoint) = Base.IteratorSize(typeof(pnt))
-Base.IteratorSize(::Type{<:WeightedPoint}) = Base.HasLength()
-Base.length(pnt::WeightedPoint) = 3
-
-Base.Tuple(box::BoundingBox) = (box.xmin, box.xmax, box.ymin, box.ymax)
-Base.getindex(box::BoundingBox, i::Integer) =
-    i == 1 ? box.xmin :
-    i == 2 ? box.xmax :
-    i == 3 ? box.ymin :
-    i == 4 ? box.ymax : throw(BoundsError(box, i))
-Base.iterate(box::BoundingBox, i::Int=1) =
-    i == 1 ? (box.xmin, 2) :
-    i == 2 ? (box.xmax, 3) :
-    i == 3 ? (box.ymin, 4) :
-    i == 4 ? (box.ymax, 5) : nothing
-Base.IteratorSize(box::BoundingBox) = Base.IteratorSize(typeof(box))
-Base.IteratorSize(::Type{<:BoundingBox}) = Base.HasLength()
-Base.length(box::BoundingBox) = 4
-
-for Class in (:Point, :BoundingBox)
-    @eval Base.map(f, obj::$Class) = $Class(map(f, Tuple(obj)))
+# Basic constructors (with tuple argument) for points and bounding boxes and
+# API to make them indexable iterators.
+for (type, len) in ((:Point,         2),
+                    (:WeightedPoint, 3),
+                    (:BoundingBox,   4),)
+    @eval begin
+        Base.Tuple(obj::$type) = getfield(obj, 1)
+        Base.getindex(obj::$type, i::Integer) = getindex(Tuple(obj), i)
+        Base.iterate(obj::$type, i::Int = 1) =
+            1 ≤ i ≤ $len ? (obj[i], i + 1) : nothing
+        Base.IteratorSize(obj::$type) = Base.IteratorSize(typeof(obj))
+        Base.IteratorSize(::Type{<:$type}) = Base.HasLength()
+        Base.length(obj::$type) = $len
+    end
+    if type === :WeightedPoint
+        @eval begin
+            $type(vals::NTuple{$len,T}) where {T<:AbstractFloat} = $type{T}(vals)
+            $type(vals::NTuple{$len,Real}) = $type(map(float, promote(vals...)))
+        end
+    else
+        @eval begin
+            $type(vals::NTuple{$len,T}) where {T} = $type{T}(vals)
+            $type(vals::NTuple{$len,Any}) = $type(promote(vals...))
+            Base.map(f, obj::$type) = $type(map(f, Tuple(obj)))
+        end
+    end
 end
 
-# Constructors of points and conversion to/from a Cartesian index.
-Point(x, y) = Point(promote(x, y)...)
+Base.propertynames(::Point) = (:x, :y)
+Base.getproperty(pnt::Point, key::Symbol) =
+    key === :x ? pnt[1] :
+    key === :y ? pnt[2] : throw(KeyError(key))
+
+Base.propertynames(::WeightedPoint) = (:w, :x, :y)
+Base.getproperty(pnt::WeightedPoint, key::Symbol) =
+    key === :w ? pnt[1] :
+    key === :x ? pnt[2] :
+    key === :y ? pnt[3] : throw(KeyError(key))
+
+Base.propertynames(::BoundingBox) = (:xmin, :xmax, :ymin, :ymax)
+Base.getproperty(box::BoundingBox, key::Symbol) =
+    key === :xmin ? box[1] :
+    key === :xmax ? box[2] :
+    key === :ymin ? box[3] :
+    key === :ymax ? box[4] : throw(KeyError(key))
+
+# Other constructors of points.
+Point{T}(x, y) where {T} = Point{T}((x, y))
+Point(x, y) = Point(promote(x, y))
 Point(x::T, y::T) where {T} = Point{T}(x, y)
 
 Point(; x, y) = Point(x, y)
@@ -67,9 +70,10 @@ Point{T}(; x, y) where {T} = Point{T}(x, y)
 
 Point(pnt::Point) = pnt
 Point{T}(pnt::Point{T}) where {T} = pnt
+Point{T}(pnt::Point) where {T} = Point{T}(Tuple(pnt))
 
-Point(pnt::PointLike) = Point(get_xy(pnt)...)
-Point{T}(pnt::PointLike) where {T} = Point{T}(get_xy(pnt)...)
+Point(pnt::PointLike) = Point(get_xy(pnt))
+Point{T}(pnt::PointLike) where {T} = Point{T}(get_xy(pnt))
 
 # Extend some basic methods for points.
 for func in (:one, :oneunit, :zero)
@@ -79,16 +83,20 @@ Base.zero(::Type{Point{T}}) where {T} = Point(zero(T),zero(T))
 Base.one(::Type{Point{T}}) where {T} = Point(one(T),one(T)) # FIXME:
 Base.oneunit(::Type{Point{T}}) where {T} = Point(oneunit(T),oneunit(T)) # FIXME:
 
-# Constructors of weighted points.
+# Other constructors of weighted points.
+WeightedPoint{T}(w, x, y) where {T<:AbstractFloat} = WeightedPoint{T}((w, x, y))
+WeightedPoint(w::Real, x::Real, y::Real) = WeightedPoint(map(float, promote(w, x, y)))
+WeightedPoint(w::T, x::T, y::T) where {T<:AbstractFloat} = WeightedPoint{T}(w, x, y)
+
+WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
+WeightedPoint{T}(; w::Real, x::Real, y::Real) where {T<:AbstractFloat} = WeightedPoint{T}(w, x, y)
+
 WeightedPoint(pnt::WeightedPoint) = pnt
 WeightedPoint{T}(pnt::WeightedPoint{T}) where {T<:AbstractFloat} = pnt
-WeightedPoint{T}(pnt::WeightedPoint) where {T} = WeightedPoint{T}(pnt.w, pnt.x, pnt.y)
-WeightedPoint(w::Tw, x::Tx, y::Ty) where {Tw<:Real,Tx<:Real,Ty<:Real} =
-    WeightedPoint{float(promote_type(Tw,Tx,Ty))}(w, x, y)
-WeightedPoint(; w::Real, x::Real, y::Real) = WeightedPoint(w, x, y)
-WeightedPoint(pnt::Point{T}) where {T} = WeightedPoint(one(T), pnt.x, pnt.y)
-WeightedPoint((w,x,y)::NTuple{3,Real}) = WeightedPoint(w, x, y)
-WeightedPoint{T}((w,x,y)::NTuple{3,Real}) where {T} = WeightedPoint{T}(w, x, y)
+WeightedPoint{T}(pnt::WeightedPoint) where {T<:AbstractFloat} = WeightedPoint{T}(Tuple(pnt))
+
+WeightedPoint(pnt::Point) = WeightedPoint(oneunit(eltype(pnt)), pnt...)
+WeightedPoint{T}(pnt::Point) where {T<:AbstractFloat} = WeightedPoint(oneunit(T), pnt...)
 
 # Extend basic methods for abstract points.
 Base.eltype(::AbstractPoint{T}) where {T} = T
@@ -206,7 +214,8 @@ yields the Euclidean distance between the 2 points `A` and `B`.
 distance(A::Point, B::Point) = hypot(A - B)
 
 # Box limits specified by 4 arguments.
-BoundingBox(xmin, xmax, ymin, ymax) = BoundingBox(promote(xmin, xmax, ymin, ymax)...)
+BoundingBox{T}(xmin, xmax, ymin, ymax) where {T} = BoundingBox{T}((xmin, xmax, ymin, ymax))
+BoundingBox(xmin, xmax, ymin, ymax) = BoundingBox(promote(xmin, xmax, ymin, ymax))
 BoundingBox(xmin::T, xmax::T, ymin::T, ymax::T) where {T} =
     BoundingBox{T}(xmin, xmax, ymin, ymax)
 
@@ -217,7 +226,7 @@ BoundingBox{T}(; xmin, xmax, ymin, ymax) where {T} = BoundingBox{T}(xmin, xmax, 
 # Box specified by a ... box.
 BoundingBox(box::BoundingBox) = box
 BoundingBox{T}(box::BoundingBox{T}) where {T} = box
-BoundingBox{T}(box::BoundingBox) where {T} = BoundingBox{T}(Tuple(box)...)
+BoundingBox{T}(box::BoundingBox) where {T} = BoundingBox{T}(Tuple(box))
 
 # Box limits specified as unit-ranges.
 let type = :(AbstractUnitRange{<:Integer}),
@@ -243,10 +252,6 @@ let expr = (:(get_x(min)), :(get_x(max)), :(get_y(min)), :(get_y(max)))
         end
     end
 end
-
-# Box limits specified by a 4-tuple.
-BoundingBox(lims::NTuple{4}) = BoundingBox(lims...)
-BoundingBox{T}(lims::NTuple{4}) where {T} = BoundingBox{T}(lims...)
 
 # Box limits specified by Cartesian indices.
 BoundingBox(inds::CartesianIndices{2}) = BoundingBox(first(inds), last(inds))
@@ -529,8 +534,9 @@ See also [`TwoDimensional.get_x`](@ref), [`TwoDimensional.get_xy`](@ref), and
 for (c, i) in ((:x, 1), (:y, 2))
     func = Symbol("get_",c)
     @eval begin
-        $(func)(pnt::AbstractPoint) = pnt.$(c)
+        $(func)(pnt::Point) = pnt[$(i)]
         $(func)(pnt::Union{NTuple{2},CartesianIndex{2}}) = pnt[$(i)]
+        $(func)(pnt::AbstractPoint) = pnt.$(c)
         $(func)(pnt::PointLike) = get_xy(pnt)[$(i)]
     end
 end
@@ -545,7 +551,8 @@ yields a 2-tuple with the abscissa `x` and ordinate `y` of point-like object
 See also [`TwoDimensional.get_x`](@ref), [`TwoDimensional.get_y`](@ref) and [`TwoDimensional.PointLike`](@ref).
 
 """
-get_xy(pnt::AbstractPoint) = (pnt.x, pnt.y)
+get_xy(pnt::Point) = Tuple(pnt)
 get_xy(pnt::CartesianIndex{2}) = Tuple(pnt)
+get_xy(pnt::AbstractPoint) = (pnt.x, pnt.y)
 get_xy(pnt::NTuple{2}) = pnt
 get_xy(pnt::NTuple{2,Any}) = promote(pnt...)

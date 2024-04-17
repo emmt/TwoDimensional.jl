@@ -51,9 +51,8 @@ See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
 
 """
 struct Point{T} <: AbstractPoint{T}
-    x::T
-    y::T
-    Point{T}(x, y) where {T} = new{T}(x, y)
+    vals::NTuple{2,T} # x, y
+    Point{T}(vals::NTuple{2,Any}) where {T} = new{T}(vals)
 end
 
 """
@@ -82,9 +81,8 @@ See also: [`Point`](@ref), [`AbstractPoint`](@ref).
 """ WeightedPoint
 
 struct WeightedPoint{T<:AbstractFloat}  <: AbstractPoint{T}
-    w::T # weight
-    x::T # abscissa
-    y::T # ordinate
+    vals::NTuple{3,T} # w, x, y
+    WeightedPoint{T}(vals::NTuple{3,Real}) where {T} = new{T}(vals)
 end
 
 """
@@ -136,11 +134,8 @@ See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
 """
 struct BoundingBox{T}
-    xmin::T
-    xmax::T
-    ymin::T
-    ymax::T
-    BoundingBox{T}(xmin, xmax, ymin, ymax) where {T} = new{T}(xmin, xmax, ymin, ymax)
+    vals::NTuple{4,T} # xmin, xmax, ymin, ymax
+    BoundingBox{T}(vals::NTuple{4,Any}) where {T} = new{T}(vals)
 end
 
 """

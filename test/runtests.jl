@@ -107,6 +107,7 @@ end
     @testset "Miscellaneous" begin
         # Iterators.
         pnt = @inferred Point(2,3)
+        @test length(pnt) === length(getfield(pnt, 1))
         @test pnt === @inferred Point(pnt...)
         @test pnt === @inferred Point(Tuple(pnt)...)
         @test pnt === @inferred Point(Tuple(pnt))
@@ -118,6 +119,7 @@ end
         @test_throws BoundsError pnt[3]
 
         wpnt = @inferred WeightedPoint(1.2,sqrt(2),3)
+        @test length(wpnt) === length(getfield(wpnt, 1))
         @test wpnt === @inferred WeightedPoint(wpnt...)
         @test wpnt === @inferred WeightedPoint(Tuple(wpnt)...)
         @test wpnt === @inferred WeightedPoint(Tuple(wpnt))
@@ -129,6 +131,7 @@ end
         @test_throws BoundsError wpnt[4]
 
         box = @inferred BoundingBox(1.2,sqrt(2),-3,11)
+        @test length(box) === length(getfield(box, 1))
         @test box === @inferred BoundingBox(box...)
         @test box === @inferred BoundingBox(Tuple(box)...)
         @test box === @inferred BoundingBox(Tuple(box))
