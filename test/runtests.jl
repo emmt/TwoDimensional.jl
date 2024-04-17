@@ -43,6 +43,11 @@ for (pfx, op) in ((:max, :max), (:sum, :(+)))
     end
 end
 
+if VERSION < v"1.2"
+    # `mapreduce` with multiple iterators requires Julia 1.2 or later.
+    Base.mapreduce(f, op, a, b; kwds...) = reduce(op, map(f, a, b); kwds...)
+end
+
 # Default relative tolerance is eps.
 relative_precision(x, y) = max(relative_precision(x), relative_precision(y))
 relative_precision(x) = relative_precision(typeof(x))
