@@ -31,6 +31,8 @@
 - Method `TypeUtils.as` is extended to convert points and bounding-boxes
   to/from tuples.
 
+- Julia versions older than 1.0 are no longer supported.
+
 ## Version 0.4.1
 
 - Tests run on Julia 1.11.
