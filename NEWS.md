@@ -1,9 +1,14 @@
-# User visible changes in TwoDimensional package
+# User visible changes in the `TwoDimensional` package
 
 ## Version 0.5.0
 
+### General changes
+
 - Points, bounding-boxes, and affine transforms coefficients may have units.
 
+- Julia versions older than 1.0 are no longer supported.
+
+### Points and bounding-boxes
 
 - `map` and broadcasting rules have been extended to be more consistent for
   points and bounding-boxes:
@@ -12,7 +17,31 @@
     and `map` takes a `swap` keyword (`false` by default) to specify whether to
     swap the inferior and superior bounds along each dimension which is needed
     when, for example, multiplying a bounding-box by a negative factor.
+
+- `zero(obj)` and `one(one)` yield the additive and multiplicative identities
+  for the type of object `obj`, a point or a bounding-box. That is such that
+  `zero(obj) + obj == obj + zero(obj) == obj` and `one(obj)*obj == obj*one(obj)
+  == obj` hold. These rules implies that `one(obj)` is the scalar
+  `one(eltype(obj))`; while, `zero(obj)` is an object of the same type as `obj`
+  with all values set to zero.
+
+### Bounding-boxes
+
+- Addition of bounding-boxes, say `C = A + B`, yields a bounding-box which
+  contains points `c = a + b` for all `a ∈ A` and all `b ∈ B`.
+
+- Deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))` has been
+  removed.
+
+- Method `TypeUtils.as` is extended to convert points and bounding-boxes
+  to/from tuples.
+
+### Affine transforms
+
 - Unary minus is implemented for affine transforms.
+
+- The type of the result of applying an affine transform follows Julia
+  type promotion rules.
 
 - Since the factors and the offsets in an affine transform `A` may have
   different units, `eltype(A)` is no longer applicable; `bare_type(A)`,
@@ -27,19 +56,8 @@
   `convert_floating_point_type(T,A)` may be used to convert the floating-point
   type of the coefficients of `A` (these methods require `using Unitless`).
 
-- The type of the result of applying an affine transform follows Julia
-  type promotion rules.
-
-- Deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))` has been
-  removed.
-
 - Method `TwoDimensional.compose` is no longer exported. Use `*`, `⋅`
   (`\cdot<tab>`), or `∘` (`\circ<tab>`) to compose affine transforms.
-
-- Method `TypeUtils.as` is extended to convert points and bounding-boxes
-  to/from tuples.
-
-- Julia versions older than 1.0 are no longer supported.
 
 ## Version 0.4.1
 
