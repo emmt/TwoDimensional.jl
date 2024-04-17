@@ -523,11 +523,14 @@ end
     types = (BigFloat, Float64, Float32, Float16)
 
     @testset "construction/conversion" begin
-        @testset "T = $T" for T in types
-            @test_throws MethodError T(A)
-            @test_throws MethodError T.(A)
-        end
         for T1 in types, T2 in types
+            @testset "T = $T" for T in types
+                @test_throws MethodError T(A)
+                if VERSION ≥ v"1.3"
+                    # FIXME: This makes old Julia versions panic on illegal instruction...
+                    @test_throws MethodError T.(A)
+                end
+            end
             @test promote_type(AffineTransform{T1}, AffineTransform{T2}) ===
                 AffineTransform{promote_type(T1,T2)}
         end
