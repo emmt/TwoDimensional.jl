@@ -4,6 +4,14 @@
 
 - Points, bounding-boxes, and affine transforms coefficients may have units.
 
+
+- `map` and broadcasting rules have been extended to be more consistent for
+  points and bounding-boxes:
+  - for a point: `f.(pnt) = map(f,pnt) = Point(map(f,Tuple(pnt)))`
+  - for a bounding-box: `f.(box) = map(f,box) = BoundingBox(map(f,Tuple(box)))`
+    and `map` takes a `swap` keyword (`false` by default) to specify whether to
+    swap the inferior and superior bounds along each dimension which is needed
+    when, for example, multiplying a bounding-box by a negative factor.
 - Unary minus is implemented for affine transforms.
 
 - Since the factors and the offsets in an affine transform `A` may have

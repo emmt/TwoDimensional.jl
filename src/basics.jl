@@ -38,7 +38,6 @@ for (type, len) in ((:Point,         2),
         @eval begin
             $type(vals::NTuple{$len,T}) where {T} = $type{T}(vals)
             $type(vals::NTuple{$len,Any}) = $type(promote(vals...))
-            Base.map(f, obj::$type) = $type(map(f, Tuple(obj)))
         end
     end
 end
@@ -141,12 +140,24 @@ for (type, like, n) in ((:Point,         :PointLike,         2),
             map(#= FIXME: as(T) =# Base.Fix1(as, T), Tuple(obj))
         Base.eltype(obj::$type) = eltype(typeof(obj))
         Base.eltype(::Type{<:$type{T}}) where {T} = T
-        Broadcast.broadcasted(::Type{T}, obj::$type) where {T} = $type{T}(obj)
         Base.promote_type(::Type{$type{T}}, ::Type{$type{T}}) where {T} = $type{T}
         Base.promote_type(::Type{$type{T₁}}, ::Type{$type{T₂}}) where {T₁,T₂} =
             $type{promote_type(T₁,T₂)}
     end
 end
+
+# Extend `map` and `Broadcast.broadcasted` for points and bounding-boxes.
+# NOTE: `Base.Callable = Union{Type,Function}`
+for type in (:Point, :WeightedPoint, :BoundingBox)
+    @eval begin
+        Broadcast.broadcasted(::Type{T}, obj::$type) where {T} = map(T, obj)
+        Broadcast.broadcasted(f::Function, obj::$type) where {T} = map(f, obj)
+    end
+end
+@inline Base.map(f, pnt::Point) = Point(map(f, Tuple(pnt)))
+@inline Base.map(f, pnt::WeightedPoint) = WeightedPoint(map(f, Tuple(pnt)))
+@inline Base.map(f, box::BoundingBox; swap::Bool = false) =
+    BoundingBox(map(f, swap ? (box.xmax, box.xmin, box.ymax, box.ymin) : Tuple(box)))
 
 """
     round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
@@ -493,14 +504,10 @@ yields the area of the bounding-box `box`.
 area(box::BoundingBox{T}) where {T<:Real} =
     max(box.xmax - box.xmin, zero(T))*max(box.ymax - box.ymin, zero(T))
 
-@inline _map(f, pnt::Point) = Point(map(f, Tuple(pnt)))
-@inline _map(f, box::BoundingBox; swap::Bool = false) =
-    BoundingBox(map(f, swap ? (box.xmax, box.xmin, box.ymax, box.ymin) : Tuple(box)))
-
 # Scaling of a point coordinates.
 Base.:(*)(pnt::Point, α::Number) = α*pnt
-Base.:(*)(α::Number, pnt::Point) = _map(Base.Fix1(*,α), pnt)
-Base.:(/)(pnt::Point, α::Number) = _map(Base.Fix2(/,α), pnt)
+Base.:(*)(α::Number, pnt::Point) = map(Base.Fix1(*,α), pnt)
+Base.:(/)(pnt::Point, α::Number) = map(Base.Fix2(/,α), pnt)
 Base.:(\)(α::Number, pnt::Point) = pnt/α
 
 # Unary plus does nothing.
@@ -508,8 +515,8 @@ Base.:(+)(pnt::Point) = pnt
 Base.:(+)(box::BoundingBox) = box
 
 # Unary minus applied to a point negate coordinates. FIXME: what if unsigned values?
-Base.:(-)(pnt::Point) = _map(-, pnt)
-Base.:(-)(box::BoundingBox) = _map(-, box; swap=true)
+Base.:(-)(pnt::Point) = map(-, pnt)
+Base.:(-)(box::BoundingBox) = map(-, box; swap=true)
 
 # Addition and subtraction of point coordinates.
 Base.:(+)(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
@@ -517,10 +524,10 @@ Base.:(-)(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
 
 # Scaling of bounding-box bounds (e.g. to change units).
 Base.:(*)(box::BoundingBox, α::Number) = α*box
-Base.:(*)(α::Number, box::BoundingBox) = _map(Base.Fix1(*,α), box; swap = α < zero(α))
+Base.:(*)(α::Number, box::BoundingBox) = map(Base.Fix1(*,α), box; swap = α < zero(α))
 
 Base.:(\)(α::Number, box::BoundingBox) = box/α
-Base.:(/)(box::BoundingBox, α::Number) = _map(Base.Fix2(/,α), box; swap = α < zero(α))
+Base.:(/)(box::BoundingBox, α::Number) = map(Base.Fix2(/,α), box; swap = α < zero(α))
 
 # Add or remove a margin δ to a bounding-box box.
 Base.:(+)(box::BoundingBox, δ::Number) =
