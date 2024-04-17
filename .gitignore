@@ -8,3 +8,5 @@ temp/
 devel.*
 work.*
 temp.*
+/Manifest.toml
+/Manifest-v*.toml
