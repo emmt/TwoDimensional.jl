@@ -545,6 +545,12 @@ Base.:(-)(box::BoundingBox, pnt::Point) =
     BoundingBox(box.xmin - pnt.x, box.xmax - pnt.x,
                 box.ymin - pnt.y, box.ymax - pnt.y)
 
+# Addition of bounding-boxes follows the rules of the addition of sets.
+Base.:(+)(A::BoundingBox, B::BoundingBox) =
+    isempty(A) || isempty(B) ? BoundingBox{promote_type(eltype(A), eltype(B))}(nothing) :
+    BoundingBox(map(+, Tuple(A), Tuple(B)))
+Base.:(-)(A::BoundingBox, B::BoundingBox) = A + (-B)
+
 """
     TwoDimensional.get_x(pnt::TwoDimensional.PointLike) -> x
 

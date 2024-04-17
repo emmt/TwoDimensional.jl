@@ -27,8 +27,8 @@
 
 ### Bounding-boxes
 
-- Addition of bounding-boxes, say `C = A + B`, yields a bounding-box which
-  contains points `c = a + b` for all `a ∈ A` and all `b ∈ B`.
+- Addition and subtraction of bounding-boxes, say `C = A ± B`, yields the
+  bounding-box `C` for all points `c = a ± b` whatever `a ∈ A` and `b ∈ B`.
 
 - Deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))` has been
   removed.
@@ -53,8 +53,8 @@
   coefficients `A.x` and `A.y`) of `A`. For the same reasons, `T(A)` and
   `T.(A)` with `T` a floating-point type is no longer supported; call any of
   `convert_bare_type(T,A)`, `convert_real_type(T,A)`, or
-  `convert_floating_point_type(T,A)` may be used to convert the floating-point
-  type of the coefficients of `A` (these methods require `using Unitless`).
+  `convert_floating_point_type(T,A)` to convert the floating-point type of the
+  coefficients of `A` (these methods require `using Unitless`).
 
 - Method `TwoDimensional.compose` is no longer exported. Use `*`, `⋅`
   (`\cdot<tab>`), or `∘` (`\circ<tab>`) to compose affine transforms.
