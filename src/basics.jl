@@ -27,6 +27,7 @@ for (type, len) in ((:Point,         2),
         Base.IteratorSize(obj::$type) = Base.IteratorSize(typeof(obj))
         Base.IteratorSize(::Type{<:$type}) = Base.HasLength()
         Base.length(obj::$type) = $len
+        Base.show(io::IO, ::MIME"text/plain", obj::$type) = show(io, obj)
     end
     if type === :WeightedPoint
         @eval begin
@@ -46,12 +47,27 @@ Base.propertynames(::Point) = (:x, :y)
 Base.getproperty(pnt::Point, key::Symbol) =
     key === :x ? pnt[1] :
     key === :y ? pnt[2] : throw(KeyError(key))
+function Base.show(io::IO, pnt::Point{T}) where {T}
+    print(io, "Point{")
+    show(io, T)
+    print(io, "}(x = "); show(io, pnt.x)
+    print(io, ", y = "); show(io, pnt.y)
+    print(io, ")")
+end
 
 Base.propertynames(::WeightedPoint) = (:w, :x, :y)
 Base.getproperty(pnt::WeightedPoint, key::Symbol) =
     key === :w ? pnt[1] :
     key === :x ? pnt[2] :
     key === :y ? pnt[3] : throw(KeyError(key))
+function Base.show(io::IO, pnt::WeightedPoint{T}) where {T}
+    print(io, "WeightedPoint{")
+    show(io, T)
+    print(io, "}(w = "); show(io, pnt.w)
+    print(io, ", x = "); show(io, pnt.x)
+    print(io, ", y = "); show(io, pnt.y)
+    print(io, ")")
+end
 
 Base.propertynames(::BoundingBox) = (:xmin, :xmax, :ymin, :ymax)
 Base.getproperty(box::BoundingBox, key::Symbol) =
@@ -59,6 +75,15 @@ Base.getproperty(box::BoundingBox, key::Symbol) =
     key === :xmax ? box[2] :
     key === :ymin ? box[3] :
     key === :ymax ? box[4] : throw(KeyError(key))
+function Base.show(io::IO, box::BoundingBox{T}) where {T}
+    print(io, "BoundingBox{")
+    show(io, T)
+    print(io, "}(xmin = "); show(io, box.xmin)
+    print(io, ", xmax = "); show(io, box.xmax)
+    print(io, ", ymin = "); show(io, box.ymin)
+    print(io, ", ymax = "); show(io, box.ymax)
+    print(io, ")")
+end
 
 # Other constructors of points.
 Point{T}(x, y) where {T} = Point{T}((x, y))

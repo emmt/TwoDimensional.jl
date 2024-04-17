@@ -106,7 +106,7 @@ end
 @testset "Points and bounding-boxes" begin
     @testset "Miscellaneous" begin
         # Iterators.
-        pnt = @inferred Point(2,3)
+        pnt = @inferred Point(2.0,3.0)
         @test length(pnt) === length(getfield(pnt, 1))
         @test pnt === @inferred Point(pnt...)
         @test pnt === @inferred Point(Tuple(pnt)...)
@@ -117,6 +117,8 @@ end
         @test (x,y) === (pnt[1], pnt[2])
         @test_throws BoundsError pnt[0]
         @test_throws BoundsError pnt[3]
+        @test_throws KeyError pnt.vals
+        @test occursin(r"^Point{Float64}\(", string(pnt))
 
         wpnt = @inferred WeightedPoint(1.2,sqrt(2),3)
         @test length(wpnt) === length(getfield(wpnt, 1))
@@ -129,6 +131,8 @@ end
         @test (w,x,y) === (wpnt[1], wpnt[2], wpnt[3])
         @test_throws BoundsError wpnt[0]
         @test_throws BoundsError wpnt[4]
+        @test_throws KeyError wpnt.vals
+        @test occursin(r"^WeightedPoint{Float64}\(", string(wpnt))
 
         box = @inferred BoundingBox(1.2,sqrt(2),-3,11)
         @test length(box) === length(getfield(box, 1))
@@ -141,6 +145,8 @@ end
         @test (xmin,xmax,ymin,ymax) === (box[1], box[2], box[3], box[4])
         @test_throws BoundsError box[0]
         @test_throws BoundsError box[5]
+        @test_throws KeyError box.vals
+        @test occursin(r"^BoundingBox{Float64}\(", string(box))
     end
     @testset "Simple points" begin
         types = (Int8, Int32, Int64, Float32, Float64)
