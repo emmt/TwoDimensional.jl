@@ -72,17 +72,18 @@ function ≃(a, b; atol = false, rtol = 4*relative_precision(a, b), norm=sum_abs
     end
 end
 
-function randomize!(A::Matrix{Bool}, bits::Int)
+function unpack_bits!(A::Matrix{Bool}, bits::Unsigned)
+    @assert length(A) ≤ 8*sizeof(bits)
     @inbounds @simd for i in eachindex(A)
-        A[i] = (bits&1) == 1
+        A[i] = (bits&1) == one(bits)
         bits >>= 1
     end
     return A
 end
 
 # Naive implementation of the bounding box algorithm.
-naiveboundingbox(A::AbstractMatrix{Bool}) = naiveboundingbox(identity, A)
-function naiveboundingbox(f::Function, A::AbstractMatrix)
+naive_bounding_box(A::AbstractMatrix{Bool}) = naive_bounding_box(identity, A)
+function naive_bounding_box(f::Function, A::AbstractMatrix)
     I, J = axes(A)
     imin = jmin = typemax(Int)
     imax = jmax = typemin(Int)
@@ -100,32 +101,43 @@ end
 @testset "Points and bounding-boxes" begin
     @testset "Miscellaneous" begin
         # Iterators.
-        pnt = Point(2,3)
-        @test Point(Tuple(pnt)...) === pnt
-        @test Point(Tuple(pnt)) === pnt
+        pnt = @inferred Point(2,3)
+        @test pnt === @inferred Point(pnt...)
+        @test pnt === @inferred Point(Tuple(pnt)...)
+        @test pnt === @inferred Point(Tuple(pnt))
         x,y = pnt
+        @test (x,y) === @inferred Tuple(pnt)
         @test (x,y) === (pnt.x, pnt.y)
-        @test Tuple(pnt) === (x,y)
+        @test (x,y) === (pnt[1], pnt[2])
+        @test_throws BoundsError pnt[0]
+        @test_throws BoundsError pnt[3]
 
-        wpnt = WeightedPoint(1.2,sqrt(2),3)
-        @test WeightedPoint(Tuple(wpnt)...) === wpnt
-        @test WeightedPoint(Tuple(wpnt)) === wpnt
+        wpnt = @inferred WeightedPoint(1.2,sqrt(2),3)
+        @test wpnt === @inferred WeightedPoint(wpnt...)
+        @test wpnt === @inferred WeightedPoint(Tuple(wpnt)...)
+        @test wpnt === @inferred WeightedPoint(Tuple(wpnt))
         w,x,y = wpnt
+        @test (w,x,y) === @inferred Tuple(wpnt)
         @test (w,x,y) === (wpnt.w, wpnt.x, wpnt.y)
-        @test Tuple(wpnt) === (w,x,y)
+        @test (w,x,y) === (wpnt[1], wpnt[2], wpnt[3])
+        @test_throws BoundsError wpnt[0]
+        @test_throws BoundsError wpnt[4]
 
-        box = BoundingBox(1.2,sqrt(2),-3,11)
-        @test BoundingBox(Tuple(box)...) === box
-        @test BoundingBox(Tuple(box)) === box
+        box = @inferred BoundingBox(1.2,sqrt(2),-3,11)
+        @test box === @inferred BoundingBox(box...)
+        @test box === @inferred BoundingBox(Tuple(box)...)
+        @test box === @inferred BoundingBox(Tuple(box))
         xmin,xmax,ymin,ymax = box
-        @test (xmin,xmax,ymin,ymax) === (box.xmin,box.xmax,box.ymin,box.ymax)
-        @test Tuple(box) === (xmin,xmax,ymin,ymax)
+        @test (xmin,xmax,ymin,ymax) === @inferred Tuple(box)
+        @test (xmin,xmax,ymin,ymax) === (box.xmin, box.xmax, box.ymin, box.ymax)
+        @test (xmin,xmax,ymin,ymax) === (box[1], box[2], box[3], box[4])
+        @test_throws BoundsError box[0]
+        @test_throws BoundsError box[5]
     end
     @testset "Simple points" begin
         types = (Int8, Int32, Int64, Float32, Float64)
         for T1 in types, T2 in types
-            @test promote_type(Point{T1}, Point{T2}) ===
-                Point{promote_type(T1,T2)}
+            @test promote_type(Point{T1}, Point{T2}) === Point{promote_type(T1,T2)}
         end
         P1 = Point(1, 1.3)
         @test eltype(P1) == Float64
@@ -210,8 +222,7 @@ end
     @testset "Weighted points" begin
         types = (Float32, Float64)
         for T1 in types, T2 in types
-            @test promote_type(WeightedPoint{T1}, WeightedPoint{T2}) ===
-                WeightedPoint{promote_type(T1,T2)}
+            @test promote_type(WeightedPoint{T1}, WeightedPoint{T2}) === WeightedPoint{promote_type(T1,T2)}
         end
         P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
         @test eltype(P2) == Float64
@@ -220,14 +231,12 @@ end
         @test WeightedPoint{Float64}(P2) === P2
         @test WeightedPoint(P2.w, P2.x, P2.y) === P2
         @test WeightedPoint{Float32}(P2) === Float32.(P2)
-        @test WeightedPoint(Point(3.1,4.2)) ===
-            WeightedPoint(w=1, x=3.1, y=4.2)
+        @test WeightedPoint(Point(3.1,4.2)) === WeightedPoint(w=1, x=3.1, y=4.2)
     end
     @testset "Bounding boxes" begin
         types = (Int8, Int32, Int64, Float32, Float64)
         for T1 in types, T2 in types
-            @test promote_type(BoundingBox{T1}, BoundingBox{T2}) ===
-                BoundingBox{promote_type(T1,T2)}
+            @test promote_type(BoundingBox{T1}, BoundingBox{T2}) === BoundingBox{promote_type(T1,T2)}
         end
         B = BoundingBox(2,3,4,5)
         δ = 0.1
@@ -455,50 +464,50 @@ end
     if true
         # Exhaustively test all possibilities.
         A = Array{Bool,2}(undef, (5,4))
-        n = (1 << length(A)) # number of possibilities
+        n = (one(UInt64) << length(A)) # number of possibilities
         for bits in 0:n-1
-            randomize!(A, bits)
-            @test BoundingBox(A) === naiveboundingbox(A)
+            unpack_bits!(A, bits)
+            @test BoundingBox(A) === naive_bounding_box(A)
         end
     else
         # Semi-exhaustive testing of the bounding box algorithm.
         A = zeros(Bool, (7,8))
         fill!(A,false)[1,3] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,true)[2:end-1,2:end-1] .= false
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[1,1] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[1,end] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[end,1] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[end,end] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[3,4] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         A[2,7] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         A[5,end] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[end,4] = true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[1,:] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[:,1] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[end,:] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[:,end] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[1,2:end-1] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[2:end-1,1] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[end,2:end-1] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
         fill!(A,false)[2:end-1,end] .= true
-        @test BoundingBox(A) === naiveboundingbox(A)
+        @test BoundingBox(A) === naive_bounding_box(A)
     end
 end
 
