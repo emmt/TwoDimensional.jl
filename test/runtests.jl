@@ -3,7 +3,7 @@ module TwoDimensionalTests
 using TwoDimensional
 using TwoDimensional: WeightedPoint, PointLike, compose, get_x, get_y, get_xy, factors_type, offsets_type
 using TwoDimensional: half, get_axis_bounds
-using Test, LinearAlgebra, TypeUtils, Unitless
+using Test, LinearAlgebra, Unitless
 import Base.MathConstants: φ
 
 # abs_diff(a, b) yields absolute difference.
