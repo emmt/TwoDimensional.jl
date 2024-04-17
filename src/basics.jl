@@ -100,13 +100,15 @@ Point{T}(pnt::Point) where {T} = Point{T}(Tuple(pnt))
 Point(pnt::PointLike) = Point(get_xy(pnt))
 Point{T}(pnt::PointLike) where {T} = Point{T}(get_xy(pnt))
 
-# Extend some basic methods for points.
-for func in (:one, :oneunit, :zero)
-    @eval Base.$func(pnt::Point) = $func(typeof(pnt))
+# Extend some basic methods for points and bounding-boxes.
+for type in (:Point, :BoundingBox), func in (:one, :zero)
+    @eval Base.$func(obj::$type) = $func(typeof(obj))
 end
 Base.zero(::Type{Point{T}}) where {T} = Point(zero(T),zero(T))
-Base.one(::Type{Point{T}}) where {T} = Point(one(T),one(T)) # FIXME:
-Base.oneunit(::Type{Point{T}}) where {T} = Point(oneunit(T),oneunit(T)) # FIXME:
+Base.one(::Type{Point{T}}) where {T} = one(T)
+
+Base.zero(::Type{BoundingBox{T}}) where {T} = BoundingBox(zero(T),zero(T),zero(T),zero(T))
+Base.one(::Type{BoundingBox{T}}) where {T} = one(T)
 
 # Other constructors of weighted points.
 WeightedPoint{T}(w, x, y) where {T<:AbstractFloat} = WeightedPoint{T}((w, x, y))
@@ -491,40 +493,40 @@ yields the area of the bounding-box `box`.
 area(box::BoundingBox{T}) where {T<:Real} =
     max(box.xmax - box.xmin, zero(T))*max(box.ymax - box.ymin, zero(T))
 
+@inline _map(f, pnt::Point) = Point(map(f, Tuple(pnt)))
+@inline _map(f, box::BoundingBox; swap::Bool = false) =
+    BoundingBox(map(f, swap ? (box.xmax, box.xmin, box.ymax, box.ymin) : Tuple(box)))
+
 # Scaling of a point coordinates.
-Base.:(*)(pnt::Point, α::Real) = α*pnt
-Base.:(*)(α::Real, pnt::Point) = Point(α*pnt.x, α*pnt.y)
-Base.:(/)(pnt::Point, α::Real) = Point(pnt.x/α, pnt.y/α)
-Base.:(\)(α::Real, pnt::Point) = pnt/α
+Base.:(*)(pnt::Point, α::Number) = α*pnt
+Base.:(*)(α::Number, pnt::Point) = _map(Base.Fix1(*,α), pnt)
+Base.:(/)(pnt::Point, α::Number) = _map(Base.Fix2(/,α), pnt)
+Base.:(\)(α::Number, pnt::Point) = pnt/α
 
 # Unary plus does nothing.
 Base.:(+)(pnt::Point) = pnt
 Base.:(+)(box::BoundingBox) = box
 
-# Unary minus applied to a point negate coordinates.
-Base.:(-)(pnt::Point{<:Union{AbstractFloat,Signed,Irrational}}) =
-    Point(-pnt.x, -pnt.y)
-
-# Unary minus applied to a bounding-box.
-Base.:(-)(box::BoundingBox{<:Union{AbstractFloat,Signed,Irrational}}) =
-    BoundingBox(-box.xmax, -box.xmin, -box.ymax, -box.ymin)
+# Unary minus applied to a point negate coordinates. FIXME: what if unsigned values?
+Base.:(-)(pnt::Point) = _map(-, pnt)
+Base.:(-)(box::BoundingBox) = _map(-, box; swap=true)
 
 # Addition and subtraction of point coordinates.
 Base.:(+)(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
 Base.:(-)(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
 
 # Scaling of bounding-box bounds (e.g. to change units).
-Base.:(*)(box::BoundingBox, α::Real) = α*box
-Base.:(*)(α::Real, box::BoundingBox) = BoundingBox(α*box.xmin, α*box.xmax,
-                                                   α*box.ymin, α*box.ymax)
-Base.:(/)(box::BoundingBox{T}, α::Real) where {T} = (one(T)/α)*box
-Base.:(\)(α::Real, box::BoundingBox) = box/α
+Base.:(*)(box::BoundingBox, α::Number) = α*box
+Base.:(*)(α::Number, box::BoundingBox) = _map(Base.Fix1(*,α), box; swap = α < zero(α))
+
+Base.:(\)(α::Number, box::BoundingBox) = box/α
+Base.:(/)(box::BoundingBox, α::Number) = _map(Base.Fix2(/,α), box; swap = α < zero(α))
 
 # Add or remove a margin δ to a bounding-box box.
-Base.:(+)(box::BoundingBox, δ::Real) =
+Base.:(+)(box::BoundingBox, δ::Number) =
     BoundingBox(box.xmin - δ, box.xmax + δ,
                 box.ymin - δ, box.ymax + δ)
-Base.:(-)(box::BoundingBox, δ::Real) =
+Base.:(-)(box::BoundingBox, δ::Number) =
     BoundingBox(box.xmin + δ, box.xmax - δ,
                 box.ymin + δ, box.ymax - δ)
 

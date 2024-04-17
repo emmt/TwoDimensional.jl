@@ -180,12 +180,14 @@ end
         @test convert(Point{Float32}, P1) === Float32.(P1)
         for T in (Float32, Int16)
             pnt = Point{T}(1,2)
-            @test @inferred(zero(Point{T})) === Point(zero(T),zero(T))
-            @test @inferred(one(Point{T})) === Point(one(T),one(T))
-            @test @inferred(oneunit(Point{T})) === Point(oneunit(T),oneunit(T))
-            @test @inferred(zero(pnt)) === Point(zero(T),zero(T))
-            @test @inferred(one(pnt)) === Point(one(T),one(T))
-            @test @inferred(oneunit(pnt)) === Point(oneunit(T),oneunit(T))
+            # `one(x)` shall yield a multiplicative for `x`.
+            @test pnt*one(pnt) == pnt
+            @test one(pnt)*pnt == pnt
+            @test @inferred(one(pnt)) === @inferred(one(Point{T})) === one(T)
+            # `zero(x)` shall yield the additive identity element for `x`.
+            @test pnt + zero(pnt) == pnt
+            @test zero(pnt) + pnt == pnt
+            @test @inferred(zero(pnt)) === @inferred(zero(Point{T})) === Point(zero(T),zero(T))
         end
         @test ntuple(i -> Point(3,5)[i], 2) == (3,5)
         # round
@@ -455,14 +457,14 @@ end
         δ = 0.1
         t = Point(-0.2,0.7)
         B = BoundingBox(2,3,4,5)
-        @test α*B === BoundingBox(xmin = α*B.xmin, xmax = α*B.xmax,
-                                  ymin = α*B.ymin, ymax = α*B.ymax)
-        @test B*α === BoundingBox(xmin = α*B.xmin, xmax = α*B.xmax,
-                                  ymin = α*B.ymin, ymax = α*B.ymax)
-        @test α\B === BoundingBox(xmin = (1/α)*B.xmin, xmax = (1/α)*B.xmax,
-                                  ymin = (1/α)*B.ymin, ymax = (1/α)*B.ymax)
-        @test B/α === BoundingBox(xmin = (1/α)*B.xmin, xmax = (1/α)*B.xmax,
-                                  ymin = (1/α)*B.ymin, ymax = (1/α)*B.ymax)
+        @test α*B === B*α === BoundingBox(xmin = α*B.xmin, xmax = α*B.xmax,
+                                          ymin = α*B.ymin, ymax = α*B.ymax)
+        @test (-α)*B === B*(-α) === BoundingBox(xmin = -α*B.xmax, xmax = -α*B.xmin,
+                                                ymin = -α*B.ymax, ymax = -α*B.ymin)
+        @test α\B === B/α === BoundingBox(xmin = B.xmin/α, xmax = B.xmax/α,
+                                          ymin = B.ymin/α, ymax = B.ymax/α)
+        @test (-α)\B === B/(-α) === BoundingBox(xmin = B.xmax/-α, xmax = B.xmin/-α,
+                                                ymin = B.ymax/-α, ymax = B.ymin/-α)
         @test B + δ === BoundingBox(xmin = B.xmin - δ, xmax = B.xmax + δ,
                                     ymin = B.ymin - δ, ymax = B.ymax + δ)
         @test B - δ === BoundingBox(xmin = B.xmin + δ, xmax = B.xmax - δ,
