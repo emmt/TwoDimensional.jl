@@ -110,12 +110,8 @@ C = A\\B            # left division, same as: C = compose(inv(A), B)
 
 """
 struct AffineTransform{T<:AbstractFloat,R,S} <: Function
-    xx::R
-    xy::R
-    x ::S
-    yx::R
-    yy::R
-    y ::S
+    factors::NTuple{4,R}
+    offsets::NTuple{2,S}
     function AffineTransform{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay) where {T<:AbstractFloat,R,S}
         isconcretetype(T) || throw(ArgumentError(
             "type parameter `T = $T` is not a concrete floating-point type"))
@@ -123,7 +119,7 @@ struct AffineTransform{T<:AbstractFloat,R,S} <: Function
             "bare type of parameter `R = $R` is not `T = $T`, got `bare_type(R) = $(bare_type(R))`"))
         bare_type(S) === T || throw(ArgumentError(
             "bare type of parameter `S = $S` is not `T = $T`, got `bare_type(S) = $(bare_type(S))`"))
-        return new{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay)
+        return new{T,R,S}((Axx, Axy, Ayx, Ayy), (Ax, Ay))
     end
 end
 
@@ -220,6 +216,15 @@ Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{U}}) where 
     AffineTransform{promote_type(T,U)}
 Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{T}}) where {T} =
     AffineTransform{T}
+
+Base.propertynames(::AffineTransform) = (:xx, :xy, :x, :yx, :yy, :y)
+Base.getproperty(A::AffineTransform, key::Symbol) =
+    key === :xx ? getfield(A, 1)[1] :
+    key === :xy ? getfield(A, 1)[2] :
+    key === :yx ? getfield(A, 1)[3] :
+    key === :yy ? getfield(A, 1)[4] :
+    key === :x  ? getfield(A, 2)[1] :
+    key === :y  ? getfield(A, 2)[2] : throw(KeyError(key))
 
 # Make affine transform objects indexable and iterable.
 Base.Tuple(A::AffineTransform) = (A.xx, A.xy, A.x, A.yx, A.yy, A.y)
