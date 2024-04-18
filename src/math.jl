@@ -55,16 +55,16 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
 # object by a number amounts to scaling around origin.
 
 # Just permute operands for some common operations on geometric objects.
-Base.:(+)(a::Point, b::GeometricObject) = b + a
-Base.:(*)(a::GeometricObject, b::Number) = b*a
-Base.:(\)(a::Number, b::GeometricObject) = b/a
++(a::Point, b::GeometricObject) = b + a
+*(a::GeometricObject, b::Number) = b*a
+\(a::Number, b::GeometricObject) = b/a
 
 # Unary plus does nothing.
-Base.:(+)(a::GeometricObject) = a
++(a::GeometricObject) = a
 
 # Unary minus negates coordinates.
-Base.:(-)(pnt::Point) = Point(-pnt.x, -pnt.y)
-Base.:(-)(box::BoundingBox) = BoundingBox(-last(box), -first(box))
+-(pnt::Point) = Point(-pnt.x, -pnt.y)
+-(box::BoundingBox) = BoundingBox(-last(box), -first(box))
 
 # Extend "trait" methods for points and bounding-boxes.
 Base.zero(obj::Union{Point,BoundingBox}) = zero(typeof(obj))
@@ -72,39 +72,39 @@ Base.one(obj::Union{Point,BoundingBox}) = one(typeof(obj))
 
 # Scaling of points and corresponding multiplicative identity.
 Base.one(::Type{Point{T}}) where {T} = one(T)
-Base.:(*)(α::Number, pnt::Point) = map(Base.Fix1(*,α), pnt)
-Base.:(/)(pnt::Point, α::Number) = map(Base.Fix2(/,α), pnt)
+*(α::Number, pnt::Point) = map(Base.Fix1(*,α), pnt)
+/(pnt::Point, α::Number) = map(Base.Fix2(/,α), pnt)
 
 # Scaling of bounding-box bounds (e.g. to change units) and corresponding
 # multiplicative identity.
 Base.one(::Type{BoundingBox{T}}) where {T} = one(T)
-Base.:(*)(box::BoundingBox, α::Number) = α*box
-Base.:(*)(α::Number, box::BoundingBox) = map(Base.Fix1(*,α), box; swap = α < zero(α))
-Base.:(\)(α::Number, box::BoundingBox) = box/α
-Base.:(/)(box::BoundingBox, α::Number) = map(Base.Fix2(/,α), box; swap = α < zero(α))
+*(box::BoundingBox, α::Number) = α*box
+*(α::Number, box::BoundingBox) = map(Base.Fix1(*,α), box; swap = α < zero(α))
+\(α::Number, box::BoundingBox) = box/α
+/(box::BoundingBox, α::Number) = map(Base.Fix2(/,α), box; swap = α < zero(α))
 
 # Addition and subtraction of points and corresponding addtive identity.
 Base.zero(::Type{Point{T}}) where {T} = Point(zero(T),zero(T))
-Base.:(+)(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
-Base.:(-)(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
++(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
+-(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
 
 # Addition amd subtraction of bounding-boxes (following the rules of the
 # addition and subtraction of sets) and corresponding addtive identity.
 Base.zero(::Type{BoundingBox{T}}) where {T} = BoundingBox(zero(T),zero(T),zero(T),zero(T))
-Base.:(+)(A::BoundingBox, B::BoundingBox) =
++(A::BoundingBox, B::BoundingBox) =
     isempty(A) || isempty(B) ? BoundingBox{promote_type(eltype(A), eltype(B))}(nothing) :
     BoundingBox(map(+, Tuple(A), Tuple(B)))
-Base.:(-)(A::BoundingBox, B::BoundingBox) = A + (-B)
+-(A::BoundingBox, B::BoundingBox) = A + (-B)
 
 # Add or remove a margin δ to a bounding-box box.
-Base.:(+)(box::BoundingBox, δ::Number) = grow(box, δ)
-Base.:(-)(box::BoundingBox, δ::Number) = shrink(box, δ)
++(box::BoundingBox, δ::Number) = grow(box, δ)
+-(box::BoundingBox, δ::Number) = shrink(box, δ)
 
 # Translate a bounding-box.
-Base.:(+)(box::BoundingBox, pnt::Point) =
++(box::BoundingBox, pnt::Point) =
     BoundingBox(box.xmin + pnt.x, box.xmax + pnt.x,
                 box.ymin + pnt.y, box.ymax + pnt.y)
-Base.:(-)(box::BoundingBox, pnt::Point) =
+-(box::BoundingBox, pnt::Point) =
     BoundingBox(box.xmin - pnt.x, box.xmax - pnt.x,
                 box.ymin - pnt.y, box.ymax - pnt.y)
 
@@ -200,7 +200,7 @@ LinearAlgebra.norm(pnt::Point) = abs(pnt)
 Base.Math.atan(pnt::Point) = atan(pnt.y, pnt.x)
 inner(a::Point, b::Point) = a.x*b.x + a.y*b.y # scalar/inner product
 outer(a::Point, b::Point) = a.x*b.y - a.y*b.x # outer product
-Base.:(*)(a::Point, b::Point) = inner(a, b) # scalar product
+*(a::Point, b::Point) = inner(a, b) # scalar product
 
 """
     distance(A, B)

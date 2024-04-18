@@ -37,22 +37,18 @@ using Unitless
 using Base: @propagate_inbounds
 using LinearAlgebra
 
+# Imports for extension.
+import Base: +, -, *, ∘, /, \, inv
+import Base: Float16, Float32, Float64
+import Base.MPFR: BigFloat
+import LinearAlgebra: ⋅, det
+
 include("types.jl")
+include("aliases.jl")
 include("basics.jl")
 include("boxes.jl")
 include("points.jl")
 include("xforms.jl")
-import .AffineTransforms:
-    AffineTransform,
-    compose,
-    factors_type,
-    intercept,
-    jacobian,
-    offsets_type,
-    rotate,
-    scale,
-    translate
 include("math.jl")
-include("aliases.jl")
 
 end # module TwoDimensional

@@ -12,6 +12,13 @@
   specifically used/imported. For example with: `using TwoDimensional:
   AffineTransform2D, Point2D, BoundingBox2D`.
 
+- `AffineTransforms` is no longer a sub-module of `TwoDimensional`. If only
+  2-dimensional affine transforms are needed, do `using TwoDimensional:
+  AffineTransform` or `using TwoDimensional: AffineTransform2D`. Most related
+  operations are available by symbolic operators; otherwise, they can also be
+  used/imported. For example: `using TwoDimensional: AffineTransform2D,
+  rotate`.
+
 - Exported method `coord_type` yields the type of the coordinates for
   a geometric object or for its type.
 

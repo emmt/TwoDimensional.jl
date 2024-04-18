@@ -1,38 +1,3 @@
-#
-# xforms.jl --
-#
-# Implementation of affine transforms which are notably useful for coordinate
-# transforms.
-#
-#------------------------------------------------------------------------------
-#
-# This file if part of the TwoDimensional Julia package licensed under the MIT
-# license (https://github.com/emmt/TwoDimensional.jl).
-#
-# Copyright (c) 2016-2024, Éric Thiébaut.
-#
-
-module AffineTransforms
-
-export
-    AffineTransform,
-    compose,
-    intercept,
-    jacobian,
-    rotate,
-    scale,
-    translate
-
-using Unitless
-
-using ..TwoDimensional: AbstractPoint, Point, PointLike, get_x, get_y
-
-# Imports for extension.
-import Base: +, -, *, ∘, /, \, inv
-import Base: Float16, Float32, Float64
-import Base.MPFR: BigFloat
-import LinearAlgebra: ⋅, det
-
 """
     AffineTransform(Axx, Axy, Ax, Ayx, Ayy, Ay) -> A
 
@@ -109,18 +74,31 @@ C = A\\B            # left division, same as: C = compose(inv(A), B)
 "`∘`" and "`⋅`" can be typed by `\\circ<tab>` and `\\cdot<tab>`.
 
 """
-struct AffineTransform{T<:AbstractFloat,R,S} <: Function
-    factors::NTuple{4,R}
-    offsets::NTuple{2,S}
-    function AffineTransform{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay) where {T<:AbstractFloat,R,S}
-        isconcretetype(T) || throw(ArgumentError(
-            "type parameter `T = $T` is not a concrete floating-point type"))
-        bare_type(R) === T || throw(ArgumentError(
-            "bare type of parameter `R = $R` is not `T = $T`, got `bare_type(R) = $(bare_type(R))`"))
-        bare_type(S) === T || throw(ArgumentError(
-            "bare type of parameter `S = $S` is not `T = $T`, got `bare_type(S) = $(bare_type(S))`"))
-        return new{T,R,S}((Axx, Axy, Ayx, Ayy), (Ax, Ay))
-    end
+function AffineTransform(Axx, Axy, Ax,
+                         Ayx, Ayy, Ay)
+    Axx, Axy, Ayx, Ayy = promote(Axx, Axy, Ayx, Ayy)
+    Ax, Ay = promote(Ax, Ay)
+    return AffineTransform(Axx,Axy,Ax, Ayx,Ayy,Ay)
+end
+
+function AffineTransform(Axx::R, Axy::R, Ax::S,
+                         Ayx::R, Ayy::R, Ay::S) where {R,S}
+    T = float(promote_type(real_type(R), real_type(S)))
+    return AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+end
+
+function AffineTransform{T}(Axx, Axy, Ax,
+                            Ayx, Ayy, Ay) where {T<:AbstractFloat}
+    Axx, Axy, Ayx, Ayy = promote(Axx, Axy, Ayx, Ayy)
+    Ax, Ay = promote(Ax, Ay)
+    return AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+end
+
+function AffineTransform{T}(Axx::R, Axy::R, Ax::S,
+                            Ayx::R, Ayy::R, Ay::S) where {T<:AbstractFloat,R,S}
+    Rc = convert_real_type(T, R)
+    Sc = convert_real_type(T, S)
+    return AffineTransform{T,Rc,Sc}(Axx,Axy,Ax, Ayx,Ayy,Ay)
 end
 
 """
@@ -142,33 +120,6 @@ AffineTransform{T}() where {T<:AbstractFloat} = AffineTransform{T,T,T}()
 AffineTransform{T,R,S}() where {T<:AbstractFloat,R,S} =
     AffineTransform{T,R,S}(oneunit(R),zero(R),zero(S),
                            zero(R),oneunit(R),zero(S))
-
-function AffineTransform(Axx, Axy, Ax,
-                         Ayx, Ayy, Ay)
-    Axx, Axy, Ayx, Ayy = promote(Axx, Axy, Ayx, Ayy)
-    Ax, Ay = promote(Ax, Ay)
-    return AffineTransform(Axx,Axy,Ax, Ayx,Ayy,Ay)
-end
-
-function AffineTransform{T}(Axx, Axy, Ax,
-                            Ayx, Ayy, Ay) where {T<:AbstractFloat}
-    Axx, Axy, Ayx, Ayy = promote(Axx, Axy, Ayx, Ayy)
-    Ax, Ay = promote(Ax, Ay)
-    return AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
-end
-
-function AffineTransform(Axx::R, Axy::R, Ax::S,
-                         Ayx::R, Ayy::R, Ay::S) where {R,S}
-    T = float(promote_type(real_type(R), real_type(S)))
-    return AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
-end
-
-function AffineTransform{T}(Axx::R, Axy::R, Ax::S,
-                            Ayx::R, Ayy::R, Ay::S) where {T<:AbstractFloat,R,S}
-    Rc = convert_real_type(T, R)
-    Sc = convert_real_type(T, S)
-    return AffineTransform{T,Rc,Sc}(Axx,Axy,Ax, Ayx,Ayy,Ay)
-end
 
 AffineTransform(A::AffineTransform) = A
 AffineTransform{T}(A::AffineTransform{T}) where {T<:AbstractFloat} = A
@@ -454,7 +405,6 @@ rightdivide(A::AffineTransform, B::AffineTransform) = begin
 end
 
 """
-
     leftdivide(A, B)
 
 yields `A\\B`, the left division of the affine transform `A` by the affine
@@ -482,8 +432,11 @@ leftdivide(A::AffineTransform, B::AffineTransform) = begin
 end
 
 """
+    intercept(A)
+    intercept(T<:Point, A)
 
-`intercept(A)` returns the tuple `(x,y)` such that `A(x,y) = (0,0)`.
+return the tuple `(x,y)` such that `A(x,y) = (0,0)`. If a `Point` type T is
+specified, a point of this type with coordinates `(x,y)` is returned.
 
 """
 function intercept(A::AffineTransform)
@@ -494,7 +447,6 @@ end
 
 intercept(::Type{T}, A::AffineTransform) where {T<:Point} = T(intercept(A)...)
 
-
 Base.show(io::IO, ::MIME"text/plain", A::AffineTransform) =
     print(io, typeof(A),
           "(",   A.xx, ",", A.xy, ",", A.x,
@@ -503,5 +455,3 @@ Base.show(io::IO, ::MIME"text/plain", A::AffineTransform) =
 Base.show(io::IO, A::AffineTransform) = show(io, MIME"text/plain"(), A)
 
 Base.print(io::IOBuffer, A::AffineTransform) = show(io, A)
-
-end # module

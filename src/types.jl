@@ -83,3 +83,17 @@ const BoundingBoxLike = Union{BoundingBox,NTuple{2,AbstractPoint},
                               NTuple{2,CartesianIndex{2}},
                               NTuple{2,AbstractUnitRange{<:Integer}},
                               CartesianIndices{2}}
+
+struct AffineTransform{T<:AbstractFloat,R,S} <: Function
+    factors::NTuple{4,R}
+    offsets::NTuple{2,S}
+    function AffineTransform{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay) where {T<:AbstractFloat,R,S}
+        isconcretetype(T) || throw(ArgumentError(
+            "type parameter `T = $T` is not a concrete floating-point type"))
+        bare_type(R) === T || throw(ArgumentError(
+            "bare type of parameter `R = $R` is not `T = $T`, got `bare_type(R) = $(bare_type(R))`"))
+        bare_type(S) === T || throw(ArgumentError(
+            "bare type of parameter `S = $S` is not `T = $T`, got `bare_type(S) = $(bare_type(S))`"))
+        return new{T,R,S}((Axx, Axy, Ayx, Ayy), (Ax, Ay))
+    end
+end
