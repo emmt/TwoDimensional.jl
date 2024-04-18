@@ -363,9 +363,9 @@ exception is thrown.
 """
 @inline function get_axis_bounds(I::AbstractRange{<:Integer})
     i0, i1, s = Int(first(I)), Int(last(I)), step(I)
-    return (s == +oneunit(s) ? (i0,i1) :
-            s == -oneunit(s) ? (i1,i0) :
-            throw(ArgumentError("expecting a range with a step equal to ±1")))
+    s == +one(s) && return (i0, i1)
+    s == -one(s) && return (i1, i0)
+    throw(ArgumentError("expecting a range with a step equal to ±1, got $s"))
 end
 
 # Empty bounding and unlimited boxes.
