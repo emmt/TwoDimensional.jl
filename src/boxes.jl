@@ -1,24 +1,24 @@
 """
-    BoundingBox(xmin,xmax,ymin,ymax)
-    BoundingBox((xmin,ymin),(xmax,ymax))
+    BoundingBox{T}(ll::Point, ur::Point)
+    BoundingBox{T}(ll::CartesianIndex{2}, ur::CartesianIndex{2})
+    BoundingBox{T}((llx,lly), (urx,ury))
+    BoundingBox{T}(xmin,xmax,ymin,ymax)
+    BoundingBox{T}(xmin=llx, xmax=urx, ymin=lly, ymax=ury)
 
-yield an instance of a 2D rectangular bounding-box whose sides are aligned with
-the coordinate axes and containing points of coordinates `(x,y)` such that
-`xmin ≤ x ≤ xmax` and `ymin ≤ y ≤ ymax`. The box is *empty* if `xmin > xmax` or
-`ymin > ymax`.
+construct a rectangular bounding-box with edges aligned with the Cartesian axes
+and given the coordinates of its lower-left, `ll`, and upper-right, `ur`,
+corners or the limits `xmin`, `xmax`, `ymin`, and `ymax` of the bounding-box.
+Parameter `T` is the type used to store coordinates, it may be omitted.
+Arguments to build a bounding-box may also be concatenated in a tuple, for
+example: `BoundingBox(((llx,lly), (urx,ury)))` is valid.
 
-A bounding-box can be constructed from the first and last points (i.e. at the
-lower-left and upper right opposite corners) of the box:
+A bounding-box is assumed to contain all points of coordinates `(x,y)` such
+that `xmin ≤ x ≤ xmax` and `ymin ≤ y ≤ ymax`. If `xmin > xmax` or `ymin >
+ymax`, the bounding-box is considered as **empty**.
 
-    BoundingBox(P0::Point, P1::Point)
-    BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})
-
-Coordinates can be specified by keywords:
-
-    BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
-
-There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
-all must be specified.
+Boxes are used to represent grid cells and bounding-boxes of other geometric
+shape. Use [`TwoDimensional.Rectangle`](@ref) if you want to define rectangular
+masks.
 
 The coordinates of a `BoundingBox`, say `box`, can be retrieved as follows:
 

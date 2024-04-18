@@ -16,6 +16,8 @@
 
 is the super-type of geometric objects whose coordinates are of type `T`. Most
 computations assume that `T` is floating-point (possibly with units).
+Coordinate type `T` of a geometric object `obj` can be retrieved with
+[`TwoDimensional.coord_type(obj)`](@ref `TwoDimensional.coord_type).
 
 """
 abstract type GeometricObject{T} end
