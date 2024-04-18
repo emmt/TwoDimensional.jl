@@ -398,18 +398,15 @@ Base.axes(box::BoundingBox{<:Integer}, d::Integer) =
 @noinline throw_bad_dimension_index() =
     error("invalid dimension index")
 
+# Extend ∈ operator.
 Base.in(pnt::AbstractPoint, box::BoundingBox) =
     (box.xmin ≤ pnt.x ≤ box.xmax) & (box.ymin ≤ pnt.y ≤ box.ymax)
-
-# To deprecate `A ∈ B` in favor of `A ⊆ B` for bounding boxes `A` and `B`, the
-# `Base.in` method must be imported.
-import Base: in
-@deprecate in(A::BoundingBox, B::BoundingBox) (A ⊆ B) false
 
 # Extend ⊆ operator.
 Base.issubset(A::BoundingBox, B::BoundingBox) =
     (isempty(A)|((A.xmin ≥ B.xmin)&(A.xmax ≤ B.xmax)&
                  (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
+
 # Union of bounding-boxes:
 Base.:(∪)(A::BoundingBox, B::BoundingBox) =
     BoundingBox(min(A.xmin, B.xmin), max(A.xmax, B.xmax),

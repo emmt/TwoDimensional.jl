@@ -25,6 +25,10 @@
   `one(eltype(obj))`; while, `zero(obj)` is an object of the same type as `obj`
   with all values set to zero.
 
+- Use `A ⊆ B` to check whether bounding-box `A` is contained in bounding-box
+  `B` (the syntax `A ∈ B` is no longer implemented for that) and `P ∈ B` to
+  check whether point `P` is inside bounding-box `B`
+
 ### Bounding-boxes
 
 - Addition and subtraction of bounding-boxes, say `C = A ± B`, yields the
