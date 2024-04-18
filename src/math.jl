@@ -129,10 +129,12 @@ for type in (:Point, :BoundingBox)
 end
 
 """
-    floor([T,] P::Point)
+    floor([T,] pnt::Point)
+    floor([T,] box::BoundingBox)
 
-yields the point with the largest integer coordinates smaller or equal those of
-the point `P`.  Argument `T` can be the type of the result or the type of the
+yield the point with the largest integer coordinates smaller or equal those of
+`pnt` or the bounding-box resulting from applying this function to the content
+of `box`. Argument `T` can be the type of the result or the type of the
 coordinates of the result.
 
 See also: [`round`](@ref), [`ceil`](@ref).
@@ -140,10 +142,12 @@ See also: [`round`](@ref), [`ceil`](@ref).
 """ Base.floor
 
 """
-    ceil([T,] P::Point)
+    ceil([T,] pnt::Point)
+    ceil([T,] box::BoundingBox)
 
 yields the point with the smallest integer coordinates larger or equal those of
-the point `P`.  Argument `T` can be the type of the result or the type of the
+`pnt` or the bounding-box resulting from applying this function to the content
+of `box`. Argument `T` can be the type of the result or the type of the
 coordinates of the result.
 
 See also: [`round`](@ref), [`floor`](@ref).
@@ -155,7 +159,7 @@ for type in (:Point, :BoundingBox), func in (:floor, :ceil)
         Base.$func(obj::$type) = map($func, obj)
         Base.$func(::Type{T}, obj::$type) where {T<:Number} = map(x -> $func(T, x), obj)
 
-        Base.$func(::Type{$type}, obj::$type) = $func(obj)
+        Base.$func(::Type{$type}, obj::$type) = $func(obj) # FIXME:
         Base.$func(::Type{$type{T}}, obj::$type) where {T} = $func(T, obj)
     end
 end
