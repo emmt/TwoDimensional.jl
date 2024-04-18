@@ -1,7 +1,7 @@
 module TwoDimensionalTests
 
 using TwoDimensional
-using TwoDimensional: WeightedPoint, PointLike, compose, get_x, get_y, get_xy, factors_type, offsets_type
+using TwoDimensional: PointLike, compose, get_x, get_y, get_xy, factors_type, offsets_type
 using TwoDimensional: get_axis_bounds
 using Test, LinearAlgebra, Unitless
 import Base.MathConstants: φ
@@ -120,20 +120,6 @@ end
         @test_throws KeyError pnt.vals
         @test occursin(r"^Point{Float64}\(", string(pnt))
 
-        wpnt = @inferred WeightedPoint(1.2,sqrt(2),3)
-        @test length(wpnt) === length(getfield(wpnt, 1))
-        @test wpnt === @inferred WeightedPoint(wpnt...)
-        @test wpnt === @inferred WeightedPoint(Tuple(wpnt)...)
-        @test wpnt === @inferred WeightedPoint(Tuple(wpnt))
-        w,x,y = wpnt
-        @test (w,x,y) === @inferred Tuple(wpnt)
-        @test (w,x,y) === (wpnt.w, wpnt.x, wpnt.y)
-        @test (w,x,y) === (wpnt[1], wpnt[2], wpnt[3])
-        @test_throws BoundsError wpnt[0]
-        @test_throws BoundsError wpnt[4]
-        @test_throws KeyError wpnt.vals
-        @test occursin(r"^WeightedPoint{Float64}\(", string(wpnt))
-
         box = @inferred BoundingBox(1.2,sqrt(2),-3,11)
         @test length(box) === length(getfield(box, 1))
         @test box === @inferred BoundingBox(box...)
@@ -161,7 +147,6 @@ end
         @test Point(1,2) === Point(y=2, x=1)
         @test Point(CartesianIndex(7,8)) === Point(7,8)
         @test CartesianIndex(Point(2,3)) === CartesianIndex(2,3)
-        @test Point(TwoDimensional.WeightedPoint(2,3,7)) === Point(3.0,7.0)
         #@test convert(CartesianIndex, Point(2,3)) === CartesianIndex(2,3)
         #@test convert(CartesianIndex{2}, Point(2,3)) === CartesianIndex(2,3)
         #@test convert(Tuple, Point(2,3)) === (2,3)
@@ -234,20 +219,6 @@ end
         @test atan(P1) == atan(P1.y, P1.x)
         @test distance(P1, Point(0,0)) == hypot(P1)
         @test distance(Point(0x02,0x05), Point(0x00,0x00)) == hypot(0x02,0x05)
-    end
-    @testset "Weighted points" begin
-        types = (Float32, Float64)
-        for T1 in types, T2 in types
-            @test promote_type(WeightedPoint{T1}, WeightedPoint{T2}) === WeightedPoint{promote_type(T1,T2)}
-        end
-        P2 = WeightedPoint(x=0.1, y=-6, w=0.1)
-        @test eltype(P2) == Float64
-        @test WeightedPoint(P2) === P2
-        @test WeightedPoint{eltype(P2)}(P2) === P2
-        @test WeightedPoint{Float64}(P2) === P2
-        @test WeightedPoint(P2.w, P2.x, P2.y) === P2
-        @test WeightedPoint{Float32}(P2) === Float32.(P2)
-        @test WeightedPoint(Point(3.1,4.2)) === WeightedPoint(w=1, x=3.1, y=4.2)
     end
     @testset "Bounding boxes" begin
         types = (Int8, Int32, Int64, Float32, Float64)
@@ -415,10 +386,6 @@ end
         @test (Point(3,4) ∈ BoundingBox(1,2,3,4)) == false
         @test (Point(2,5) ∈ BoundingBox(1,2,3,4)) == false
         @test (Point(3,5) ∈ BoundingBox(1,2,3,4)) == false
-        @test (WeightedPoint(1,2,4) ∈ BoundingBox(1,2,3,4)) == true
-        @test (WeightedPoint(1,3,4) ∈ BoundingBox(1,2,3,4)) == false
-        @test (WeightedPoint(1,2,5) ∈ BoundingBox(1,2,3,4)) == false
-        @test (WeightedPoint(1,3,5) ∈ BoundingBox(1,2,3,4)) == false
 
         @test (BoundingBox(1,-2,3,4) ⊆ BoundingBox{Float32}(nothing)) == true
         @test (BoundingBox(1,-2,3,4) ⊆ BoundingBox(1,2,3,4)) == true

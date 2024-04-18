@@ -12,8 +12,6 @@
 #
 module TwoDimensional
 
-# WeightedPoint is not exported by default because packages may implement a
-# different definition.
 export
     AbstractPoint,
     AffineTransform,
@@ -21,7 +19,6 @@ export
     Point,
     area,
     center,
-    # FIXME: compose,
     distance,
     exterior,
     intercept,
@@ -42,7 +39,6 @@ include("types.jl")
 include("basics.jl")
 include("boxes.jl")
 include("points.jl")
-include("weightedpoints.jl")
 include("xforms.jl")
 import .AffineTransforms:
     AffineTransform,

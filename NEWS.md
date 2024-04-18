@@ -12,7 +12,6 @@
   specifically used/imported. For example with: `using TwoDimensional:
   AffineTransform2D, Point2D, BoundingBox2D`.
 
-
 ### Points and bounding-boxes
 
 - `map` and broadcasting rules have been extended to be more consistent for
@@ -33,6 +32,10 @@
 - Use `A ⊆ B` to check whether bounding-box `A` is contained in bounding-box
   `B` (the syntax `A ∈ B` is no longer implemented for that) and `P ∈ B` to
   check whether point `P` is inside bounding-box `B`
+
+- Weighted points, of non-exported type `TwoDimensional.WeightedPoint`, have
+  been removed due to coordinates possibly having units. They may come back but
+  with 2 type parameters: one for the weight, the other for the coordinates.
 
 ### Bounding-boxes
 

@@ -16,10 +16,11 @@ as(::Type{T}, x) where {T} = convert(T, x)::T
 
 # Basic constructors (with tuple argument) for points and bounding boxes and
 # API to make them indexable iterators.
-for (type, len) in ((:Point,         2),
-                    (:WeightedPoint, 3),
-                    (:BoundingBox,   4),)
+for (type, like, len) in ((:Point,         :PointLike,         2),
+                          (:BoundingBox,   :BoundingBoxLike,   4),)
     @eval begin
+        $type(vals::NTuple{$len,T}) where {T} = $type{T}(vals)
+        $type(vals::NTuple{$len,Any}) = $type(promote(vals...))
         Base.Tuple(obj::$type) = getfield(obj, 1)
         Base.getindex(obj::$type, i::Integer) = getindex(Tuple(obj), i)
         Base.iterate(obj::$type, i::Int = 1) =
@@ -28,33 +29,10 @@ for (type, len) in ((:Point,         2),
         Base.IteratorSize(::Type{<:$type}) = Base.HasLength()
         Base.length(obj::$type) = $len
         Base.show(io::IO, ::MIME"text/plain", obj::$type) = show(io, obj)
-    end
-    if type === :WeightedPoint
-        @eval begin
-            $type(vals::NTuple{$len,T}) where {T<:AbstractFloat} = $type{T}(vals)
-            $type(vals::NTuple{$len,Real}) = $type(map(float, promote(vals...)))
-        end
-    else
-        @eval begin
-            $type(vals::NTuple{$len,T}) where {T} = $type{T}(vals)
-            $type(vals::NTuple{$len,Any}) = $type(promote(vals...))
-        end
-    end
-end
-
-# Extend basic methods for abstract points.
-Base.eltype(::AbstractPoint{T}) where {T} = T
-Base.CartesianIndex(pnt::AbstractPoint{<:Integer}) = CartesianIndex(get_xy(pnt)...)
-
-# Extend basic methods for points and bounding-boxes.
-for (type, like, n) in ((:Point,         :PointLike,         2),
-                        (:WeightedPoint, :WeightedPointLike, 3),
-                        (:BoundingBox,   :BoundingBoxLike,   4),)
-    @eval begin
         Base.convert(::Type{T}, obj::T) where {T<:$type} = obj
         Base.convert(::Type{T}, obj::$like) where {T<:$type} = T(obj)
         Base.convert(::Type{Tuple}, obj::$type) = Tuple(obj)
-        Base.convert(::Type{NTuple{$n,T}}, obj::$type) where {T} =
+        Base.convert(::Type{NTuple{$len,T}}, obj::$type) where {T} =
             map(#= FIXME: as(T) =# Base.Fix1(as, T), Tuple(obj))
         Base.eltype(obj::$type) = eltype(typeof(obj))
         Base.eltype(::Type{<:$type{T}}) where {T} = T
@@ -63,3 +41,7 @@ for (type, like, n) in ((:Point,         :PointLike,         2),
             $type{promote_type(T₁,T₂)}
     end
 end
+
+# Extend basic methods for abstract points.
+Base.eltype(::AbstractPoint{T}) where {T} = T
+Base.CartesianIndex(pnt::AbstractPoint{<:Integer}) = CartesianIndex(get_xy(pnt)...)

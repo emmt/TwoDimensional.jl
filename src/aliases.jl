@@ -15,14 +15,6 @@ is an alias for [`TwoDimensional.Point{T}`](@ref Point).
 const Point2D{T} = Point{T}
 
 """
-    WeightedPoint2D{T}
-
-is an alias for [`TwoDimensional.WeightedPoint{T}`](@ref WeightedPoint).
-
-"""
-const WeightedPoint2D{T} = WeightedPoint{T}
-
-"""
     BoundingBox2D{T}
 
 is an alias for [`TwoDimensional.BoundingBox{T}`](@ref BoundingBox).

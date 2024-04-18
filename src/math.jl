@@ -1,13 +1,12 @@
 # Extend `map` and `Broadcast.broadcasted` for points and bounding-boxes.
 # NOTE: `Base.Callable = Union{Type,Function}`
-for type in (:Point, :WeightedPoint, :BoundingBox)
+for type in (:Point, :BoundingBox)
     @eval begin
         Broadcast.broadcasted(::Type{T}, obj::$type) where {T} = map(T, obj)
         Broadcast.broadcasted(f::Function, obj::$type) = map(f, obj)
     end
 end
 @inline Base.map(f, pnt::Point) = Point(map(f, Tuple(pnt)))
-@inline Base.map(f, pnt::WeightedPoint) = WeightedPoint(map(f, Tuple(pnt)))
 @inline Base.map(f, box::BoundingBox; swap::Bool = false) =
     BoundingBox(map(f, swap ? (box.xmax, box.xmin, box.ymax, box.ymin) : Tuple(box)))
 

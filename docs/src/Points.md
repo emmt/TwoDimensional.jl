@@ -1,10 +1,9 @@
 # Points
 
-An object whose type is derived from [`AbstractPoint{T}`](@ref AbstractPoint)
-(or `AbstractPoint2D{T}` if `TwoDimensional.Suffixed` is used instead of
-`TwoDimensional`) has 2-D coordinates: its abscissa and ordinate respectively
-named `x` and `y`.  The parameter `T` is the type of the coordinates and can be
-retrieved by the `eltype` method.
+Any object whose type is derived from [`AbstractPoint{T}`](@ref AbstractPoint)
+has 2-D coordinates: its abscissa and ordinate respectively named `x` and `y`.
+The parameter `T` is the type of the coordinates and can be retrieved by the
+`eltype` method.
 
 
 ## Aliases
@@ -12,7 +11,7 @@ retrieved by the `eltype` method.
 Call:
 
 ```julia
-using TwoDimensional.Suffixed
+using TwoDimensional: AbstractPoint2D, Point2D
 ```
 
 instead of:
@@ -21,9 +20,8 @@ instead of:
 using TwoDimensional
 ```
 
-to have `Point2D`, `WeightedPoint2D` and `AbstractPoint2D` provided as
-respective aliases to `TwoDimensional.Point` `TwoDimensional.WeightedPoint` and
-`TwoDimensional.AbstractPoint`.
+to have `Point2D`, `AbstractPoint2D` provided as respective aliases to
+`TwoDimensional.Point` and `TwoDimensional.AbstractPoint`.
 
 
 ## Construction
@@ -34,31 +32,16 @@ The most simple concrete type is [`Point{T}`](@ref Point) constructed by:
 Point(x,y)
 ```
 
-where `(x,y)` are the coordinates of the point.  Weighted points of type
-[`WeightedPoint{T}`](@ref WeightedPoint) associate a weight and coordinates:
-
-```julia
-WeightedPoint(w,x,y)
-```
-
-where `(x,y)` are the coordinates of the point and `w` its weight (nonnegative
-by convention).
+where `(x,y)` are the coordinates of the point.
 
 
-Coordinates and weights can also be
-specified by keywords:
+Coordinates and weights can also be specified by keywords:
 
 ```julia
 Point(x=xval, y=yval)
 ```
 
-or
-
-```julia
-WeightedPoint(w=wgt, x=xval, y=yval)
-```
-
-There are no default values for keywords `w`, `x` and `y` so they must all be
+There are no default values for keywords `x` and `y` so they must both be
 specified.
 
 
@@ -84,27 +67,6 @@ or:
 x, y = pnt
 ```
 
-Similar rules apply for a `WeightedPoint`, say `wpt`:
-
-```julia
-w = wpt.w
-x = wpt.x
-y = wpt.y
-```
-
-or:
-
-```julia
-w = pnt[1]
-x = pnt[2]
-y = pnt[3]
-```
-
-or:
-
-```julia
-w, x, y = wpt
-```
 
 ## Conversion
 

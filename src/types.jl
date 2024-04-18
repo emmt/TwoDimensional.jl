@@ -17,7 +17,7 @@
 is the abstract type of objects with at least 2 properties: `x` and `y`, their
 respective abscissa and ordinate, both of type `T`.
 
-See also: [`Point`](@ref), [`WeightedPoint`](@ref).
+See also [`Point`](@ref).
 
 """
 abstract type AbstractPoint{T} end
@@ -28,7 +28,7 @@ abstract type AbstractPoint{T} end
 
 yield an instance of a 2D point of coordinates `(x,y)`.
 
-A point may be multiplied or divided by a scalar to scale its coordinates.  The
+A point may be multiplied or divided by a scalar to scale its coordinates. The
 addition (resp. subtraction) of two points adds (resp. subtracts) their
 coordinates.
 
@@ -47,7 +47,7 @@ or:
 
     x, y = pnt
 
-See also: [`WeightedPoint`](@ref), [`AbstractPoint`](@ref).
+See also [`AbstractPoint`](@ref).
 
 """
 struct Point{T} <: AbstractPoint{T}
@@ -68,34 +68,6 @@ their abscissa and ordinate.
 
 """
 const PointLike = Union{AbstractPoint,Tuple{Any,Any},CartesianIndex{2}}
-
-"""
-    WeightedPoint{T}(w,x,y)
-
-yields a weighted point which has 3 fields: `w` its weight, `x` its abscissa
-and `y` its ordinate, all of type `T`.  By convention `w ≥ 0` but this is not
-checked for efficiency reasons.
-
-See also: [`Point`](@ref), [`AbstractPoint`](@ref).
-
-""" WeightedPoint
-
-struct WeightedPoint{T<:AbstractFloat}  <: AbstractPoint{T}
-    vals::NTuple{3,T} # w, x, y
-    WeightedPoint{T}(vals::NTuple{3,Real}) where {T} = new{T}(vals)
-end
-
-"""
-    TwoDimensional.WeightedPointLike
-
-is the union of types that may be used to specify a weighted point in
-`TwoDimensional` package.
-
-[`WeightedPoint`](@ref) constructor can build an instance from any argument of
-these types.
-
-"""
-const WeightedPointLike = Union{WeightedPoint,Tuple{Any,Any,Any}}
 
 """
     BoundingBox(xmin,xmax,ymin,ymax)
