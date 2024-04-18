@@ -44,4 +44,14 @@ end
 
 # Extend basic methods for abstract points.
 Base.eltype(::AbstractPoint{T}) where {T} = T
+Base.eltype(::Type{<:AbstractPoint{T}}) where {T} = T
 Base.CartesianIndex(pnt::AbstractPoint{<:Integer}) = CartesianIndex(get_xy(pnt)...)
+
+"""
+    coord_type(obj) -> T
+
+yields the coordinate type of a geometrical object or of its type.
+
+"""
+coord_type(::GeometricObject{T}) where {T} = T
+coord_type(::Type{<:GeometricObject{T}}) where {T} = T

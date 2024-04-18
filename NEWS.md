@@ -12,6 +12,9 @@
   specifically used/imported. For example with: `using TwoDimensional:
   AffineTransform2D, Point2D, BoundingBox2D`.
 
+- Exported method `coord_type` yields the type of the coordinates for
+  a geometric object or for its type.
+
 ### Points and bounding-boxes
 
 - `map` and broadcasting rules have been extended to be more consistent for

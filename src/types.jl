@@ -12,6 +12,25 @@
 #
 
 """
+    TwoDimensional.GeometricObject{T}
+
+is the super-type of geometric objects whose coordinates are of type `T`. Most
+computations assume that `T` is floating-point (possibly with units).
+
+"""
+abstract type GeometricObject{T} end
+
+"""
+    TwoDimensional.GeometricElement{T} <: TwoDimensional.GeometricObject{T}
+
+is the super-type of elementary geometric objects whose coordinates are of type
+`T`. Concrete objects of this type are the building blocks or more complex
+geometric objects.
+
+"""
+abstract type GeometricElement{T} <: GeometricObject{T} end
+
+"""
     AbstractPoint{T}
 
 is the abstract type of objects with at least 2 properties: `x` and `y`, their
@@ -20,7 +39,7 @@ respective abscissa and ordinate, both of type `T`.
 See also [`Point`](@ref).
 
 """
-abstract type AbstractPoint{T} end
+abstract type AbstractPoint{T} <: GeometricElement{T} end
 
 """
     Point(x,y)
@@ -105,7 +124,7 @@ or:
 See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
 
 """
-struct BoundingBox{T}
+struct BoundingBox{T} <: GeometricElement{T}
     vals::NTuple{4,T} # xmin, xmax, ymin, ymax
     BoundingBox{T}(vals::NTuple{4,Any}) where {T} = new{T}(vals)
 end

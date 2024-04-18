@@ -119,6 +119,7 @@ end
         @test_throws BoundsError pnt[3]
         @test_throws KeyError pnt.vals
         @test occursin(r"^Point{Float64}\(", string(pnt))
+        @test coord_type(pnt) === coord_type(typeof(pnt)) === eltype(pnt)
 
         box = @inferred BoundingBox(1.2,sqrt(2),-3,11)
         @test length(box) === length(getfield(box, 1))
@@ -133,6 +134,7 @@ end
         @test_throws BoundsError box[5]
         @test_throws KeyError box.vals
         @test occursin(r"^BoundingBox{Float64}\(", string(box))
+        @test coord_type(box) === coord_type(typeof(box)) === eltype(box)
     end
     @testset "Simple points" begin
         types = (Int8, Int32, Int64, Float32, Float64)

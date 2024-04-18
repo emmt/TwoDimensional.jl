@@ -19,6 +19,7 @@ export
     Point,
     area,
     center,
+    coord_type,
     distance,
     exterior,
     intercept,
