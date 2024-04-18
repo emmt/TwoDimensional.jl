@@ -19,8 +19,9 @@
   used/imported. For example: `using TwoDimensional: AffineTransform2D,
   rotate`.
 
-- Exported method `coord_type` yields the type of the coordinates for
-  a geometric object or for its type.
+- Exported method `coord_type` yields the type of the coordinates for a
+  geometric object or for its type. Method `promote_coord_type` yields the
+  promoted coordinates type from a list of geometric objects/types.
 
 ### Points and bounding-boxes
 

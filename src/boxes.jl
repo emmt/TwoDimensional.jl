@@ -113,7 +113,7 @@ true. This can be used to extract this rectangular region:
 
     A[BoundingBox(f, A)]
 
-If `A` is a matrix of booleans, `f` is assumed to the identity if not
+If `A` is a matrix of Booleans, `f` is assumed to the identity if not
 specified.
 
 """

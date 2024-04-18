@@ -135,6 +135,28 @@ end
         @test_throws KeyError box.vals
         @test occursin(r"^BoundingBox{Float64}\(", string(box))
         @test coord_type(box) === coord_type(typeof(box)) === eltype(box)
+
+        let pnt_int = Point(-1,2),
+            pnt_f32 = Point(1.0f0,3.0f0),
+            box_f64 = BoundingBox{Float64}(pnt_int, pnt_f32)
+            @test Int     === @inferred coord_type(pnt_int)
+            @test Int     === @inferred coord_type(typeof(pnt_int))
+            @test Float32 === @inferred coord_type(pnt_f32)
+            @test Float32 === @inferred coord_type(typeof(pnt_f32))
+            @test Float64 === @inferred coord_type(box_f64)
+            @test Float64 === @inferred coord_type(typeof(box_f64))
+            @test Int     === @inferred promote_coord_type(pnt_int)
+            @test Int     === @inferred promote_coord_type(typeof(pnt_int))
+            @test Float32 === @inferred promote_coord_type(pnt_f32)
+            @test Float32 === @inferred promote_coord_type(typeof(pnt_f32))
+            @test Float64 === @inferred promote_coord_type(box_f64)
+            @test Float64 === @inferred promote_coord_type(typeof(box_f64))
+            @test Float32 === @inferred promote_coord_type(pnt_int, pnt_f32)
+            @test Float32 === @inferred promote_coord_type(pnt_int,typeof(pnt_f32))
+            @test Float32 === @inferred promote_coord_type(typeof(pnt_int),typeof(pnt_f32))
+            @test Float64 === @inferred promote_coord_type(pnt_int,pnt_f32,box_f64)
+            @test Float64 === @inferred promote_coord_type(typeof(box_f64),pnt_int,pnt_f32)
+        end
     end
     @testset "Simple points" begin
         types = (Int8, Int32, Int64, Float32, Float64)

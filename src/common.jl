@@ -55,3 +55,23 @@ yields the coordinate type of a geometrical object or of its type.
 """
 coord_type(::GeometricObject{T}) where {T} = T
 coord_type(::Type{<:GeometricObject{T}}) where {T} = T
+
+"""
+    promote_coord_type(args...) -> T
+
+yields the promoted coordinate type of geometrical objects/types in `args...`
+
+"""
+@inline promote_coord_type(A::GeometricObject, B...) =
+    _promote_coord_type(coord_type(A), B...)
+
+@inline promote_coord_type(::Type{<:A}, B...) where {A<:GeometricObject} =
+    _promote_coord_type(coord_type(A), B...)
+
+_promote_coord_type(::Type{T}) where {T} = T # end the recursion
+
+@inline _promote_coord_type(::Type{T}, A::GeometricObject, B...) where {T} =
+    _promote_coord_type(promote_type(T, coord_type(A)), B...)
+
+@inline _promote_coord_type(::Type{T}, ::Type{A}, B...) where {T,A<:GeometricObject} =
+    _promote_coord_type(promote_type(T, coord_type(A)), B...)

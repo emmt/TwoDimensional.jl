@@ -25,6 +25,7 @@ export
     intercept,
     interior,
     jacobian,
+    promote_coord_type,
     rotate,
     scale,
     translate,
@@ -45,9 +46,9 @@ import LinearAlgebra: ⋅, det
 
 include("types.jl")
 include("aliases.jl")
-include("basics.jl")
-include("boxes.jl")
+include("common.jl")
 include("points.jl")
+include("boxes.jl")
 include("xforms.jl")
 include("math.jl")
 
