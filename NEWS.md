@@ -8,6 +8,11 @@
 
 - Julia versions older than 1.0 are no longer supported.
 
+- Sub-module `TwoDimensional.Suffixed` has been suppressed, aliases must
+  specifically used/imported. For example with: `using TwoDimensional:
+  AffineTransform2D, Point2D, BoundingBox2D`.
+
+
 ### Points and bounding-boxes
 
 - `map` and broadcasting rules have been extended to be more consistent for

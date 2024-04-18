@@ -22,22 +22,17 @@ The source code of `TwoDimensional` is available on
 using TwoDimensional
 ```
 
-gives you types [`AffineTransform{T}`](@ref AffineTransform), [`Point{T}`](@ref
-Point) and [`BoundingBox{T}`](@ref BoundingBox) parameterized by the type `T`
-of their components (`T` must be floating point for [`AffineTransform{T}`](@ref
-AffineTransform)).
+gives you types [`AffineTransform`](@ref AffineTransform), [`Point`](@ref
+Point) and [`BoundingBox`](@ref BoundingBox).
 
-To avoid conflicts with other packages, you may use/import
-`TwoDimensional.Suffixed` which gives you types [`AffineTransform2D{T}`](@ref
-AffineTransform2D), [`Point2D{T}`](@ref Point2D) and [`BoundingBox2D{T}`](@ref
-BoundingBox2D) instead, that is with suffix `2D`.
-
-You can also fine tune what you want.  For instance:
+To avoid conflicts with other packages, you may specifically use/import
+aliases to these types with suffixes `2D` like [`AffineTransform2D`](@ref
+AffineTransform2D), [`Point2D`](@ref Point2D), [`BoundingBox2D`](@ref
+BoundingBox2D), etc. For example:
 
 ```julia
-using TwoDimensional: AffineTransform, Point2D
+using TwoDimensional: AffineTransform2D, Point2D, BoundingBox2D
 ```
-
 
 ## Table of contents
 

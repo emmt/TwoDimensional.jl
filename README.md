@@ -25,18 +25,14 @@ Other related packages:
 using TwoDimensional
 ```
 
-gives you types `AffineTransform{T}`, `Point{T}` and `BoundingBox{T}`
-parameterized by the type `T` of their components (`T` must be floating point
-for `AffineTransform{T}`).
+gives you types `AffineTransform`, `Point` and `BoundingBox`.
 
-To avoid conflicts with other packages, you may use/import
-`TwoDimensional.Suffixed` which gives you types `AffineTransform2D{T}`,
-`Point2D{T}` and `BoundingBox2D{T}` instead, that is with suffix `2D`.
-
-You can also fine tune what you want.  For instance:
+To avoid conflicts with other packages, you may specifically use/import aliases
+to these types with suffixes `2D` like `AffineTransform2D`, `Point2D`,
+`BoundingBox2D`, etc. For example:
 
 ```julia
-using TwoDimensional: AffineTransform, Point2D
+using TwoDimensional: AffineTransform2D, Point2D, BoundingBox2D
 ```
 
 ## Documentation

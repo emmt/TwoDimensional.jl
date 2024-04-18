@@ -55,6 +55,6 @@ import .AffineTransforms:
     scale,
     translate
 include("math.jl")
-include("suffixed.jl")
+include("aliases.jl")
 
 end # module TwoDimensional
