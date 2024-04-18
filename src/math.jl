@@ -10,6 +10,26 @@ end
 @inline Base.map(f, box::BoundingBox; swap::Bool = false) =
     BoundingBox(map(f, swap ? (box.xmax, box.xmin, box.ymax, box.ymin) : Tuple(box)))
 
+# Check for equality.
+Base.:(==)(a::Point, b::Point) =
+    (a.x == b.x) &
+    (a.y == b.y)
+Base.:(==)(a::BoundingBox, b::BoundingBox) =
+    (a.xmin == b.xmin) &
+    (a.ymin == b.ymin) &
+    (a.xmax == b.xmax) &
+    (a.ymax == b.ymax)
+
+# Check for approximate equality.
+Base.isapprox(a::Point, b::Point; kwds...) =
+    isapprox(a.x, b.x; kwds...) &&
+    isapprox(a.y, b.y; kwds...)
+Base.isapprox(a::BoundingBox, b::BoundingBox; kwds...) =
+    isapprox(a.xmin, b.xmin; kwds...) &&
+    isapprox(a.ymin, b.ymin; kwds...) &&
+    isapprox(a.xmax, b.xmax; kwds...) &&
+    isapprox(a.ymax, b.ymax; kwds...)
+
 # Extend ∈ operator.
 Base.in(pnt::AbstractPoint, box::BoundingBox) =
     (box.xmin ≤ pnt.x ≤ box.xmax) & (box.ymin ≤ pnt.y ≤ box.ymax)
