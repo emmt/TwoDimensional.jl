@@ -34,7 +34,13 @@
 
 - Use `A ⊆ B` to check whether bounding-box `A` is contained in bounding-box
   `B` (the syntax `A ∈ B` is no longer implemented for that) and `P ∈ B` to
-  check whether point `P` is inside bounding-box `B`
+  check whether point `P` is inside bounding-box `B`.
+
+- Points can be defined by their polar coordinates and `hypot`, `abs`, and
+  `norm` yield the distance of a point distance to the origin, while `atan`
+  yields its polar angle and `abs2` yields its squared distance to the origin.
+  `TwoDimensional.inner` and `TwoDimensional.outer` compute the inner and outer
+  products of two points.
 
 - Weighted points, of non-exported type `TwoDimensional.WeightedPoint`, have
   been removed due to coordinates possibly having units. They may come back but

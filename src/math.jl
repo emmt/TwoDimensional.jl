@@ -170,9 +170,15 @@ function Base.clamp(pnt::Point, box::BoundingBox)
     return Point{T}(x, y)
 end
 
-# Methods hypot() and atan() yield the polar coordinates of a point.
+# Mathematic functions for points.
 Base.hypot(pnt::Point) = hypot(pnt.x, pnt.y)
-Base.atan(pnt::Point) = atan(pnt.y, pnt.x)
+Base.abs(pnt::Point) = hypot(pnt)
+Base.abs2(pnt::Point) = abs2(pnt.x) + abs2(pnt.y)
+LinearAlgebra.norm(pnt::Point) = abs(pnt)
+Base.Math.atan(pnt::Point) = atan(pnt.y, pnt.x)
+inner(a::Point, b::Point) = a.x*b.x + a.y*b.y # scalar/inner product
+outer(a::Point, b::Point) = a.x*b.y - a.y*b.x # outer product
+Base.:(*)(a::Point, b::Point) = inner(a, b) # scalar product
 
 """
     distance(A, B)

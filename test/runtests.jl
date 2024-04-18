@@ -147,6 +147,22 @@ end
         @test Point{eltype(P1)}(P1) === P1
         @test eltype(Point(1,2)) == Int
         @test Point(1,2) === Point(y=2, x=1)
+        for pnt in (Point(1,2), Point(-1.0, 3.5))
+            let r = hypot(pnt.x, pnt.y), θ = atan(pnt.y, pnt.x)
+                @test hypot(pnt) ≈ r
+                @test norm(pnt) ≈ r
+                @test abs(pnt) ≈ r
+                @test abs2(pnt) ≈ r^2
+                @test atan(pnt) ≈ θ
+                @test Point(r = r, θ = θ) ≈ pnt
+            end
+        end
+        let a = Point(1,2), b = Point(-1.0, 3.5)
+            @test TwoDimensional.inner(a, b) ≈ (a.x*b.x + a.y*b.y)
+            @test TwoDimensional.inner(b, a) ≈ (a.x*b.x + a.y*b.y)
+            @test TwoDimensional.outer(a, b) ≈ (a.x*b.y - a.y*b.x)
+            @test TwoDimensional.outer(b, a) ≈ (a.y*b.x - a.x*b.y)
+        end
         @test Point(CartesianIndex(7,8)) === Point(7,8)
         @test CartesianIndex(Point(2,3)) === CartesianIndex(2,3)
         #@test convert(CartesianIndex, Point(2,3)) === CartesianIndex(2,3)

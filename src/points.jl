@@ -1,18 +1,20 @@
 """
-    Point(x,y)
-    Point((x,y))
+    Point{T}(x,y)
+    Point{T}((x,y))
+    Point{T}(; x=..., y=...)
+    Point{T}(; r=..., θ=...)
 
-yield an instance of a 2D point of coordinates `(x,y)`.
+construct a point given its Cartesian coordinates `(x,y)` (in the 3 first
+examples) or its polar coordinates (in the last example) with `r` the distance
+to the origin and `θ` the counterclockwise angle relative to `x`-axis.
+Parameter `T` is the type used to store coordinates, it may be omitted.
+
+Note that, in `TwoDimensional`, `x` and `y` respectively correspond to the 1st
+and 2nd dimensions of 2-dimensional arrays.
 
 A point may be multiplied or divided by a scalar to scale its coordinates. The
 addition (resp. subtraction) of two points adds (resp. subtracts) their
 coordinates.
-
-Coordinates can be specified by keywords:
-
-    Point(x=xval, y=yval)
-
-There are no default values for keywords `x` and `y` so both must be specified.
 
 The coordinates of a `Point`, say `pnt`, can be retrieved as follows:
 
@@ -23,6 +25,9 @@ or:
 
     x, y = pnt
 
+the polar coordinates of the point can be retrieved by `hypot(pnt) -> r`,
+`abs(pnt) -> r`, or `norm(pnt) -> r`, and by `atan(pnt) -> θ`.
+
 See also [`AbstractPoint`](@ref).
 
 """
@@ -30,8 +35,19 @@ Point{T}(x, y) where {T} = Point{T}((x, y))
 Point(x, y) = Point(promote(x, y))
 Point(x::T, y::T) where {T} = Point{T}(x, y)
 
-Point(; x, y) = Point(x, y)
-Point{T}(; x, y) where {T} = Point{T}(x, y)
+# Keyword-only constructor.
+@inline Point(; kwds...) = build(Point; kwds...)
+@inline Point{T}(; kwds...) where {T} = build(Point{T}; kwds...)
+@inline build(::Type{T}; x=nothing, y=nothing, r=nothing, θ=nothing) where {T<:Point} =
+    if (x !== nothing) & (y !== nothing) & (r === nothing) & (θ === nothing)
+        return T(x, y)
+    elseif (x === nothing) & (y === nothing) & (r !== nothing) & (θ !== nothing)
+        sinθ, cosθ = sincos(θ)
+        return T(r*cosθ, r*sinθ)
+    else
+        throw(ArgumentError(
+            "exclusively keywords `x` and `y` or `r` and `θ` must be specified"))
+    end
 
 Point(pnt::Point) = pnt
 Point{T}(pnt::Point{T}) where {T} = pnt

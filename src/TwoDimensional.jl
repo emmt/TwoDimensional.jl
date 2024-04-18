@@ -28,8 +28,9 @@ export
     rotate,
     scale,
     translate,
-    # Re-export from LinearAlgebra
-    det
+    # Re-exports from LinearAlgebra
+    det,
+    norm
 
 #using TypeUtils
 using Unitless

@@ -31,7 +31,7 @@ geometric objects.
 abstract type GeometricElement{T} <: GeometricObject{T} end
 
 """
-    AbstractPoint{T}
+    AbstractPoint{T} <: TwoDimensional.GeometricElement{T}
 
 is the abstract type of objects with at least 2 properties: `x` and `y`, their
 respective abscissa and ordinate, both of type `T`.
