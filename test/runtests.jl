@@ -2,7 +2,7 @@ module TwoDimensionalTests
 
 using TwoDimensional
 using TwoDimensional: WeightedPoint, PointLike, compose, get_x, get_y, get_xy, factors_type, offsets_type
-using TwoDimensional: half, get_axis_bounds
+using TwoDimensional: get_axis_bounds
 using Test, LinearAlgebra, Unitless
 import Base.MathConstants: φ
 
@@ -441,8 +441,6 @@ end
         @test view(A,X,Y) === view(A, B)
     end
     @testset "Arithmetic" begin
-        @test half(Float64) == 0.5
-        @test half(Float32) == one(Float32)/2
         @test 2*Point(3,4) === Point(6,8)
         @test Point(3,4)*3 === Point(9,12)
         @test 3\Point(3,4) === Point(3/3,4/3)
