@@ -3,7 +3,7 @@
 for type in (:Point, :WeightedPoint, :BoundingBox)
     @eval begin
         Broadcast.broadcasted(::Type{T}, obj::$type) where {T} = map(T, obj)
-        Broadcast.broadcasted(f::Function, obj::$type) where {T} = map(f, obj)
+        Broadcast.broadcasted(f::Function, obj::$type) = map(f, obj)
     end
 end
 @inline Base.map(f, pnt::Point) = Point(map(f, Tuple(pnt)))
