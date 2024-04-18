@@ -40,6 +40,8 @@
 - Method `TypeUtils.as` is extended to convert points and bounding-boxes
   to/from tuples.
 
+- Taking the center of an empty bounding-box throws an error.
+
 ### Affine transforms
 
 - Unary minus is implemented for affine transforms.

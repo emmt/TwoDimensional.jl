@@ -40,6 +40,9 @@ using LinearAlgebra
 
 include("types.jl")
 include("basics.jl")
+include("boxes.jl")
+include("points.jl")
+include("weightedpoints.jl")
 include("xforms.jl")
 import .AffineTransforms:
     AffineTransform,
@@ -51,6 +54,7 @@ import .AffineTransforms:
     rotate,
     scale,
     translate
+include("math.jl")
 include("suffixed.jl")
 
 end # module TwoDimensional
