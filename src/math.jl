@@ -90,12 +90,8 @@ Base.:(+)(A::BoundingBox, B::BoundingBox) =
 Base.:(-)(A::BoundingBox, B::BoundingBox) = A + (-B)
 
 # Add or remove a margin δ to a bounding-box box.
-Base.:(+)(box::BoundingBox, δ::Number) =
-    BoundingBox(box.xmin - δ, box.xmax + δ,
-                box.ymin - δ, box.ymax + δ)
-Base.:(-)(box::BoundingBox, δ::Number) =
-    BoundingBox(box.xmin + δ, box.xmax - δ,
-                box.ymin + δ, box.ymax - δ)
+Base.:(+)(box::BoundingBox, δ::Number) = grow(box, δ)
+Base.:(-)(box::BoundingBox, δ::Number) = shrink(box, δ)
 
 # Translate a bounding-box.
 Base.:(+)(box::BoundingBox, pnt::Point) =
@@ -104,7 +100,6 @@ Base.:(+)(box::BoundingBox, pnt::Point) =
 Base.:(-)(box::BoundingBox, pnt::Point) =
     BoundingBox(box.xmin - pnt.x, box.xmax - pnt.x,
                 box.ymin - pnt.y, box.ymax - pnt.y)
-
 
 """
     round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])

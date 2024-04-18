@@ -208,6 +208,38 @@ Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     view(A, B.xmin:B.xmax, B.ymin:B.ymax)
 
 """
+    TwoDimensional.grow(box, dx, dy=dx)
+
+yields a new bounding-box object corresponding to the input `box` object with 1st and
+2nd dimensions respectively grown by `dx` and `dy`.
+
+Note that the algebraic (not absolute) values are applied. Hence, if `dx` and
+`dy` are both negative, the bounding-box is effectively shrunk by `abs(dx)` and
+`abs(dy)`.
+
+See also [`TwoDimensional.shrink`](@ref).
+
+"""
+grow(box::BoundingBox, dx, dy=dx) = BoundingBox((box.xmin - dx, box.ymin - dy),
+                                                (box.xmax + dx, box.ymax + dy))
+
+"""
+    TwoDimensional.shrink(box, dx, dy=dx)
+
+yields a new bounding-box object corresponding to the input `box` object with 1st and
+2nd dimensions respectively shrunk by `dx` and `dy`.
+
+Note that the algebraic (not absolute) values are applied. Hence, if `dx` and
+`dy` are both negative, the bounding-box is effectively grown by `abs(dx)` and
+`abs(dy)`.
+
+See also [`TwoDimensional.grow`](@ref).
+
+"""
+shrink(box::BoundingBox, dx, dy=dx) = BoundingBox((box.xmin + dx, box.ymin + dy),
+                                                  (box.xmax - dx, box.ymax - dy))
+
+"""
     interior([T,] box)
 
 yields the largest bounding-box with integer valued bounds and which is
