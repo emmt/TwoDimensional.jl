@@ -42,6 +42,11 @@
   `TwoDimensional.inner` and `TwoDimensional.outer` compute the inner and outer
   products of two points.
 
+- `BoundingBox(obj)` yields the bounding-box of the geometric object `obj`.
+  `BoundingBox(f,arr)` yields the bounding-box of the entries of the
+  2-dimensional array `A` such that `f(A[i,j])` is true. If `A` is an array of
+  Booleans, `f` is assumed to the identity if not specified.
+
 - Weighted points, of non-exported type `TwoDimensional.WeightedPoint`, have
   been removed due to coordinates possibly having units. They may come back but
   with 2 type parameters: one for the weight, the other for the coordinates.

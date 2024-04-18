@@ -95,10 +95,33 @@ function Base.show(io::IO, box::BoundingBox{T}) where {T}
     print(io, ")")
 end
 
+"""
+    BoundingBox{T}(obj)
+
+yields the bounding-box of the geometric object `obj`. If the coordinate type
+`T` is not provided, `T = coord_type(obj)` is assumed.
+
+"""
+BoundingBox(obj::GeometricObject{T}) where {T} = BoundingBox{T}(obj)
+BoundingBox{T}(pnt::Point) where {T} = BoundingBox{T}(pnt, pnt)
+
+"""
+    BoundingBox(f, A::AbstractMatrix)
+
+yields the minimal bounding-box of the entries of `A` such that `f(A[i,j])` is
+true. This can be used to extract this rectangular region:
+
+    A[BoundingBox(f, A)]
+
+If `A` is a matrix of booleans, `f` is assumed to the identity if not
+specified.
+
+"""
+BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
+
 # See
 # https://stackoverflow.com/questions/9852159/calculate-bounding-box-of-arbitrary-pixel-based-drawing
 # for the basic ideas under the following algorithm.
-BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
 function BoundingBox(f::Function, A::AbstractMatrix)
     I, J = axes(A)
     i0, i1 = get_axis_bounds(I)
