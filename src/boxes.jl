@@ -199,10 +199,8 @@ Base.axes(box::BoundingBox{<:Integer}, d::Integer) =
     error("invalid dimension index")
 
 # Use bounding-boxes to extract a sub-array or a view.
-@propagate_inbounds function Base.getindex(A::AbstractMatrix,
-                                           B::BoundingBox{<:Integer})
+@propagate_inbounds Base.getindex(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     A[B.xmin:B.xmax, B.ymin:B.ymax]
-end
 
 Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
     view(A, B.xmin:B.xmax, B.ymin:B.ymax)

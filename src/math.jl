@@ -39,23 +39,32 @@ Base.issubset(A::BoundingBox, B::BoundingBox) =
     (isempty(A)|((A.xmin ≥ B.xmin)&(A.xmax ≤ B.xmax)&
                  (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
 
-# Union of bounding-boxes:
-Base.:(∪)(A::BoundingBox, B::BoundingBox) =
+# Operator ∪, union of bounding-boxes.
+Base.union(A::BoundingBox, B::BoundingBox) =
     BoundingBox(min(A.xmin, B.xmin), max(A.xmax, B.xmax),
                 min(A.ymin, B.ymin), max(A.ymax, B.ymax))
 
-# Intersection of bounding-boxes:
-Base.:(∩)(A::BoundingBox, B::BoundingBox) =
+# Operator ∩, intersection of bounding-boxes.
+Base.intersect(A::BoundingBox, B::BoundingBox) =
     BoundingBox(max(A.xmin, B.xmin), min(A.xmax, B.xmax),
                 max(A.ymin, B.ymin), min(A.ymax, B.ymax))
 
+# Common mathematical operations on geometric objects. Adding a point to a
+# geometric object amounts to shifting the object. Unary plus does nothing.
+# Unary minus behaves as multiplying by -1. Multiplying/dividing a geometric
+# object by a number amounts to scaling around origin.
+
+# Just permute operands for some common operations on geometric objects.
+Base.:(+)(a::Point, b::GeometricObject) = b + a
+Base.:(*)(a::GeometricObject, b::Number) = b*a
+Base.:(\)(a::Number, b::GeometricObject) = b/a
+
 # Unary plus does nothing.
-Base.:(+)(pnt::Point) = pnt
-Base.:(+)(box::BoundingBox) = box
+Base.:(+)(a::GeometricObject) = a
 
 # Unary minus negates coordinates.
-Base.:(-)(pnt::Point) = map(-, pnt)
-Base.:(-)(box::BoundingBox) = map(-, box; swap=true)
+Base.:(-)(pnt::Point) = Point(-pnt.x, -pnt.y)
+Base.:(-)(box::BoundingBox) = BoundingBox(-last(box), -first(box))
 
 # Extend "trait" methods for points and bounding-boxes.
 Base.zero(obj::Union{Point,BoundingBox}) = zero(typeof(obj))
@@ -63,10 +72,8 @@ Base.one(obj::Union{Point,BoundingBox}) = one(typeof(obj))
 
 # Scaling of points and corresponding multiplicative identity.
 Base.one(::Type{Point{T}}) where {T} = one(T)
-Base.:(*)(pnt::Point, α::Number) = α*pnt
 Base.:(*)(α::Number, pnt::Point) = map(Base.Fix1(*,α), pnt)
 Base.:(/)(pnt::Point, α::Number) = map(Base.Fix2(/,α), pnt)
-Base.:(\)(α::Number, pnt::Point) = pnt/α
 
 # Scaling of bounding-box bounds (e.g. to change units) and corresponding
 # multiplicative identity.
