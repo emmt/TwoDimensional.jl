@@ -1,4 +1,39 @@
-# Box limits specified by 4 arguments.
+"""
+    BoundingBox(xmin,xmax,ymin,ymax)
+    BoundingBox((xmin,ymin),(xmax,ymax))
+
+yield an instance of a 2D rectangular bounding-box whose sides are aligned with
+the coordinate axes and containing points of coordinates `(x,y)` such that
+`xmin ≤ x ≤ xmax` and `ymin ≤ y ≤ ymax`. The box is *empty* if `xmin > xmax` or
+`ymin > ymax`.
+
+A bounding-box can be constructed from the first and last points (i.e. at the
+lower-left and upper right opposite corners) of the box:
+
+    BoundingBox(P0::Point, P1::Point)
+    BoundingBox(I0::CartesianIndex{2}, I1::CartesianIndex{2})
+
+Coordinates can be specified by keywords:
+
+    BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
+
+There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
+all must be specified.
+
+The coordinates of a `BoundingBox`, say `box`, can be retrieved as follows:
+
+    box.xmin  or  box[1]  ->  xmin
+    box.xmax  or  box[2]  ->  xmax
+    box.ymin  or  box[3]  ->  ymin
+    box.ymax  or  box[4]  ->  ymax
+
+or:
+
+    xmin, xmax, ymin, ymax = box
+
+See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
+
+"""
 BoundingBox{T}(xmin, xmax, ymin, ymax) where {T} = BoundingBox{T}((xmin, xmax, ymin, ymax))
 BoundingBox(xmin, xmax, ymin, ymax) = BoundingBox(promote(xmin, xmax, ymin, ymax))
 BoundingBox(xmin::T, xmax::T, ymin::T, ymax::T) where {T} =

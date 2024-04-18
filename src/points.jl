@@ -1,4 +1,31 @@
-# Other constructors of points.
+"""
+    Point(x,y)
+    Point((x,y))
+
+yield an instance of a 2D point of coordinates `(x,y)`.
+
+A point may be multiplied or divided by a scalar to scale its coordinates. The
+addition (resp. subtraction) of two points adds (resp. subtracts) their
+coordinates.
+
+Coordinates can be specified by keywords:
+
+    Point(x=xval, y=yval)
+
+There are no default values for keywords `x` and `y` so both must be specified.
+
+The coordinates of a `Point`, say `pnt`, can be retrieved as follows:
+
+    pnt.x  or  pnt[1]  ->  x
+    pnt.y  or  pnt[2]  ->  y
+
+or:
+
+    x, y = pnt
+
+See also [`AbstractPoint`](@ref).
+
+"""
 Point{T}(x, y) where {T} = Point{T}((x, y))
 Point(x, y) = Point(promote(x, y))
 Point(x::T, y::T) where {T} = Point{T}(x, y)
