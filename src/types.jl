@@ -33,6 +33,29 @@ geometric objects.
 abstract type GeometricElement{T} <: GeometricObject{T} end
 
 """
+    TwoDimensional.ShapeElement{T} <: TwoDimensional.GeometricElement{T}
+
+is the super-type of elementary geometric objects whose coordinates are of type
+`T` and which can be used to specify boundaries.
+
+"""
+abstract type ShapeElement{T} <: GeometricElement{T} end
+
+"""
+    TwoDimensional.MaskElement(shape::ShapeElement, opaque::Bool)
+
+builds a simple mask whose boundaries are defined by `shape` and which is
+opaque (i.e., an obscuration) if `opaque` is true and transparent (i.e., an
+aperture) otherwise.
+
+"""
+struct MaskElement{T,S} <: ShapeElement{T}
+    shape::S
+    opaque::Bool
+    MaskElement(obj::S, opaque::Bool) where {T,S<:ShapeElement{T}} = new{T,S}(obj, opaque)
+end
+
+"""
     AbstractPoint{T} <: TwoDimensional.GeometricElement{T}
 
 is the abstract type of objects with at least 2 properties: `x` and `y`, their
@@ -44,28 +67,63 @@ See also [`Point`](@ref).
 abstract type AbstractPoint{T} <: GeometricElement{T} end
 
 struct Point{T} <: AbstractPoint{T}
-    vals::NTuple{2,T} # x, y
-    Point{T}(vals::NTuple{2,Any}) where {T} = new{T}(vals)
+    vec::NTuple{2,T} # x, y
+    # Inner constructor: Point{T}(x::T, y::T)
+    Point{T}(xy::Vararg{T,2}) where {T} = new{T}(xy)
 end
+
+const Points{T} = Union{AbstractVector{Point{T}},Tuple{Vararg{Point{T}}}}
+
+struct Rectangle{T} <: ShapeElement{T}
+    vec::NTuple{2,Point{T}} # Point(x0, y0), Point(x1, y1)
+    function Rectangle{T}(start::Point{T}, stop::Point{T}) where {T}
+        # The coordinates are ordered.
+        x0, x1 = fastminmax(start.x, stop.x)
+        y0, y1 = fastminmax(start.y, stop.y)
+        return new{T}((Point{T}(x0, y0), Point{T}(x1, y1)))
+    end
+end
+
+struct BoundingBox{T} <: GeometricElement{T}
+    vec::NTuple{2,Point{T}} # Point(xmin, ymin), Point(xmax, ymax)
+    BoundingBox{T}(startstop::Vararg{Point{T},2}) where {T} = new{T}(startstop)
+end
+
+const RectangularObject{T} = Union{BoundingBox{T},Rectangle{T}}
 
 """
     TwoDimensional.PointLike
 
-is the union of types that may be used to specify a point in `TwoDimensional`
-package.
+is the union of types that can be converted into a
+[`TwoDimensional.Point`](@ref).
 
-[`Point`](@ref) constructor can build an instance from any argument of these
-types. Accessors [`TwoDimensional.get_x`](@ref) and
+The [`Point`](@ref) constructor can build an instance from any argument of
+these types. Accessors [`TwoDimensional.get_x`](@ref) and
 [`TwoDimensional.get_y`](@ref) may be used on objects of such type to retrieve
 their abscissa and ordinate.
 
 """
-const PointLike = Union{AbstractPoint,Tuple{Any,Any},CartesianIndex{2}}
+const PointLike = Union{AbstractPoint,
+                        NTuple{2,Number}, # NOTE: Purposely more restrictive
+                                          #       than when calling explicitly
+                                          #       the constructor to avoid
+                                          #       ambiguities.
+                        CartesianIndex{2}}
 
-struct BoundingBox{T} <: GeometricElement{T}
-    vals::NTuple{4,T} # xmin, xmax, ymin, ymax
-    BoundingBox{T}(vals::NTuple{4,Any}) where {T} = new{T}(vals)
-end
+"""
+    TwoDimensional.RectangleLike
+
+is the union of types that may be used to specify a rectangle in
+`TwoDimensional` package.
+
+The [`Rectangle`](@ref) constructor can build an instance from any argument of
+these types.
+
+"""
+const RectangleLike = Union{Rectangle,
+                            NTuple{2,AbstractPoint},
+                            NTuple{2,NTuple{2,Number}},
+                            NTuple{2,CartesianIndex{2}}}
 
 """
     TwoDimensional.BoundingBoxLike
@@ -73,13 +131,13 @@ end
 is the union of types that may be used to specify a bounding-box in
 `TwoDimensional` package.
 
-[`BoundingBox`](@ref) constructor can build an instance from any argument of
-these types.
+The [`BoundingBox`](@ref) constructor can build an instance from any argument
+of these types.
 
 """
-const BoundingBoxLike = Union{BoundingBox,NTuple{2,AbstractPoint},
-                              Tuple{Tuple{Any,Any},Tuple{Any,Any}},
-                              Tuple{Any,Any,Any,Any},
+const BoundingBoxLike = Union{BoundingBox,
+                              NTuple{2,AbstractPoint},
+                              NTuple{2,NTuple{2,Number}},
                               NTuple{2,CartesianIndex{2}},
                               NTuple{2,AbstractUnitRange{<:Integer}},
                               CartesianIndices{2}}

@@ -1,16 +1,24 @@
 """
-    BoundingBox{T}(ll::Point, ur::Point)
-    BoundingBox{T}(ll::CartesianIndex{2}, ur::CartesianIndex{2})
-    BoundingBox{T}((llx,lly), (urx,ury))
-    BoundingBox{T}(xmin,xmax,ymin,ymax)
-    BoundingBox{T}(xmin=llx, xmax=urx, ymin=lly, ymax=ury)
+    box = BoundingBox{T}(start, stop)
+    box = BoundingBox{T}((xmin,ymin), (xmax,ymax))
+    box = BoundingBox{T}(; start=..., stop=...)
+    box = BoundingBox{T}(; xmin=..., xmax=..., ymin=..., ymax=...)
 
 construct a rectangular bounding-box with edges aligned with the Cartesian axes
-and given the coordinates of its lower-left, `ll`, and upper-right, `ur`,
-corners or the limits `xmin`, `xmax`, `ymin`, and `ymax` of the bounding-box.
-Parameter `T` is the type used to store coordinates, it may be omitted.
-Arguments to build a bounding-box may also be concatenated in a tuple, for
-example: `BoundingBox(((llx,lly), (urx,ury)))` is valid.
+and given the coordinates of 2 opposite corners, `start` and `stop`, whose
+coordinates, `(xmin,ymin)` and `(xmax,ymax)`, may be specified as points, as
+2-tuples, as 2-dimensional Cartesian indices, or by keywords. Parameter `T` is
+the type used to store coordinates, it may be omitted.
+
+Bounding-boxes have the following properties which reflect the keywords
+accepted by their constructor:
+
+    box.xmin  -> xmax::T
+    box.xmax  -> xmax::T
+    box.ymin  -> ymax::T
+    box.ymax  -> ymax::T
+    box.start -> start::Point{T}
+    box.stop  -> stop::Point{T}
 
 A bounding-box is assumed to contain all points of coordinates `(x,y)` such
 that `xmin ≤ x ≤ xmax` and `ymin ≤ y ≤ ymax`. If `xmin > xmax` or `ymin >
@@ -20,80 +28,121 @@ Boxes are used to represent grid cells and bounding-boxes of other geometric
 shape. Use [`TwoDimensional.Rectangle`](@ref) if you want to define rectangular
 masks.
 
-The coordinates of a `BoundingBox`, say `box`, can be retrieved as follows:
+Bounding-boxes are indexable iterators:
 
-    box.xmin  or  box[1]  ->  xmin
-    box.xmax  or  box[2]  ->  xmax
-    box.ymin  or  box[3]  ->  ymin
-    box.ymax  or  box[4]  ->  ymax
+    length(box)     -> 2
+    firstindex(box) -> 1
+    lastindex(box)  -> 2
+    box[1]          -> box.start
+    box[2]          -> box.stop
+    first(box)      -> box.start
+    last(box)       -> box.stop
+    Tuple(box)      -> (box.start, box.stop)
 
-or:
+Hence, the parameters of a bounding-box can be retrieved by:
 
-    xmin, xmax, ymin, ymax = box
+    start, stop = box
+    (xmin, ymin), (xmax, ymax) = box
 
-See also [`Point`](@ref), [`interior`](@ref), [`exterior`](@ref).
+See also [`Point`](@ref), [`Rectangle`](@ref), [`interior`](@ref), and
+[`exterior`](@ref).
 
 """
-BoundingBox{T}(xmin, xmax, ymin, ymax) where {T} = BoundingBox{T}((xmin, xmax, ymin, ymax))
-BoundingBox(xmin, xmax, ymin, ymax) = BoundingBox(promote(xmin, xmax, ymin, ymax))
-BoundingBox(xmin::T, xmax::T, ymin::T, ymax::T) where {T} =
-    BoundingBox{T}(xmin, xmax, ymin, ymax)
+BoundingBox(start::Point{T}, stop::Point{T}) where {T} = BoundingBox{T}(start, stop)
+BoundingBox(start::Point, stop::Point) = BoundingBox(promote(start, stop)...)
+BoundingBox{T}(start::Point, stop::Point) where {T} =
+    BoundingBox{T}(Point{T}(start), Point{T}(stop))
 
-# Box limits specified by keywords.
-BoundingBox(; xmin, xmax, ymin, ymax) = BoundingBox(xmin, xmax, ymin, ymax)
-BoundingBox{T}(; xmin, xmax, ymin, ymax) where {T} = BoundingBox{T}(xmin, xmax, ymin, ymax)
-
-# Box specified by a ... box.
-BoundingBox(box::BoundingBox) = box
-BoundingBox{T}(box::BoundingBox{T}) where {T} = box
-BoundingBox{T}(box::BoundingBox) where {T} = BoundingBox{T}(Tuple(box))
-
-# Box limits specified as unit-ranges.
-let type = :(AbstractUnitRange{<:Integer}),
-    expr = (:(first(xrng)), :(last(xrng)), :(first(yrng)), :(last(yrng)))
-    for args in ((:(xrng::$type), :(yrng::$type)),
-                 (:((xrng,yrng)::Tuple{$type,$type}),))
-        @eval begin
-            BoundingBox($(args...)) = BoundingBox($(expr...))
-            BoundingBox{T}($(args...)) where {T} = BoundingBox{T}($(expr...))
-        end
+# Bounding-box constructors for `start` and `stop` specified as other
+# point-like objects than points.
+for type in (:(NTuple{2,Any}), :(CartesianIndex{2}))
+    @eval begin
+        BoundingBox(start::$type, stop::$type) = BoundingBox(Point(start), Point(stop))
+        BoundingBox{T}(start::$type, stop::$type) where {T} =
+            BoundingBox{T}(Point(start), Point(stop))
     end
 end
 
-# Box limits specified by a pair of points, of Cartesian indices, or of 2-tuple.
-let expr = (:(get_x(min)), :(get_x(max)), :(get_y(min)), :(get_y(max)))
-    for type in (:Point, :(CartesianIndex{2}), :(Tuple{Any,Any}))
-        for args in ((:(min::$type), :(max::$type)),
-                     (:((min,max)::Tuple{$type,$type}),))
-            @eval begin
-                BoundingBox($(args...)) = BoundingBox($(expr...))
-                BoundingBox{T}($(args...)) where {T} = BoundingBox{T}($(expr...))
-            end
-        end
-    end
+# Bounding-box constructors for `start` and `stop` specified as integer-valued
+# unit-ranges.
+function BoundingBox(xrng::AbstractUnitRange{<:Integer},
+                     yrng::AbstractUnitRange{<:Integer})
+    T = promote_type(eltype(xrng), eltype(yrng))
+    return BoundingBox{T}(xrng, yrng)
+end
+function BoundingBox{T}(xrng::AbstractUnitRange{<:Integer},
+                        yrng::AbstractUnitRange{<:Integer}) where {T}
+    return BoundingBox{T}(xmin = as(T, first(xrng)), xmax = as(T, last(xrng)),
+                          ymin = as(T, first(yrng)), ymax = as(T, last(yrng)))
 end
 
-# Box limits specified by Cartesian indices.
+# Bounding-box constructors for box limits specified by Cartesian indices.
 BoundingBox(inds::CartesianIndices{2}) = BoundingBox(first(inds), last(inds))
 BoundingBox{T}(inds::CartesianIndices{2}) where {T} = BoundingBox{T}(first(inds), last(inds))
 
-# Properties.
-Base.propertynames(::BoundingBox) = (:xmin, :xmax, :ymin, :ymax)
-Base.getproperty(box::BoundingBox, key::Symbol) =
-    key === :xmin ? box[1] :
-    key === :xmax ? box[2] :
-    key === :ymin ? box[3] :
-    key === :ymax ? box[4] : throw(KeyError(key))
-
-function Base.show(io::IO, box::BoundingBox{T}) where {T}
-    print(io, "BoundingBox{")
-    show(io, T)
-    print(io, "}(xmin = "); show(io, box.xmin)
-    print(io, ", xmax = "); show(io, box.xmax)
-    print(io, ", ymin = "); show(io, box.ymin)
-    print(io, ", ymax = "); show(io, box.ymax)
-    print(io, ")")
+# Unpack `(start,stop)` or `(xrng, yrng)` provided as a 2-tuple.
+for type in (:Point, :(NTuple{2,Any}), :(CartesianIndex{2}))
+    @eval begin
+        BoundingBox((start, stop)::NTuple{2,$type}) = BoundingBox(start, stop)
+        BoundingBox{T}((start, stop)::NTuple{2,$type}) where {T} =
+            BoundingBox{T}(start, stop)
+    end
 end
+BoundingBox((xrng, yrng)::NTuple{2,AbstractUnitRange{<:Integer}}) = BoundingBox(xrng, yrng)
+BoundingBox{T}((xrng, yrng)::NTuple{2,AbstractUnitRange{<:Integer}}) where {T} =
+    BoundingBox{T}(xrng, yrng)
+
+# Keyword-only bounding-box constructors.
+@inline BoundingBox(; kwds...) = build(BoundingBox; kwds...)
+@inline BoundingBox{T}(; kwds...) where {T} = build(BoundingBox{T}; kwds...)
+@inline function build(::Type{T};
+                       xmin=nothing, ymin=nothing, xmax=nothing, ymax=nothing,
+                       start=nothing, stop=nothing) where{T<:BoundingBox}
+    if is_something(start, stop) && is_nothing(xmin, ymin, xmax, ymax)
+        return T(start, stop)
+    elseif is_nothing(start, stop) && is_something(xmin, ymin, xmax, ymax)
+        return T((xmin, ymin), (xmax, ymax))
+    else
+        throw(ArgumentError(
+            "exclusively keywords `start` and `stop` or keywords `xmin`, `ymin`, `xmax`, and `ymax` must be specified"))
+    end
+end
+
+# Convert/copy constructors.
+BoundingBox(box::BoundingBox) = box
+BoundingBox{T}(box::BoundingBox{T}) where {T} = box
+BoundingBox{T}(box::BoundingBox) where {T} = BoundingBox{T}(Tuple(box)...)
+Base.convert(::Type{T}, box::T) where {T<:BoundingBox} = box
+Base.convert(::Type{T}, obj::BoundingBoxLike) where {T<:BoundingBox} = T(obj)
+
+# Make bounding-boxes indexable iterators.
+Base.length(      box::BoundingBox) = 2
+Base.firstindex(  box::BoundingBox) = 1
+Base.lastindex(   box::BoundingBox) = 2
+Base.first(       box::BoundingBox) = box[1]
+Base.last(        box::BoundingBox) = box[2]
+Base.IteratorSize(box::BoundingBox) = Base.IteratorSize(typeof(box))
+Base.IteratorSize(::Type{<:BoundingBox}) = Base.HasLength()
+@inline Base.iterate(box::BoundingBox, i::Int = 1) =
+    i == 1 ? (first(box), 2) :
+    i == 2 ? (last( box), 3) : nothing
+
+# Properties of bounding-boxes.
+Base.propertynames(::BoundingBox) = (:start, :stop, :xmin, :xmax, :ymin, :ymax,)
+Base.getproperty(box::BoundingBox, key::Symbol) =
+    key === :start ? first(box)   :
+    key === :stop  ? last( box)   :
+    key === :xmin  ? first(box).x :
+    key === :ymin  ? first(box).y :
+    key === :xmax  ? last( box).x :
+    key === :ymax  ? last( box).y : throw(KeyError(key))
+
+Base.show(io::IO, box::BoundingBox{T}) where {T} =
+    print(io, "BoundingBox{", T,
+          "}(xmin = ", box.xmin,
+          ", xmax = ", box.xmax,
+          ", ymin = ", box.ymin,
+          ", ymax = ", box.ymax, ")")
 
 """
     BoundingBox{T}(obj)
@@ -101,9 +150,16 @@ end
 yields the bounding-box of the geometric object `obj`. If the coordinate type
 `T` is not provided, `T = coord_type(obj)` is assumed.
 
+This can be used to compute the union or the intersection of the bounding-boxes
+of objects:
+
+    mapreduce(BoundingBox, ∪, (obj1, obj2, obj3, ...))
+    mapreduce(BoundingBox, ∩, [obj1, obj2, obj3, ...])
+
 """
 BoundingBox(obj::GeometricObject{T}) where {T} = BoundingBox{T}(obj)
 BoundingBox{T}(pnt::Point) where {T} = BoundingBox{T}(pnt, pnt)
+BoundingBox{T}(rect::Rectangle) where {T} = BoundingBox{T}(first(rect), last(rect))
 
 """
     BoundingBox(f, A::AbstractMatrix)
@@ -113,7 +169,7 @@ true. This can be used to extract this rectangular region:
 
     A[BoundingBox(f, A)]
 
-If `A` is a matrix of Booleans, `f` is assumed to the identity if not
+If `A` is a matrix of Booleans, `f` is assumed to be the identity if not
 specified.
 
 """
@@ -172,7 +228,7 @@ function BoundingBox(f::Function, A::AbstractMatrix)
             end
         end
     end
-    return BoundingBox(imin, imax, jmin, jmax)
+    return BoundingBox(imin:imax, jmin:jmax)
 end
 
 """
@@ -194,39 +250,36 @@ end
 # Empty bounding and unlimited boxes.
 BoundingBox{T}(::Nothing) where {T<:Real} = typemin(BoundingBox{T})
 Base.typemin(::Type{BoundingBox{T}}) where {T<:Real} =
-    BoundingBox(typemax(T), typemin(T), typemax(T), typemin(T))
+    BoundingBox(xmin = typemax(T), xmax = typemin(T),
+                ymin = typemax(T), ymax = typemin(T))
 Base.typemax(::Type{BoundingBox{T}}) where {T<:Real} =
-    BoundingBox(typemin(T), typemax(T), typemin(T), typemax(T))
+    BoundingBox(xmin = typemin(T), xmax = typemax(T),
+                ymin = typemin(T), ymax = typemax(T))
 
-# Conversion of bounding-boxes to/from Cartesian indices.
-Base.CartesianIndices(box::BoundingBox{<:Integer}) =
-    CartesianIndices((Int(box.xmin):Int(box.xmax), Int(box.ymin):Int(box.ymax)))
-
-# Lower left and upper right corners of a bounding-box.
-Base.first(box::BoundingBox) = Point(box.xmin, box.ymin)
-Base.last(box::BoundingBox) = Point(box.xmax, box.ymax)
+# Conversion of bounding-boxes to Cartesian indices.
+Base.CartesianIndices(box::BoundingBox) = CartesianIndices(axes(box))
 
 Base.isempty(box::BoundingBox) = (box.xmin > box.xmax)|(box.ymin > box.ymax)
 
-Base.size(box::BoundingBox{<:Integer}) = map(length, axes(box))
-Base.size(box::BoundingBox{<:Integer}, d::Integer) = length(axes(box, d))
+Base.size(box::BoundingBox) = map(length, axes(box))
+Base.size(box::BoundingBox, d::Integer) = length(axes(box, d))
 
 Base.axes(box::BoundingBox{<:Integer}) = (UnitRange{Int}(box.xmin, box.xmax),
                                           UnitRange{Int}(box.ymin, box.ymax))
 Base.axes(box::BoundingBox{<:Integer}, d::Integer) =
     d == 1 ? UnitRange{Int}(box.xmin, box.xmax) :
     d == 2 ? UnitRange{Int}(box.ymin, box.ymax) :
-    d > 2 ? (1:1) : throw_bad_dimension_index()
+    d > 2  ? UnitRange{Int}(1, 1) : error("invalid dimension index")
 
-@noinline throw_bad_dimension_index() =
-    error("invalid dimension index")
+Base.axes(box::BoundingBox) = throw_axes_restricted_box_with_integer_coordinates()
+Base.axes(box::BoundingBox, d::Integer) = throw_axes_restricted_box_with_integer_coordinates()
+@noinline throw_axes_restricted_box_with_integer_coordinates() = throw(ArgumentError(
+    "`axes(box)` is restricted to bounding-boxes with integer coordinates"))
 
 # Use bounding-boxes to extract a sub-array or a view.
-@propagate_inbounds Base.getindex(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
-    A[B.xmin:B.xmax, B.ymin:B.ymax]
-
-Base.view(A::AbstractMatrix, B::BoundingBox{<:Integer}) =
-    view(A, B.xmin:B.xmax, B.ymin:B.ymax)
+Base.view(arr::AbstractMatrix, box::BoundingBox) = view(arr, axes(box)...)
+@inline @propagate_inbounds Base.getindex(arr::AbstractMatrix, box::BoundingBox) =
+    arr[axes(box)...]
 
 """
     TwoDimensional.grow(box, dx, dy=dx)
@@ -241,8 +294,8 @@ Note that the algebraic (not absolute) values are applied. Hence, if `dx` and
 See also [`TwoDimensional.shrink`](@ref).
 
 """
-grow(box::BoundingBox, dx, dy=dx) = BoundingBox((box.xmin - dx, box.ymin - dy),
-                                                (box.xmax + dx, box.ymax + dy))
+grow(box::BoundingBox{T}, delta::Point{T}) where {T} = BoundingBox(first(box) - delta,
+                                                                   last( box) + delta)
 
 """
     TwoDimensional.shrink(box, dx, dy=dx)
@@ -257,77 +310,59 @@ Note that the algebraic (not absolute) values are applied. Hence, if `dx` and
 See also [`TwoDimensional.grow`](@ref).
 
 """
-shrink(box::BoundingBox, dx, dy=dx) = BoundingBox((box.xmin + dx, box.ymin + dy),
-                                                  (box.xmax - dx, box.ymax - dy))
+shrink(box::BoundingBox{T}, delta::Point{T}) where {T} = BoundingBox(first(box) + delta,
+                                                                     last( box) - delta)
+
+# Encode methods having identical code for `grow` and `shrink`.
+for func in (:grow, :shrink)
+    @eval begin
+        $func(box::BoundingBox, dx::Number, dy::Number=dx) = $func(box, Point(dx, dy))
+        $func(box::BoundingBox, delta::Point) = $func(promote_coord_type(box, delta)...)
+    end
+end
 
 """
     interior([T,] box)
 
 yields the largest bounding-box with integer valued bounds and which is
 contained by the bounding-box `box`. Optional argument `T` is to specify the
-type of the result or of the coordinates of the result which is the same as
-`box` by default.
+type of the result or the type of the coordinates of the result which is the
+same as `box` by default.
 
-See also: [`exterior`](@ref), [`round`](@ref).
+See also [`exterior`](@ref), [`ceil`](@ref ceil(::Point)) and [`floor`](@ref
+floor(::Point)).
 
 """
-interior(box::BoundingBox{T}) where {T} = interior(T, box)
-interior(::Type{BoundingBox{T}}, box::BoundingBox) where {T} = interior(T, box)
-interior(::Type{T}, box::BoundingBox{T}) where {T<:Integer} = box
-interior(::Type{T}, box::BoundingBox{T}) where {T<:Real} =
-    BoundingBox(ceil(box.xmin), floor(box.xmax),
-                ceil(box.ymin), floor(box.ymax))
-interior(::Type{T}, box::BoundingBox{<:Integer}) where {T<:Integer} =
-    BoundingBox{T}(box)
-interior(::Type{T}, box::BoundingBox{<:Real}) where {T<:Integer} =
-    BoundingBox(ceil(T, box.xmin), floor(T, box.xmax),
-                ceil(T, box.ymin), floor(T, box.ymax))
-interior(::Type{T}, box::BoundingBox{<:Integer}) where {T<:Real} =
-    BoundingBox{T}(box)
-interior(::Type{T}, box::BoundingBox{U}) where {T<:Real,U<:Real} =
-    BoundingBox{T}(interior(U, box))
+interior(::Type{T}, box::BoundingBox) where {T} = BoundingBox(ceil(T, first(box)),
+                                                              floor(T, last(box)))
 
 """
     exterior([T,] box)
 
 yields the smallest bounding-box with integer valued bounds and which contains
-the bounding-box `box`.  Optional argument `T` is to specify the type of the
-result or of the coordinates of the result which is the same as `box` by default.
+the bounding-box `box`. Optional argument `T` is to specify the type of the
+result or the type of the coordinates of the result which is the same as `box`
+by default.
 
-See also: [`interior`](@ref), [`round`](@ref).
-
-"""
-exterior(box::BoundingBox{T}) where {T} = exterior(T, box)
-exterior(::Type{BoundingBox{T}}, box::BoundingBox) where {T} = exterior(T, box)
-exterior(::Type{T}, box::BoundingBox{T}) where {T<:Integer} = box
-exterior(::Type{T}, box::BoundingBox{T}) where {T<:Real} =
-    BoundingBox(floor(box.xmin), ceil(box.xmax),
-                floor(box.ymin), ceil(box.ymax))
-exterior(::Type{T}, box::BoundingBox{<:Integer}) where {T<:Integer} =
-    BoundingBox{T}(box)
-exterior(::Type{T}, box::BoundingBox{<:Real}) where {T<:Integer} =
-    BoundingBox(floor(T, box.xmin), ceil(T, box.xmax),
-                floor(T, box.ymin), ceil(T, box.ymax))
-exterior(::Type{T}, box::BoundingBox{<:Integer}) where {T<:Real} =
-    BoundingBox{T}(box)
-exterior(::Type{T}, box::BoundingBox{U}) where {T<:Real,U<:Real} =
-    BoundingBox{T}(exterior(U, box))
+See also [`interior`](@ref), [`ceil`](@ref ceil(::Point)) and [`floor`](@ref
+floor(::Point)).
 
 """
-    center(box::BoundingBox) -> c::Point
+exterior(::Type{T}, box::BoundingBox) where {T} = BoundingBox(floor(T, first(box)),
+                                                              ceil(T, last(box)))
 
-yields the central point of the bounding-box `box`.
+# Encode methods having identical code for `interior` and `exterior`.
+for func in (:interior, :exterior)
+    @eval begin
+        # Deal with `T` and box coordinates all integers.
+        $func(::Type{T}, box::BoundingBox{T}) where {T<:Integer} = box
+        $func(::Type{T}, box::BoundingBox{<:Integer}) where {T<:Integer} =
+            BoundingBox{T}(box)
 
-"""
-center(box::BoundingBox) =
-    isempty(box) ? throw(ArgumentError("cannot get center of empty box")) :
-    Point((box.xmin + box.xmax)/2, (box.ymin + box.ymax)/2)
-
-"""
-    area(box)
-
-yields the area of the bounding-box `box`.
-
-"""
-area(box::BoundingBox{T}) where {T<:Real} =
-    max(box.xmax - box.xmin, zero(T))*max(box.ymax - box.ymin, zero(T))
+        # Provide coordinate type for `interior` and `exterior`.
+        $func(box::BoundingBox{T}) where {T} = $func(T, box)
+        $func(::Type{BoundingBox}, box::BoundingBox{T}) where {T} = $func(T, box)
+        $func(::Type{BoundingBox{T}}, box::BoundingBox) where {T} = $func(T, box)
+        $func(::Type{BoundingBox{T}}, box::BoundingBox{T}) where {T} = $func(T, box)
+    end
+end

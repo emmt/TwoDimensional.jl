@@ -23,6 +23,11 @@
   geometric object or for its type. Method `promote_coord_type` yields the
   promoted coordinates type from a list of geometric objects/types.
 
+- New geometric object type `Rectangle` which is similar to `BoundingBox`
+  except that rectangles can never be empty (a rectangle contains at least a
+  single point) and they are converted into polygons when transformed by an
+  affine coordinate transform.
+
 ### Points and bounding-boxes
 
 - `map` and broadcasting rules have been extended to be more consistent for
@@ -54,6 +59,12 @@
   `BoundingBox(f,arr)` yields the bounding-box of the entries of the
   2-dimensional array `A` such that `f(A[i,j])` is true. If `A` is an array of
   Booleans, `f` is assumed to the identity if not specified.
+
+- Four arguments constructor `BoundingBox(xmin,xmax,ymin,xmax)` is no longer
+  supported as it was a source of confusion and of many errors. Use
+  `BoundingBox((xmin,ymin),(xmax,xmax))` or `BoundingBox(xmin:xmax,ymin:xmax)`
+  (for integer coordinates), or use keywords `BoundingBox(xmin=..., xmax=...,
+  ymin=..., xmax=...)`.
 
 - Weighted points, of non-exported type `TwoDimensional.WeightedPoint`, have
   been removed due to coordinates possibly having units. They may come back but

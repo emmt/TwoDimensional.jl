@@ -17,6 +17,7 @@ export
     AffineTransform,
     BoundingBox,
     Point,
+    Rectangle,
     area,
     center,
     coord_type,
@@ -35,7 +36,7 @@ export
 
 #using TypeUtils
 using Unitless
-using Base: @propagate_inbounds
+using Base: @propagate_inbounds, Fix1, Fix2
 using LinearAlgebra
 
 # Imports for extension.
@@ -48,6 +49,7 @@ include("types.jl")
 include("aliases.jl")
 include("common.jl")
 include("points.jl")
+include("rectangles.jl")
 include("boxes.jl")
 include("xforms.jl")
 include("math.jl")
