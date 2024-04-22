@@ -78,8 +78,8 @@ struct Rectangle{T} <: ShapeElement{T}
     vec::NTuple{2,Point{T}} # Point(x0, y0), Point(x1, y1)
     function Rectangle{T}(start::Point{T}, stop::Point{T}) where {T}
         # The coordinates are ordered.
-        x0, x1 = fastminmax(start.x, stop.x)
-        y0, y1 = fastminmax(start.y, stop.y)
+        x0, x1 = minmax(start.x, stop.x)
+        y0, y1 = minmax(start.y, stop.y)
         return new{T}((Point{T}(x0, y0), Point{T}(x1, y1)))
     end
 end
