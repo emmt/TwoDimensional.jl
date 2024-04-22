@@ -9,8 +9,9 @@ be re-built without ambiguities. For example, for a point `pnt`:
 
 both hold.
 
-Geometrical objects that have homogeneous parts extend the `Base.Tuple` method
-to return these parts, the `Base.getindex` method to directly index among these
+Geometrical objects that have homogeneous parts (see
+['TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.Tuple` method to
+return these parts, the `Base.getindex` method to directly index among these
 parts, and the ['TwoDimensional.apply`](@ref) method.
 
 """
@@ -37,7 +38,8 @@ object of the same king with the result.
 If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether
 to swap the first and las end-points of the box.
 
-See also ['TwoDimensional.parts`](@ref).
+See also ['TwoDimensional.parts`](@ref) and
+['TwoDimensional.VertexBasedObject`](@ref).
 
 """
 @inline apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
@@ -65,9 +67,7 @@ as(::Type{T}, x) where {T} = convert(T, x)::T
 
 # Basic constructors (with tuple argument) for points and bounding boxes and
 # API to make them indexable iterators.
-for (type, like, len) in ((:Point,         :PointLike,         2),
-                          (:Rectangle,     :RectangleLike,     2),
-                          (:BoundingBox,   :BoundingBoxLike,   2),)
+for type in (:Point, :Rectangle, :BoundingBox)
     @eval begin
         Base.promote_type(::Type{$type{T}}, ::Type{$type{T}}) where {T} = $type{T}
         Base.promote_type(::Type{$type{T₁}}, ::Type{$type{T₂}}) where {T₁,T₂} =

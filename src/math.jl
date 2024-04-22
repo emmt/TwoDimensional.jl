@@ -108,21 +108,6 @@ end
 +(box::BoundingBox, δ::Number) = grow(box, δ)
 -(box::BoundingBox, δ::Number) = shrink(box, δ)
 
-"""
-    round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
-
-yields the object that is the nearest to `obj` by rounding its coordinates to
-nearest integral values. Argument `T` can be the type of the result (a point or
-a bounding-box) or the type of the coordinates of the result. Rounding mode may
-be specified by optional argument `r`, the default being the same as the
-`round` method for a scalar value.
-
-For points, see also: [`floor(::Point)`](@ref), [`ceil(::Point)`](@ref).
-
-For bounding-boxes, see also: [`interior`](@ref), [`exterior`](@ref).
-
-""" Base.round
-
 # NOTE: Using the following functor is a bit faster than map with an anonymous
 #       function.
 struct Round{T,R} <: Function
@@ -135,13 +120,27 @@ Round{T}() where {T} = Round{T}(nothing)
 (f::Round{T,Nothing})(x) where {T<:Number} = round(T, x)
 (f::Round{T,<:RoundingMode})(x) where {T<:Number} = round(T, x, f.r)
 
+"""
+    round([T,] obj, [r::RoundingMode])
+
+applies the `round` function to the coordinates of the vertices defining the
+vertex-based geometric object `obj` and returns an object of the same kind
+built with the resulting vertices. Optional argument `T` can be the type of the
+returned object or the type of the coordinates for the returned object.
+Rounding mode may be specified by optional argument `r`, the default being the
+same as the `round` method for a scalar value.
+
+See also: [`floor`](@ref floor(::TwoDimensional.Point)), [`ceil`](@ref
+ceil(::TwoDimensional.Point)).
+
+"""
+Base.round(obj::VertexBasedObject) = apply(round, obj)
+Base.round(obj::VertexBasedObject, r::RoundingMode) = apply(Round{Nothing}(r), obj)
+Base.round(::Type{T}, obj::VertexBasedObject) where {T} = apply(Round{T}(), obj)
+Base.round(::Type{T}, obj::VertexBasedObject, r::RoundingMode) where {T} = apply(Round{T}(r), obj)
+
 for type in (:Point, :Rectangle, :BoundingBox)
     @eval begin
-        Base.round(obj::$type) = apply(round, obj)
-        Base.round(obj::$type, r::RoundingMode) = apply(Round{Nothing}(r), obj)
-        Base.round(::Type{T}, obj::$type) where {T} = apply(Round{T}(), obj)
-        Base.round(::Type{T}, obj::$type, r::RoundingMode) where {T} = apply(Round{T}(r), obj)
-
         Base.round(::Type{$type}, obj::$type) = round(obj)
         Base.round(::Type{$type}, obj::$type, r::RoundingMode) = round(obj, r)
         Base.round(::Type{$type{T}}, obj::$type) where {T} = round(T, obj)
@@ -150,38 +149,44 @@ for type in (:Point, :Rectangle, :BoundingBox)
 end
 
 """
-    floor([T,] pnt::Point)
-    floor([T,] box::BoundingBox)
+    floor([T,] obj)
 
-yield the point with the largest integer coordinates smaller or equal those of
-`pnt` or the bounding-box resulting from applying this function to the content
-of `box`. Argument `T` can be the type of the result or the type of the
-coordinates of the result.
+applies the `floor` function to the coordinates of the vertices defining the
+vertex-based geometric object `obj` and returns an object of the same kind
+built with the resulting vertices. Optional argument `T` can be the type of the
+returned object or the type of the coordinates for the returned object.
 
-See also: [`round`](@ref), [`ceil`](@ref).
+See also: [`round`](@ref round(::TwoDimensional.Point)), [`ceil`](@ref
+ceil(::TwoDimensional.Point)).
 
-""" Base.floor
+For bounding-boxes, see also: [`interior`](@ref TwoDimensional.interior),
+[`exterior`](@ref TwoDimensional.exterior).
 
 """
-    ceil([T,] pnt::Point)
-    ceil([T,] box::BoundingBox)
+Base.floor(obj::VertexBasedObject) = apply(floor, obj)
 
-yields the point with the smallest integer coordinates larger or equal those of
-`pnt` or the bounding-box resulting from applying this function to the content
-of `box`. Argument `T` can be the type of the result or the type of the
-coordinates of the result.
+"""
+    ceil([T,] obj)
 
-See also: [`round`](@ref), [`floor`](@ref).
+applies the `ceil` function to the coordinates of the vertices defining the
+vertex-based geometric object `obj` and returns an object of the same kind
+built with the resulting vertices. Optional argument `T` can be the type of the
+returned object or the type of the coordinates for the returned object.
 
-""" Base.ceil
+See also: [`round`](@ref round(::TwoDimensional.Point)), [`floor`](@ref
+floor(::TwoDimensional.Point)).
+
+For bounding-boxes, see also: [`interior`](@ref TwoDimensional.interior),
+[`exterior`](@ref TwoDimensional.exterior).
+
+"""
+Base.ceil(obj::VertexBasedObject) = apply(ceil, obj)
 
 for type in (:Point, :Rectangle, :BoundingBox), func in (:floor, :ceil)
     @eval begin
-        Base.$func(obj::$type) = apply($func, obj)
-        Base.$func(::Type{T}, obj::$type) where {T} = apply(Fix1($func, T), obj)
-
         Base.$func(::Type{$type}, obj::$type) = $func(obj)
         Base.$func(::Type{$type{T}}, obj::$type) where {T} = $func(T, obj)
+        Base.$func(::Type{T}, obj::$type) where {T} = apply(Fix1($func, T), obj)
     end
 end
 

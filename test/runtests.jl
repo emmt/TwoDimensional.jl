@@ -272,7 +272,7 @@ end
         @test area(rec) == (rec.x1 - rec.x0)*(rec.y1 - rec.y0)
     end
 
-    @testset "BoundingBoxs ($T)" for T in (Int16, Int, Float32)
+    @testset "BoundingBoxes ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests
         start, stop = (-1, 2), (3, 4)
         @assert start[1] < stop[1] && start[2] < stop[2] # this is assumed by the tests

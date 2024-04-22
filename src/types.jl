@@ -126,6 +126,19 @@ const RectangleLike = Union{Rectangle,
                             NTuple{2,CartesianIndex{2}}}
 
 """
+    TwoDimensional.VertexBasedObject{T}
+
+is the union of types of objects defined by their verices and with coordinate
+type `T`.
+
+See also [`TwoDimensional.apply`].
+
+"""
+const VertexBasedObject{T} = Union{Point{T},
+                                   Rectangle{T},
+                                   BoundingBox{T}}
+
+"""
     TwoDimensional.BoundingBoxLike
 
 is the union of types that may be used to specify a bounding-box in
