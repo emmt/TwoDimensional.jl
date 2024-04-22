@@ -32,6 +32,7 @@ export
     scale,
     translate,
     # Re-exports from LinearAlgebra
+    cross,
     det,
     norm
 

@@ -181,8 +181,17 @@ end
         @test norm(pnt) ≈ r
         @test abs(pnt) ≈ r
         @test abs2(pnt) ≈ r^2
+        @test abs2(pnt) ≈ dot(pnt, pnt)
         @test atan(pnt) ≈ θ
         @test Point(; r = r, θ = θ) ≈ pnt
+        let a = Point(-1, 2), b = Point(3.0, 7.0)
+            @test a ⋅ b ≈ a.x*b.x + a.y*b.y
+            @test a ⋅ b === dot(a, b)
+            @test a ⋅ b === b ⋅ a
+            @test a * b ≈ a.x*b.y - a.y*b.x
+            @test a * b === cross(a, b)
+            @test a * b === -(b * a)
+        end
     end
 
     @testset "Rectangles ($T)" for T in (Int16, Int, Float32)

@@ -208,9 +208,31 @@ Base.abs(pnt::Point) = hypot(pnt)
 Base.abs2(pnt::Point) = abs2(pnt.x) + abs2(pnt.y)
 LinearAlgebra.norm(pnt::Point) = abs(pnt)
 Base.Math.atan(pnt::Point) = atan(pnt.y, pnt.x)
-inner(a::Point, b::Point) = a.x*b.x + a.y*b.y # scalar/inner product
-outer(a::Point, b::Point) = a.x*b.y - a.y*b.x # outer product
-*(a::Point, b::Point) = inner(a, b) # scalar product
+
+"""
+    dot(a::Point, b::Point)
+    a ⋅ b
+
+yields the dot product (a.k.a. scalar product or inner product) of the two
+points `a` and `b` which is given by:
+
+    a.x*b.x + a.y*b.y
+
+"""
+LinearAlgebra.dot(a::Point, b::Point) = a.x*b.x + a.y*b.y
+
+"""
+    cross(a::Point, b::Point)
+    a * b
+
+yields the cross product (a.k.a. vector product or directed area product) of
+the two points `a` and `b` which is given by:
+
+    a.x*b.y - a.y*b.x
+
+"""
+LinearAlgebra.cross(a::Point, b::Point) = a.x*b.y - a.y*b.x
+*(a::Point, b::Point) = cross(a, b)
 
 """
     distance(A, B)

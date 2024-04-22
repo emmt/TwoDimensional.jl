@@ -66,6 +66,9 @@
   2-dimensional array `A` such that `f(A[i,j])` is true. If `A` is an array of
   Booleans, `f` is assumed to be the identity if not specified.
 
+- Points are considered as 2-dimensional vectors in `dot` product (also `⋅`
+  operator), `cross` product (also `*` operator), and `norm`.
+
 ### Bounding-boxes
 
 - Addition and subtraction of bounding-boxes, say `C = A ± B`, yields the
