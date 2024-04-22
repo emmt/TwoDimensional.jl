@@ -94,11 +94,11 @@ Base.lastindex(     rect::Rectangle) = 2
 Base.first(         rect::Rectangle) = rect[1]
 Base.last(          rect::Rectangle) = rect[2]
 Base.eltype(        rect::Rectangle) = eltype(typeof(rect))
-Base.IteratorSize(  rect::Rectangle) = Base.IteratorSize(typeof(rect))
-Base.IteratorEltype(rect::Rectangle) = Base.IteratorEltype(typeof(rect))
+Base.IteratorSize(  rect::Rectangle) = IteratorSize(typeof(rect))
+Base.IteratorEltype(rect::Rectangle) = IteratorEltype(typeof(rect))
 Base.eltype(        ::Type{<:Rectangle{T}}) where {T} = Point{T}
-Base.IteratorSize(  ::Type{<:Rectangle}) = Base.HasLength()
-Base.IteratorEltype(::Type{<:Rectangle}) = Base.HasEltype()
+Base.IteratorSize(  ::Type{<:Rectangle}) = HasLength()
+Base.IteratorEltype(::Type{<:Rectangle}) = HasEltype()
 @inline Base.iterate(rect::Rectangle, i::Int = 1) =
     i == 1 ? (first(rect), 2) :
     i == 2 ? (last( rect), 3) : nothing

@@ -38,7 +38,9 @@ export
 
 #using TypeUtils
 using Unitless
-using Base: @propagate_inbounds, Fix1, Fix2
+using Base: @propagate_inbounds, Fix1, Fix2, tail
+using Base: IteratorSize, SizeUnknown, HasLength, HasShape, IsInfinite
+using Base: IteratorEltype, EltypeUnknown, HasEltype
 using LinearAlgebra
 
 # Imports for extension.
