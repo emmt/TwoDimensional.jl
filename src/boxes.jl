@@ -116,13 +116,17 @@ Base.convert(::Type{T}, box::T) where {T<:BoundingBox} = box
 Base.convert(::Type{T}, obj::BoundingBoxLike) where {T<:BoundingBox} = T(obj)
 
 # Make bounding-boxes indexable iterators.
-Base.length(      box::BoundingBox) = 2
-Base.firstindex(  box::BoundingBox) = 1
-Base.lastindex(   box::BoundingBox) = 2
-Base.first(       box::BoundingBox) = box[1]
-Base.last(        box::BoundingBox) = box[2]
-Base.IteratorSize(box::BoundingBox) = Base.IteratorSize(typeof(box))
-Base.IteratorSize(::Type{<:BoundingBox}) = Base.HasLength()
+Base.length(        box::BoundingBox) = 2
+Base.firstindex(    box::BoundingBox) = 1
+Base.lastindex(     box::BoundingBox) = 2
+Base.first(         box::BoundingBox) = box[1]
+Base.last(          box::BoundingBox) = box[2]
+Base.eltype(        box::BoundingBox) = eltype(typeof(box))
+Base.IteratorSize(  box::BoundingBox) = Base.IteratorSize(typeof(box))
+Base.IteratorEltype(box::BoundingBox) = Base.IteratorEltype(typeof(box))
+Base.eltype(        ::Type{<:BoundingBox{T}}) where {T} = Point{T}
+Base.IteratorSize(  ::Type{<:BoundingBox}) = Base.HasLength()
+Base.IteratorEltype(::Type{<:BoundingBox}) = Base.HasEltype()
 @inline Base.iterate(box::BoundingBox, i::Int = 1) =
     i == 1 ? (first(box), 2) :
     i == 2 ? (last( box), 3) : nothing

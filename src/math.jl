@@ -37,55 +37,62 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
     BoundingBox(xmin = max(A.xmin, B.xmin), xmax = min(A.xmax, B.xmax),
                 ymin = max(A.ymin, B.ymin), ymax = min(A.ymax, B.ymax))
 
-# Common mathematical operations on geometric objects. Adding a point to a
-# geometric object amounts to shifting the object. Unary plus does nothing.
-# Unary minus behaves as multiplying by -1. Multiplying/dividing a geometric
-# object by a number amounts to scaling around origin.
-
 # Just permute operands for some common operations on geometric objects.
 *(a::GeometricObject, b::Number) = b*a
 \(a::Number, b::GeometricObject) = b/a
-+(a::Point, b::GeometricObject) = b + a
++(a::Point{T}, b::GeometricObject{T}) where {T} = b + a
+
+# Promote operands to a common coordinate type for some geometric operations.
 +(a::GeometricObject, b::Point) = +(promote_coord_type(a, b)...)
++(a::Point, b::GeometricObject) = +(promote_coord_type(a, b)...)
++(a::Point, b::Point) = +(promote_coord_type(a, b)...)
+-(a::GeometricObject, b::Point) = -(promote_coord_type(a, b)...)
+-(a::Point, b::GeometricObject) = -(promote_coord_type(a, b)...)
+-(a::Point, b::Point) = -(promote_coord_type(a, b)...)
 
 # Unary plus does nothing.
 +(a::GeometricObject) = a
 
-# Unary minus negates coordinates.
--(pnt::Point) = Point(-pnt.x, -pnt.y)
--(rect::Rectangle) = Rectangle(-last(rect), -first(rect))
--(box::BoundingBox) = BoundingBox(-last(box), -first(box))
+# Unary minus negates coordinates and should as multiplying by -1.
+-(pnt::Point) = apply(-, pnt)
+-(rect::Rectangle) = apply(-, rect)
+-(box::BoundingBox) = apply(-, box; swap = true)
 
-# Extend zero/one methods for geometric objects.
-Base.zero(obj::GeometricObject) = zero(typeof(obj))
+# Scaling of geometric objects and corresponding multiplicative identity.
 Base.one(obj::GeometricObject) = one(typeof(obj))
 
-# Scaling of points and corresponding multiplicative identity.
 Base.one(::Type{Point{T}}) where {T} = one(T)
-*(α::Number, pnt::Point) = map(Base.Fix1(*,α), pnt)
-/(pnt::Point, α::Number) = map(Base.Fix2(/,α), pnt)
+*(α::Number, pnt::Point) = apply(Fix1(*, α), pnt)
+/(pnt::Point, α::Number) = apply(Fix2(/, α), pnt)
 
-# Scaling of rectangles and corresponding multiplicative identity.
 Base.one(::Type{Rectangle{T}}) where {T} = one(T)
-*(α::Number, rect::Rectangle) = map(Base.Fix1(*,α), rect)
-/(rect::Rectangle, α::Number) = map(Base.Fix2(/,α), rect)
+*(α::Number, rect::Rectangle) =  apply(Fix1(*, α), rect)
+/(rect::Rectangle, α::Number) =  apply(Fix2(/, α), rect)
 
-# Scaling of bounding-box bounds (e.g. to change units) and corresponding
-# multiplicative identity.
 Base.one(::Type{BoundingBox{T}}) where {T} = one(T)
-*(box::BoundingBox, α::Number) = α*box
-*(α::Number, box::BoundingBox) = map(Base.Fix1(*,α), box; swap = α < zero(α))
-\(α::Number, box::BoundingBox) = box/α
-/(box::BoundingBox, α::Number) = map(Base.Fix2(/,α), box; swap = α < zero(α))
+*(α::Number, box::BoundingBox) = apply(Fix1(*, α), box; swap = α < zero(α))
+/(box::BoundingBox, α::Number) = apply(Fix2(/, α), box; swap = α < zero(α))
 
-# Addition and subtraction of points and corresponding addtive identity.
-Base.zero(::Type{Point{T}}) where {T} = Point(zero(T),zero(T))
-+(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
--(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
+# Translate a geometric object by adding or subtracting a point and
+# corresponding addtive identity.
+Base.zero(obj::GeometricObject) = zero(typeof(obj))
+
+Base.zero(::Type{Point{T}}) where {T} = Point(zero(T), zero(T))
++(A::Point{T}, B::Point{T}) where {T} = Point(A.x + B.x, A.y + B.y)
+-(A::Point{T}, B::Point{T}) where {T} = Point(A.x - B.x, A.y - B.y)
+
+Base.zero(::Type{Rectangle{T}}) where {T} = zero(Point{T})
++(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), rect)
+-(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), rect)
+-(pnt::Point{T}, rect::Rectangle{T}) where {T} = apply(Fix1(-, pnt), rect)
+
+Base.zero(::Type{BoundingBox{T}}) where {T} = zero(Point{T})
++(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), box; swap = false)
+-(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), box)
+-(pnt::Point{T}, box::BoundingBox{T}) where {T} = apply(Fix1(-, pnt), box; swap = true)
 
 # Addition and subtraction of bounding-boxes (following the rules of the
 # addition and subtraction of sets) and corresponding addtive identity.
-Base.zero(::Type{BoundingBox{T}}) where {T} = BoundingBox(zero(T),zero(T),zero(T),zero(T))
 function +(A::BoundingBox, B::BoundingBox)
     T = promote(coord_type(A), coord_type(B))
     (isempty(A) || isempty(B)) && return BoundingBox{T}(nothing)
@@ -100,13 +107,6 @@ end
 # Add or remove a margin δ to a bounding-box box.
 +(box::BoundingBox, δ::Number) = grow(box, δ)
 -(box::BoundingBox, δ::Number) = shrink(box, δ)
-
-# Translate a geometric object by adding or subtracting a point.
-+(rect::Rectangle{T}, pnt::Point{T}) where {T} = Rectangle(first(rect) + pnt, last(rect) + pnt)
--(rect::Rectangle{T}, pnt::Point{T}) where {T} = Rectangle(first(rect) - pnt, last(rect) - pnt)
-
-+(box::BoundingBox{T}, pnt::Point{T}) where {T} = BoundingBox(first(box) + pnt, last(box) + pnt)
--(box::BoundingBox{T}, pnt::Point{T}) where {T} = BoundingBox(first(box) - pnt, last(box) - pnt)
 
 """
     round([T,] obj::Union{Point,BoundingBox}, [r::RoundingMode])
@@ -137,10 +137,10 @@ Round{T}() where {T} = Round{T}(nothing)
 
 for type in (:Point, :Rectangle, :BoundingBox)
     @eval begin
-        Base.round(obj::$type) = map(round, obj)
-        Base.round(obj::$type, r::RoundingMode) = map(Round{Nothing}(r), obj)
-        Base.round(::Type{T}, obj::$type) where {T} = map(Round{T}(), obj)
-        Base.round(::Type{T}, obj::$type, r::RoundingMode) where {T} = map(Round{T}(r), obj)
+        Base.round(obj::$type) = apply(round, obj)
+        Base.round(obj::$type, r::RoundingMode) = apply(Round{Nothing}(r), obj)
+        Base.round(::Type{T}, obj::$type) where {T} = apply(Round{T}(), obj)
+        Base.round(::Type{T}, obj::$type, r::RoundingMode) where {T} = apply(Round{T}(r), obj)
 
         Base.round(::Type{$type}, obj::$type) = round(obj)
         Base.round(::Type{$type}, obj::$type, r::RoundingMode) = round(obj, r)
@@ -177,8 +177,8 @@ See also: [`round`](@ref), [`floor`](@ref).
 
 for type in (:Point, :Rectangle, :BoundingBox), func in (:floor, :ceil)
     @eval begin
-        Base.$func(obj::$type) = map($func, obj)
-        Base.$func(::Type{T}, obj::$type) where {T} = map(Fix1($func, T), obj)
+        Base.$func(obj::$type) = apply($func, obj)
+        Base.$func(::Type{T}, obj::$type) where {T} = apply(Fix1($func, T), obj)
 
         Base.$func(::Type{$type}, obj::$type) = $func(obj)
         Base.$func(::Type{$type{T}}, obj::$type) where {T} = $func(T, obj)

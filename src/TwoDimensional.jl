@@ -20,6 +20,7 @@ export
     Rectangle,
     area,
     center,
+    convert_coord_type,
     coord_type,
     distance,
     exterior,

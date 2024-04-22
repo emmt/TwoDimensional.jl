@@ -6,6 +6,12 @@ using TwoDimensional: get_axis_bounds
 using Test, LinearAlgebra, Unitless
 import Base.MathConstants: φ
 
+struct MyPoint{T} <: AbstractPoint{T}
+    name::String
+    x::T
+    y::T
+end
+
 # abs_diff(a, b) yields absolute difference.
 # max_abs_diff(a, b) yields maximum absolute difference.
 # sum_abs_diff(a, b) yields sum of absolute differences.
@@ -100,44 +106,246 @@ function naive_bounding_box(f::Function, A::AbstractMatrix)
             jmax = max(jmax, j)
         end
     end
-    return BoundingBox(imin, imax, jmin, jmax)
+    return BoundingBox(imin:imax, jmin:jmax)
 end
 
-@testset "Points and bounding-boxes" begin
-    @testset "Miscellaneous" begin
-        # Iterators.
-        pnt = @inferred Point(2.0,3.0)
-        @test length(pnt) === length(getfield(pnt, 1))
+@testset "TwoDimensional" begin
+    # Constructors.
+    @testset "Points ($T)" for T in (Int16, Int, Float32)
+        @assert !(T === Float64) # this is assumed by the tests
+        xy = 1, 2
+        pnt = @inferred Point(map(T, xy)...)
+        pnt_f64 = @inferred Point{Float64}(xy)
+        pnt_misc = @inferred MyPoint{T}("yet another point", xy...)
+        @test pnt isa Point{T}
+        @test typeof(pnt) === Point{T}
+        @test coord_type(pnt) === coord_type(typeof(pnt)) === T
+        @test eltype(pnt) === eltype(typeof(pnt)) === T
+        @test eltype(pnt_misc) === eltype(typeof(pnt_misc)) === T
+        @test Tuple(pnt) === (pnt...,)
+        @test pnt === Point(pnt...,)
+        @test length(pnt) === length(getfield(pnt, 1)) == 2
+        @test Set(Base.propertynames(pnt)) == Set((:x, :y))
+        @test firstindex(pnt) === 1
+        @test lastindex(pnt) === 2
+        @test Base.IteratorSize(pnt) === Base.IteratorSize(typeof(pnt)) === Base.HasLength()
+        @test Base.IteratorEltype(pnt) === Base.IteratorEltype(typeof(pnt)) === Base.HasEltype()
+        x, y = pnt
+        r, θ = hypot(x, y), atan(y, x)
+        @test (x, y) === map(T, xy)
+        @test (x, y) === @inferred Tuple(pnt)
+        @test (x, y) === (pnt.x, pnt.y)
+        @test (x, y) === (pnt[1], pnt[2])
+        @test (x, y) === (first(pnt), last(pnt))
+        @test_throws BoundsError pnt[0]
+        @test_throws BoundsError pnt[3]
+        @test_throws KeyError pnt.vec
+        @test occursin(r"^Point\b", string(pnt))
+        @test pnt === @inferred Point(map(T, xy))
         @test pnt === @inferred Point(pnt...)
         @test pnt === @inferred Point(Tuple(pnt)...)
         @test pnt === @inferred Point(Tuple(pnt))
-        x,y = pnt
-        @test (x,y) === @inferred Tuple(pnt)
-        @test (x,y) === (pnt.x, pnt.y)
-        @test (x,y) === (pnt[1], pnt[2])
-        @test_throws BoundsError pnt[0]
-        @test_throws BoundsError pnt[3]
-        @test_throws KeyError pnt.vals
-        @test occursin(r"^Point{Float64}\(", string(pnt))
-        @test coord_type(pnt) === coord_type(typeof(pnt)) === eltype(pnt)
+        @test pnt === @inferred Point{T}(xy...)
+        @test pnt === @inferred Point{T}(xy)
+        @test pnt === @inferred Point{T}(Int8(x), Int16(y))
+        @test pnt === @inferred Point{T}((Int8(x), Int16(y)))
+        @test pnt === @inferred Point{T}(pnt_f64)
+        @test pnt === @inferred Point{T}(pnt_misc)
+        @test pnt === @inferred Point(pnt_misc)
+        @test pnt === @inferred Point{T}(; x = x, y = y)
+        @test pnt === @inferred Point(; x = T(x), y = T(y))
+        @test pnt === @inferred Point{T}(CartesianIndex(xy))
+        if T <: Int
+            @test pnt === @inferred Point(CartesianIndex(xy))
+            @test CartesianIndex(xy) === CartesianIndex(pnt)
+            @test CartesianIndex(xy) === CartesianIndex(pnt_misc)
+        end
+        # Conversions.
+        @test pnt === @inferred convert(Point, pnt)
+        @test pnt === @inferred convert(Point{T}, pnt)
+        @test pnt === @inferred convert(Point{T}, pnt_f64)
+        @test pnt === @inferred convert(Point{T}, xy)
+        @test pnt === @inferred convert(Point{T}, (Int8(x), Int16(y)))
+        @test pnt === @inferred convert(Point{T}, CartesianIndex(xy))
+        @test convert_coord_type(coord_type(pnt_f64), pnt) === pnt_f64
+        @test convert_coord_type(coord_type(pnt), pnt_f64) === pnt
+        if T <: AbstractFloat
+            @test @inferred(float(pnt)) === pnt
+            @test @inferred(float(typeof(pnt))) === typeof(pnt)
+        elseif T <: Int
+            @test @inferred(float(pnt)) === @inferred(Point(float(pnt.x), float(pnt.y)))
+            @test @inferred(float(typeof(pnt))) === Point{float(T)}
+        end
+        # Functions specific to points.
+        @test hypot(pnt) ≈ r
+        @test norm(pnt) ≈ r
+        @test abs(pnt) ≈ r
+        @test abs2(pnt) ≈ r^2
+        @test atan(pnt) ≈ θ
+        @test Point(; r = r, θ = θ) ≈ pnt
+    end
 
-        box = @inferred BoundingBox(xmin=1.2, xmax=sqrt(2), ymin=-3, ymax=11)
-        @test length(box) === length(getfield(box, 1))
+    @testset "Rectangles ($T)" for T in (Int16, Int, Float32)
+        @assert !(T === Float64) # this is assumed by the tests
+        start, stop = (-1, 2), (3, 4)
+        @assert start[1] < stop[1] && start[2] < stop[2] # this is assumed by the tests
+        rec = @inferred Rectangle(T.(start), T.(stop))
+        rec_f64 = @inferred Rectangle{Float64}(start, stop) # same with other type
+        @test rec isa Rectangle{T}
+        @test typeof(rec) === Rectangle{T}
+        @test coord_type(rec) === coord_type(typeof(rec)) === T
+        @test eltype(rec) === eltype(typeof(rec)) === Point{T}
+        @test Tuple(rec) === (rec...,)
+        @test rec === Rectangle(rec...,)
+        @test length(rec) === length(getfield(rec, 1)) == 2
+        @test Set(Base.propertynames(rec)) == Set((:x0, :x1, :y0, :y1, :start, :stop))
+        @test firstindex(rec) === 1
+        @test lastindex(rec) === 2
+        @test Base.IteratorSize(rec) === Base.IteratorSize(typeof(rec)) === Base.HasLength()
+        @test Base.IteratorEltype(rec) === Base.IteratorEltype(typeof(rec)) === Base.HasEltype()
+        (x0, y0), (x1, y1) = (rec.x0, rec.y0), (rec.x1, rec.y1)
+        @test x0 ≤ x1 && y0 ≤ y1
+        @test rec === Rectangle((x0, y0), (x1, y1))
+        @test rec === Rectangle((x1, y0), (x0, y1))
+        @test rec === Rectangle((x0, y1), (x1, y0))
+        @test rec === Rectangle((x1, y1), (x0, y0))
+        @test (Point(x0, y0), Point(x1, y1)) === @inferred Tuple(rec)
+        @test (Point(x0, y0), Point(x1, y1)) === (rec.start, rec.stop)
+        @test (Point(x0, y0), Point(x1, y1)) === (rec[1], rec[2])
+        @test (Point(x0, y0), Point(x1, y1)) === (first(rec), last(rec))
+        @test_throws BoundsError rec[0]
+        @test_throws BoundsError rec[3]
+        @test_throws KeyError rec.vec
+        @test occursin(r"^Rectangle\b", string(rec))
+        @test rec === @inferred Rectangle(rec...)
+        @test rec === @inferred Rectangle(Tuple(rec)...)
+        @test rec === @inferred Rectangle(Tuple(rec))
+        @testset "start = $start, stop = $stop" for (start, stop) in (
+            ((x0,y0), (x1,y1)),
+            (Int8.((x0,y0)), Float64.((x1,y1))),
+            ((Int8(x0),Int16(y0)), (Float64(x1),Float32(y1))),
+            (Point(x0,y0), Point(x1,y1)),
+            (Point{Int8}(x0,y0), Point{Float64}(x1,y1)),
+            (CartesianIndex(Int(x0),Int(y0)), CartesianIndex(Int(x1),Int(y1))),
+            )
+            @test rec === @inferred Rectangle{T}(start, stop)
+            @test rec === @inferred Rectangle{T}((start, stop))
+            @test rec === @inferred Rectangle{T}(; x0 = start[1], y0 = start[2], x1 = stop[1], y1 = stop[2])
+            @test rec === @inferred Rectangle{T}(; start = start, stop = stop)
+            if start isa Point && stop isa Point
+                @test rec === @inferred Rectangle(Point{T}(start), Point{T}(stop))
+                @test rec === @inferred Rectangle(; start = Point{T}(start), stop = Point{T}(stop))
+            end
+            if start isa CartesianIndex && stop isa CartesianIndex
+                @test rec === @inferred Rectangle(T.(Tuple(start)), T.(Tuple(stop)))
+                @test rec === @inferred Rectangle(; start = T.(Tuple(start)), stop = T.(Tuple(stop)))
+                @test rec === @inferred Rectangle(; x0 = T(start[1]), y0 = T(start[2]), x1 = T(stop[1]), y1 = T(stop[2]))
+                if T <: Int
+                    @test rec === @inferred Rectangle(start, stop)
+                end
+            end
+        end
+        # Conversions.
+        @test rec === @inferred convert(Rectangle, rec)
+        @test rec === @inferred convert(Rectangle{T}, rec)
+        @test rec === @inferred convert(Rectangle{T}, rec_f64)
+        @test rec === @inferred convert(Rectangle{T}, Tuple(rec_f64))
+        @test convert_coord_type(coord_type(rec_f64), rec) === rec_f64
+        @test convert_coord_type(coord_type(rec), rec_f64) === rec
+        if T <: AbstractFloat
+            @test @inferred(float(rec)) === rec
+            @test @inferred(float(typeof(rec))) === typeof(rec)
+        elseif T <: Int
+            @test @inferred(float(rec)) === @inferred(Rectangle(float(rec.start), float(rec.stop)))
+            @test @inferred(float(typeof(rec))) === Rectangle{float(T)}
+        end
+        # Functions specific to rectangles.
+        @test area(rec) == (rec.x1 - rec.x0)*(rec.y1 - rec.y0)
+    end
+
+    @testset "BoundingBoxs ($T)" for T in (Int16, Int, Float32)
+        @assert !(T === Float64) # this is assumed by the tests
+        start, stop = (-1, 2), (3, 4)
+        @assert start[1] < stop[1] && start[2] < stop[2] # this is assumed by the tests
+        box = @inferred BoundingBox(T.(start), T.(stop))
+        box_f64 = @inferred BoundingBox{Float64}(start, stop)
+        @test box isa BoundingBox{T}
+        @test typeof(box) === BoundingBox{T}
+        @test coord_type(box) === coord_type(typeof(box)) === T
+        @test eltype(box) === eltype(typeof(box)) === Point{T}
+        @test Tuple(box) === (box...,)
+        @test box === BoundingBox(box...,)
+        @test length(box) === length(getfield(box, 1)) == 2
+        @test Set(Base.propertynames(box)) == Set((:xmin, :xmax, :ymin, :ymax, :start, :stop))
+        @test firstindex(box) === 1
+        @test lastindex(box) === 2
+        @test Base.IteratorSize(box) === Base.IteratorSize(typeof(box)) === Base.HasLength()
+        @test Base.IteratorEltype(box) === Base.IteratorEltype(typeof(box)) === Base.HasEltype()
+        (xmin, ymin), (xmax, ymax) = (box.xmin, box.ymin), (box.xmax, box.ymax)
+        @test false === isempty(BoundingBox((xmin, ymin), (xmax, ymax)))
+        @test true  === isempty(BoundingBox((xmax, ymin), (xmin, ymax)))
+        @test true  === isempty(BoundingBox((xmin, ymax), (xmax, ymin)))
+        @test true  === isempty(BoundingBox((xmax, ymax), (xmin, ymin)))
+        @test (Point(xmin, ymin), Point(xmax, ymax)) === @inferred Tuple(box)
+        @test (Point(xmin, ymin), Point(xmax, ymax)) === (box.start, box.stop)
+        @test (Point(xmin, ymin), Point(xmax, ymax)) === (box[1], box[2])
+        @test (Point(xmin, ymin), Point(xmax, ymax)) === (first(box), last(box))
+        @test_throws BoundsError box[0]
+        @test_throws BoundsError box[3]
+        @test_throws KeyError box.vec
+        @test occursin(r"^BoundingBox\b", string(box))
         @test box === @inferred BoundingBox(box...)
         @test box === @inferred BoundingBox(Tuple(box)...)
         @test box === @inferred BoundingBox(Tuple(box))
-        (xmin, ymin), (xmax, ymax) = box
-        start, stop = box
-        @test (start, stop) === @inferred Tuple(box)
-        @test (start, stop) === (box.start, box.stop)
-        @test (start, stop) === (box[1], box[2])
-        @test (xmin, xmax, ymin, ymax) === (box.xmin, box.xmax, box.ymin, box.ymax)
-        @test_throws BoundsError box[firstindex(box) - 1]
-        @test_throws BoundsError box[lastindex(box) + 1]
-        @test_throws KeyError box.vals
-        @test occursin(r"^BoundingBox{Float64}\(", string(box))
-        @test coord_type(box) === coord_type(typeof(box)) === eltype(box)
+        @testset "start = $start, stop = $stop" for (start, stop) in (
+            ((xmin,ymin), (xmax,ymax)),
+            (Int8.((xmin,ymin)), Float64.((xmax,ymax))),
+            ((Int8(xmin),Int16(ymin)), (Float64(xmax),Float32(ymax))),
+            (Point(xmin,ymin), Point(xmax,ymax)),
+            (Point{Int8}(xmin,ymin), Point{Float64}(xmax,ymax)),
+            (CartesianIndex(Int(xmin),Int(ymin)), CartesianIndex(Int(xmax),Int(ymax))),
+            )
+            @test box === @inferred BoundingBox{T}(start, stop)
+            @test box === @inferred BoundingBox{T}((start, stop))
+            @test box === @inferred BoundingBox{T}(; xmin = start[1], ymin = start[2], xmax = stop[1], ymax = stop[2])
+            @test box === @inferred BoundingBox{T}(; start = start, stop = stop)
+            if start isa Point && stop isa Point
+                @test box === @inferred BoundingBox(Point{T}(start), Point{T}(stop))
+                @test box === @inferred BoundingBox(; start = Point{T}(start), stop = Point{T}(stop))
+            elseif start isa CartesianIndex && stop isa CartesianIndex
+                @test box === @inferred BoundingBox(T.(Tuple(start)), T.(Tuple(stop)))
+                @test box === @inferred BoundingBox(; start = T.(Tuple(start)), stop = T.(Tuple(stop)))
+                @test box === @inferred BoundingBox(; xmin = T(start[1]), ymin = T(start[2]), xmax = T(stop[1]), ymax = T(stop[2]))
+                if T <: Int
+                    @test box === @inferred BoundingBox(start, stop)
+                end
+            end
+        end
+        # Other constructors.
+        xrng, yrng = Int(xmin):Int(xmax), Int(ymin):Int(ymax)
+        @test box === @inferred BoundingBox{T}(xrng, yrng)
+        @test box === @inferred BoundingBox{T}((xrng, yrng))
+        @test box === @inferred BoundingBox{T}(; xmin = first(xrng), xmax = last(xrng), ymin = first(yrng), ymax = last(yrng))
+        @test box === @inferred BoundingBox(Rectangle(box.start, box.stop))
+        @test @inferred(BoundingBox(box.start)) === @inferred(BoundingBox(box.start, box.start))
+        # Conversions.
+        @test box === @inferred convert(BoundingBox, box)
+        @test box === @inferred convert(BoundingBox{T}, box)
+        @test box === @inferred convert(BoundingBox{T}, box_f64)
+        @test box === @inferred convert(BoundingBox{T}, Tuple(box_f64))
+        @test convert_coord_type(coord_type(box_f64), box) === box_f64
+        @test convert_coord_type(coord_type(box), box_f64) === box
+        if T <: AbstractFloat
+            @test @inferred(float(box)) === box
+            @test @inferred(float(typeof(box))) === typeof(box)
+        elseif T <: Int
+            @test @inferred(float(box)) === @inferred(BoundingBox(float(box.start), float(box.stop)))
+            @test @inferred(float(typeof(box))) === BoundingBox{float(T)}
+        end
+        # Functions specific to bounding-boxes.
+    end
 
+    @testset "Promote coord. type" begin
         let pnt_i16 = Point{Int16}(-1,2),
             rec_i32 = Rectangle{Int32}(pnt_i16, 2*pnt_i16),
             box_f32 = BoundingBox{Float32}(rec_i32),
@@ -166,595 +374,373 @@ end
             @test @inferred(promote_coord_type(pnt_i16, rec_i32, box_f32, pnt_f64)) === (Point{Float64}(pnt_i16), Rectangle{Float64}(rec_i32), BoundingBox{Float64}(box_f32), pnt_f64)
         end
     end
-    @testset "Simple points" begin
-        types = (Int8, Int32, Int64, Float32, Float64)
-        for T1 in types, T2 in types
-            @test promote_type(Point{T1}, Point{T2}) === Point{promote_type(T1,T2)}
+
+    # Common mathematical operations on geometric objects.
+    @testset "Arithmetic ($(typeof(obj)))" for obj in (
+        @inferred(Point(-1, 3)),
+        @inferred(Rectangle((-1.0f0, 2.0f0), (3.0f0, 4.0f0))),
+        @inferred(BoundingBox((-1.0, 2.0), (3.0, 4.0))),
+        )
+
+        # The following tests require that the bounding-box be not empty.
+        if obj isa BoundingBox
+            @test !isempty(obj)
         end
-        P1 = Point(1, 1.3)
-        @test eltype(P1) == Float64
-        @test Point(P1) === P1
-        @test Point{eltype(P1)}(P1) === P1
-        @test eltype(Point(1,2)) == Int
-        @test Point(1,2) === Point(y=2, x=1)
-        for pnt in (Point(1,2), Point(-1.0, 3.5))
-            let r = hypot(pnt.x, pnt.y), θ = atan(pnt.y, pnt.x)
-                @test hypot(pnt) ≈ r
-                @test norm(pnt) ≈ r
-                @test abs(pnt) ≈ r
-                @test abs2(pnt) ≈ r^2
-                @test atan(pnt) ≈ θ
-                @test Point(r = r, θ = θ) ≈ pnt
+
+        # Unary plus does nothing.
+        @test +obj === obj
+
+        # Unary minus negates coordinates and should as multiplying by -1.
+        @test -obj === -one(coord_type(obj))*obj
+        if obj isa Point
+            @test -obj === @inferred Point(-obj.x, -obj.y)
+        elseif obj isa Rectangle
+            @test -obj === @inferred Rectangle(-first(obj), -last(obj))
+            @test -obj === @inferred Rectangle((-obj.x0, -obj.y0), (-obj.x1, -obj.y1))
+        elseif obj isa BoundingBox
+            @test !isempty(obj)
+            @test -obj === @inferred BoundingBox(-last(obj), -first(obj))
+            @test -obj === @inferred BoundingBox((-obj.xmax, -obj.ymax), (-obj.xmin, -obj.ymin))
+        end
+
+        # Multiplicative identity.
+        @test isone(one(obj))
+        @test one(obj) === one(typeof(obj)) === one(coord_type(obj))
+        @test one(obj)*obj === obj
+        @test obj*one(obj) === obj
+        @test one(obj)\obj === @inferred float(obj)
+        @test obj/one(obj) === @inferred float(obj)
+        @test (-one(obj))*obj === -obj
+        @test obj*(-one(obj)) === -obj
+        @test (-one(obj))\obj === -float(obj)
+        @test obj/(-one(obj)) === -float(obj)
+
+        # Multiplying/dividing a geometric object by a number amounts to
+        # scaling around origin.
+        α = 7/2
+        if obj isa Point
+            @test α*obj === Point(α*obj.x, α*obj.y)
+            @test α\obj === Point(α\obj.x, α\obj.y)
+        elseif obj isa Rectangle
+            @test α*obj === @inferred Rectangle(α*first(obj), α*last(obj))
+            @test α*obj === @inferred Rectangle((α*obj.x0, α*obj.y0), (α*obj.x1, α*obj.y1))
+            @test α\obj === @inferred Rectangle(α\first(obj), α\last(obj))
+            @test α\obj === @inferred Rectangle((α\obj.x0, α\obj.y0), (α\obj.x1, α\obj.y1))
+        elseif obj isa BoundingBox
+            @test α*obj === @inferred BoundingBox(α*first(obj), α*last(obj))
+            @test α*obj === @inferred BoundingBox((α*obj.xmin, α*obj.ymin), (α*obj.xmax, α*obj.ymax), )
+            @test α\obj === @inferred BoundingBox(α\first(obj), α\last(obj))
+            @test α\obj === @inferred BoundingBox((α\obj.xmin, α\obj.ymin), (α\obj.xmax, α\obj.ymax), )
+            @test (-α)*obj === @inferred BoundingBox(-α*last(obj), -α*first(obj))
+            @test (-α)*obj === @inferred BoundingBox((-α*obj.xmax, -α*obj.ymax), (-α*obj.xmin, -α*obj.ymin))
+            @test (-α)\obj === @inferred BoundingBox(-α\last(obj), -α\first(obj))
+            @test (-α)\obj === @inferred BoundingBox((-α\obj.xmax, -α\obj.ymax), (-α\obj.xmin, -α\obj.ymin))
+        end
+        @test obj*α === α*obj
+        @test obj/α === α\obj
+
+        # Additive identity.
+        @test iszero(zero(obj))
+        @test zero(obj) === zero(typeof(obj))
+        @test obj + zero(obj) === obj
+        @test zero(obj) + obj === obj
+        @test obj - zero(obj) === obj
+        @test zero(obj) - obj === -obj
+
+        # Adding a point to a geometric object amounts to shifting the object.
+        pnt = Point{Int8}(7,-3)
+        @test obj + pnt === pnt + obj
+        @test obj - pnt === obj + (-pnt)
+        @test obj - pnt === -pnt + obj
+        if obj isa Point
+            @test obj + pnt === Point(obj.x + pnt.x, obj.y + pnt.y)
+            @test obj - pnt === Point(obj.x - pnt.x, obj.y - pnt.y)
+            @test pnt - obj === Point(pnt.x - obj.x, pnt.y - obj.y)
+        elseif obj isa Rectangle
+            @test obj + pnt === @inferred Rectangle(first(obj) + pnt, last(obj) + pnt)
+            @test obj + pnt === @inferred Rectangle((obj.x0 + pnt.x, obj.y0 + pnt.y), (obj.x1 + pnt.x, obj.y1 + pnt.y))
+            @test obj - pnt === @inferred Rectangle(first(obj) - pnt, last(obj) - pnt)
+            @test obj - pnt === @inferred Rectangle((obj.x0 - pnt.x, obj.y0 - pnt.y), (obj.x1 - pnt.x, obj.y1 - pnt.y))
+            @test pnt - obj === @inferred Rectangle(pnt - first(obj), pnt - last(obj))
+            @test pnt - obj === @inferred Rectangle((pnt.x - obj.x0, pnt.y - obj.y0), (pnt.x - obj.x1, pnt.y - obj.y1))
+        elseif obj isa BoundingBox
+            @test obj + pnt === @inferred BoundingBox(first(obj) + pnt, last(obj) + pnt)
+            @test obj + pnt === @inferred BoundingBox((obj.xmin + pnt.x, obj.ymin + pnt.y), (obj.xmax + pnt.x, obj.ymax + pnt.y))
+            @test obj - pnt === @inferred BoundingBox(first(obj) - pnt, last(obj) - pnt)
+            @test obj - pnt === @inferred BoundingBox((obj.xmin - pnt.x, obj.ymin - pnt.y), (obj.xmax - pnt.x, obj.ymax - pnt.y))
+            @test pnt - obj === @inferred BoundingBox(pnt - last(obj), pnt - first(obj))
+            @test pnt - obj === @inferred BoundingBox((pnt.x - obj.xmax, pnt.y - obj.ymax), (pnt.x - obj.xmin, pnt.y - obj.ymin))
+        end
+    end
+
+    @testset "Bounding-box algorithm" begin
+        if true # false for debugging to avoid too many errors, true for production
+            # Exhaustively test all possibilities.
+            A = Array{Bool,2}(undef, (5,4))
+            n = (one(UInt64) << length(A)) # number of possibilities
+            for bits in 0:n-1
+                unpack_bits!(A, bits)
+                @test BoundingBox(A) === naive_bounding_box(A)
             end
-        end
-        let a = Point(1,2), b = Point(-1.0, 3.5)
-            @test TwoDimensional.inner(a, b) ≈ (a.x*b.x + a.y*b.y)
-            @test TwoDimensional.inner(b, a) ≈ (a.x*b.x + a.y*b.y)
-            @test TwoDimensional.outer(a, b) ≈ (a.x*b.y - a.y*b.x)
-            @test TwoDimensional.outer(b, a) ≈ (a.y*b.x - a.x*b.y)
-        end
-        @test Point(CartesianIndex(7,8)) === Point(7,8)
-        @test CartesianIndex(Point(2,3)) === CartesianIndex(2,3)
-        #@test convert(CartesianIndex, Point(2,3)) === CartesianIndex(2,3)
-        #@test convert(CartesianIndex{2}, Point(2,3)) === CartesianIndex(2,3)
-        #@test convert(Tuple, Point(2,3)) === (2,3)
-        #@test convert(Tuple{Float64,Int}, Point(2,3)) === (2.0,3)
-        @test Point{Float32}(P1) === Float32.(P1)
-        @test promote(P1) === (P1,)
-        @test Point{Int}(x=Int16(8),y=Int16(9)) === Point(8,9)
-        @test Point{Float64}(CartesianIndex(8,9)) === Point(8.0,9.0)
-        @test Point{Float64}(2, 3) === Point(2.0, 3.0)
-        @test Point{Float64}((8,9)) === Point(8.0,9.0)
-        P2 = Point(3,11)
-        P3 = Point{Float32}(-2.1,11.8)
-        @test promote(P1, P2) === (P1,Float64.(P2))
-        @test promote(P1, P2, P3) === (P1,Float64.(P2),Float64.(P3))
-        @test convert(Point, P1) === P1
-        @test convert(Point{Float32}, P1) === Float32.(P1)
-        for T in (Float32, Int16)
-            pnt = Point{T}(1,2)
-            # `one(x)` shall yield a multiplicative for `x`.
-            @test pnt*one(pnt) == pnt
-            @test one(pnt)*pnt == pnt
-            @test @inferred(one(pnt)) === @inferred(one(Point{T})) === one(T)
-            # `zero(x)` shall yield the additive identity element for `x`.
-            @test pnt + zero(pnt) == pnt
-            @test zero(pnt) + pnt == pnt
-            @test @inferred(zero(pnt)) === @inferred(zero(Point{T})) === Point(zero(T),zero(T))
-        end
-        @test ntuple(i -> Point(3,5)[i], 2) == (3,5)
-        # round
-        @test round(Point(1.2,-0.7)) === Point(1.0,-1.0)
-        @test round(Point(1,-7)) === Point(1,-7)
-        if VERSION < v"1.11.0-beta1"
-            @test_throws Exception round(Float32, Point(1,-7))
         else
-            @test round(Float32, Point(1,-7)) === Point{Float32}(1,-7)
-        end
-        @test round(Int32, Point(1,-7)) === Point{Int32}(1,-7)
-        @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
-        @test round(Int, Point(1,-4)) === Point(1,-4)
-        @test round(Point, P1) === Point(map(round, Tuple(P1)))
-        @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
-        @test round(Int, Point(1.2,-0.7)) === Point(1,-1)
-        @test round(Point{Int}, Point(1.6,-0.7)) === Point(2,-1)
-        @test round(Point(1.5, 2.5)) === Point(2.0, 2.0)
-        @test round(Point(1.5, 2.5), RoundNearestTiesUp) === Point(2.0, 3.0)
-        if VERSION < v"1.11.0-beta1"
-            @test_throws Exception round(Float32, Point(1.5e0, 2.5e0), RoundNearestTiesUp)
-        else
-            @test round(Float32, Point(1.5e0, 2.5e0), RoundNearestTiesUp) === Point{Float32}(2, 3)
-        end
-        # floor
-        @test floor(Point(-1,3)) === Point(-1,3)
-        @test floor(Int, Point(-1,3)) === Point(-1,3)
-        @test floor(Point{Int}, Point(-1,3)) === Point(-1,3)
-        @test floor(Int16, Point(-1,3)) === Point{Int16}(-1,3)
-        @test floor(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
-        @test floor(Point(-1.7,3.2)) === Point(-2.0,3.0)
-        @test floor(Int, Point(-1.7,3.2)) === Point(-2,3)
-        # ceil
-        @test ceil(Point(-1,3)) === Point(-1,3)
-        @test ceil(Int, Point(-1,3)) === Point(-1,3)
-        @test ceil(Point{Int}, Point(-1,3)) === Point(-1,3)
-        @test ceil(Int16, Point(-1,3)) === Point{Int16}(-1,3)
-        @test ceil(Point{Int16}, Point(-1,3)) === Point{Int16}(-1,3)
-        @test ceil(Point(-1.7,3.2)) === Point(-1.0,4.0)
-        @test ceil(Int, Point(-1.7,3.2)) === Point(-1,4)
-        # other methods
-        @test clamp(Point(-1.1, 6.3), BoundingBox(1:4, 1:5)) === Point(1.0,5.0)
-        @test hypot(P1) == hypot(P1.x, P1.y)
-        @test atan(P1) == atan(P1.y, P1.x)
-        @test distance(P1, Point(0,0)) == hypot(P1)
-        @test distance(Point(0x02,0x05), Point(0x00,0x00)) == hypot(0x02,0x05)
-    end
-    @testset "Bounding boxes" begin
-        types = (Int8, Int32, Int64, Float32, Float64)
-        for T1 in types, T2 in types
-            @test promote_type(BoundingBox{T1}, BoundingBox{T2}) === BoundingBox{promote_type(T1,T2)}
-        end
-        B = BoundingBox(2:3, 4:5)
-        δ = 0.1
-        @test eltype(B) === Int
-        @test BoundingBox(B) === B
-        @test BoundingBox{eltype(B)}(B) === B
-        @test BoundingBox{Float32}(B) ===
-            BoundingBox{Float32}((B.xmin, B.ymin), (B.xmax, B.ymax))
-        @test BoundingBox((2,4),(3,5.0)) === BoundingBox((2.0,4.0),(3.0,5.0))
-        @test convert(BoundingBox, B) === B
-        @test convert(BoundingBox{eltype(B)}, B) === B
-        @test convert(BoundingBox{Int16}, B) === BoundingBox{Int16}(B)
-        # Construct a bounding-box from 2-tuple or 2-tuple.
-        @test BoundingBox(((2,4),(3,5))) === BoundingBox((2,4),(3,5))
-        @test BoundingBox{Float64}(((2,4),(3,5))) === BoundingBox((2.0,4.0),(3.0,5.0))
-        @test convert(BoundingBox, ((2,4),(3,5))) === BoundingBox((2,4),(3,5))
-        @test convert(BoundingBox{Float64}, ((2,4),(3,5))) ===
-            BoundingBox((2.0,4.0),(3.0,5.0))
-        # Construct a bounding-box from 2 points.
-        @test BoundingBox(Point(2,3),Point(4,5)) === BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}(Point(2,3),Point(4,5)) ===
-            BoundingBox{Int16}((2,3),(4,5))
-        @test BoundingBox((Point(2,3),Point(4,5))) === BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}((Point(2,3),Point(4,5))) ===
-            BoundingBox{Int16}((2,3),(4,5))
-        @test convert(BoundingBox,(Point(2,3),Point(4,5))) ===
-            BoundingBox((2,3),(4,5))
-        @test convert(BoundingBox{Int16}, (Point(2,3),Point(4,5))) ===
-            BoundingBox{Int16}((2,3),(4,5))
-        # Construct a bounding-box from 2 Cartesian indices.
-        @test BoundingBox(CartesianIndex(2,3),CartesianIndex(4,5)) ===
-            BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}(CartesianIndex(2,3),CartesianIndex(4,5)) ===
-            BoundingBox{Int16}((2,3),(4,5))
-        @test BoundingBox((CartesianIndex(2,3),CartesianIndex(4,5))) ===
-            BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}((CartesianIndex(2,3),CartesianIndex(4,5))) ===
-            BoundingBox{Int16}((2,3),(4,5))
-        # Construct a bounding-box from 2 2-tuple.
-        @test BoundingBox((2,3),(4,5)) === BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}((2,3),(4,5)) === BoundingBox{Int16}((2,3),(4,5))
-        # Construct a bounding-box by keywords.
-        @test BoundingBox(xmin=2,ymin=3,xmax=4,ymax=5) ===
-            BoundingBox((2,3),(4,5))
-        @test BoundingBox{Float64}(xmin=2,ymin=3,xmax=4,ymax=5) ===
-            BoundingBox((2.0,3.0),(4.0,5.0))
-        # Construct a bounding-box from CartesianIndices instance.
-        R = CartesianIndices((2:4,3:5))
-        @test BoundingBox(R) === BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}(R) === BoundingBox{Int16}((2,3),(4,5))
-        @test convert(BoundingBox, R) === BoundingBox((2,3),(4,5))
-        @test convert(BoundingBox{Int16}, R) === BoundingBox{Int16}((2,3),(4,5))
-        # Construct a bounding-box from 2 ranges.
-        R = (2:4, 3:5)
-        @test BoundingBox(R...) === BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}(R...) === BoundingBox{Int16}((2,3),(4,5))
-        @test BoundingBox(R) === BoundingBox((2,3),(4,5))
-        @test BoundingBox{Int16}(R) === BoundingBox{Int16}((2,3),(4,5))
-        @test convert(BoundingBox,R) === BoundingBox((2,3),(4,5))
-        @test convert(BoundingBox{Int16},R) === BoundingBox{Int16}((2,3),(4,5))
-
-        @test first(B) === Point(B.xmin,B.ymin)
-        @test last(B) === Point(B.xmax,B.ymax)
-        @test isempty(typemax(BoundingBox{Int})) == false
-        @test isempty(typemin(BoundingBox{Float64})) == true
-        @test BoundingBox{Float32}(nothing) === typemin(BoundingBox{Float32})
-        @test size(BoundingBox{Int16}(nothing)) === (0,0)
-        @test (Point(3,5),Point(7,8)) === Tuple(BoundingBox(3:7, 5:8))
-        Rx, Ry = 3:7, -6:-3
-        B = BoundingBox(Rx,Ry)
-        @test size(B) === (length(Rx),length(Ry))
-        @test size(BoundingBox{Int16}(B)) === size(B)
-        @test axes(B) === (Rx,Ry)
-        @test axes(BoundingBox{Int16}(B)) === (Rx,Ry)
-        for k in (1,2)
-            @test size(B, k) === size(B)[k]
-            @test axes(B, k) === axes(B)[k]
-            @test size(BoundingBox{Int16}(B), k) === size(B)[k]
-            @test axes(BoundingBox{Int16}(B), k) === axes(B)[k]
-        end
-        @test size(B,40) === 1
-        @test_throws ErrorException size(B, 0)
-        B1 = BoundingBox((2,4),(3,5))
-        B2 = BoundingBox((1.1,4.5),(3.2,5.8))
-        B3 = BoundingBox{Float32}((1.1,4.5),(3.2,5.8))
-        @test_broken promote(B1, B2) === (Float64.(B1),B2)
-        @test_broken promote(B1, B2, B3) === (Float64.(B1),B2,Float64.(B3))
-        @test_throws MethodError BoundingBox(ones(5,7))
-        @test BoundingBox(-2:6, 8:11) === BoundingBox((-2,8),(6,11))
-        @test BoundingBox((2:4, -1:7)) === BoundingBox((2,-1),(4,7))
-        @test CartesianIndices(BoundingBox(2:4,-1:7)) ===
-            CartesianIndices((2:4,-1:7))
-        @test get_axis_bounds(9:13) === (9,13)
-        @test get_axis_bounds(13:9) === (13,12)
-        @test get_axis_bounds(13:-1:9) === (9,13)
-        @test_throws ArgumentError get_axis_bounds(13:-2:9)
-        let A = ones(7,8)
-            A[1:2,:] .= 0
-            A[4,:] .= 0
-            A[end,:] .= 0
-            @test BoundingBox(x -> x > 0, A) === BoundingBox((3, 1),(6,8))
-            @test BoundingBox(A .> 0) === BoundingBox((3, 1),(6,8))
-            A[:,1] .= 0
-            A[:3:4] .= 0
-            A[:,end-1:end] .= 0
-            A[2,2] = 1
-            @test BoundingBox(x -> x > 0, A) === BoundingBox((2, 2),(6,6))
-            @test BoundingBox(A .> 0) === BoundingBox((2, 2),(6,6))
-        end
-        @test BoundingBox{Float32}(nothing) ===
-            BoundingBox{Float32}((Inf,Inf),(-Inf,-Inf))
-        @test typemin(BoundingBox{Float64}) === BoundingBox((Inf,Inf),(-Inf,-Inf))
-        @test typemax(BoundingBox{Float64}) === BoundingBox((-Inf,-Inf),(Inf,Inf))
-        # round
-        @test round(BoundingBox((1.1,-3.6),(2.1,7.7))) ===
-            BoundingBox((1.0,-4.0),(2.0,8.0))
-        @test round(BoundingBox{Int16}, BoundingBox((1.1,-3.6),(2.1,7.7))) ===
-            BoundingBox{Int16}((1,-4),(2,8))
-        @test round(Int, BoundingBox((1,-3),(2,7))) === BoundingBox((1,-3),(2,7))
-        @test round(Int16, BoundingBox((1.1,-3.6),(2.1,7.7))) ===
-            BoundingBox{Int16}((1,-4),(2,8))
-        @test round(Int16, BoundingBox((1,-4),(2,8))) ===
-            BoundingBox{Int16}((1,-4),(2,8))
-        if VERSION < v"1.11.0-beta1"
-            @test_throws Exception round(Float32, BoundingBox{Int16}((1,-4),(2,8)))
-            @test_throws Exception round(Float32, BoundingBox((1.1,-4.6),(2.7,8.3)))
-        else
-            @test round(Float32, BoundingBox{Int16}((1,-4),(2,8))) === BoundingBox{Float32}(1,2,-4,8)
-            @test round(Float32, BoundingBox((1.1,-4.6),(2.7,8.3))) === BoundingBox{Float32}((1,-5),(3,8))
-        end
-        @test round(BoundingBox((1.5, 3.5),( 2.5, 9.9))) === BoundingBox((2.0, 4.0),( 2.0, 10.0))
-        @test round(BoundingBox((1.5, 3.5),( 2.5, 9.9)), RoundNearestTiesUp) ===
-            BoundingBox((2.0, 4.0),( 3.0, 10.0))
-        # exterior
-        @test exterior(B) === B
-        @test exterior(Int, B) === B
-        @test exterior(Int16, B) === BoundingBox{Int16}(B)
-        @test_broken exterior(Float32, B) === BoundingBox{Float32}(B)
-        @test exterior(BoundingBox{Int}, B) === B
-        @test_broken exterior(B + δ) === B + 1.0
-        @test exterior(Int, B + δ) === B + 1
-        @test exterior(BoundingBox{Int}, B) === BoundingBox{Int}(exterior(B))
-        @test_broken exterior(Float32, B + δ) ===
-            BoundingBox{Float32}(exterior(B + δ))
-        # interior
-        @test interior(B) === B
-        @test interior(Int, B) === B
-        @test interior(Int16, B) === BoundingBox{Int16}(B)
-        @test_broken interior(Float32, B) === BoundingBox{Float32}(B)
-        @test interior(BoundingBox{Int}, B) === B
-        @test_broken interior(B + δ) === Float64.(B)
-        @test interior(Int, B - δ) === B - 1
-        @test interior(BoundingBox{Int}, B) === BoundingBox{Int}(interior(B))
-        @test_broken interior(Float32, B + δ) === BoundingBox{Float32}(interior(B + δ))
-        # other methods
-        @test area(Rectangle((2,5),(4,8))) == 6
-        @test area(Rectangle((2.0,5.0),(4.0,8.0))) == 6.0
-
-        @test (Point(2,4) ∈ BoundingBox((1,3),(2,4))) == true
-        @test (Point(3,4) ∈ BoundingBox((1,3),(2,4))) == false
-        @test (Point(2,5) ∈ BoundingBox((1,3),(2,4))) == false
-        @test (Point(3,5) ∈ BoundingBox((1,3),(2,4))) == false
-
-        @test (BoundingBox((1,3),(-2,4)) ⊆ BoundingBox{Float32}(nothing)) == true
-        @test (BoundingBox((1,3),(-2,4)) ⊆ BoundingBox((1,3),(2,4))) == true
-        @test (BoundingBox((1,3),(2,4)) ⊆ BoundingBox((1,3),(2,4))) == true
-        @test (BoundingBox((1,3),(2,4)) ⊆ BoundingBox((1,0),(4,3))) == false
-        @test (BoundingBox((0,3),(2,4)) ⊆ BoundingBox((1,3),(2,5))) == false
-
-        C = Point(x = 0.5*(B.xmin + B.xmax), y = 0.5*(B.ymin + B.ymax))
-        @test center(B) === C
-        @test center(BoundingBox{Float64}(B)) === C
-        B1 = BoundingBox(-2:6, -7:-1)
-        B2 = BoundingBox(1:8, -9:3)
-        @test B1 ∪ B2 === BoundingBox(-2:8, -9:3)
-        @test B1 ∩ B2 === BoundingBox(1:6, -7:-1)
-        A = rand(7,8)
-        X, Y = 2:4, 1:3
-        B = BoundingBox(X, Y)
-        @test A[X,Y] == A[B]
-        @test view(A,X,Y) === view(A, B)
-    end
-    @testset "Arithmetic" begin
-        @test 2*Point(3,4) === Point(6,8)
-        @test Point(3,4)*3 === Point(9,12)
-        @test 3\Point(3,4) === Point(3/3,4/3)
-        @test Point(3,4)/3 === Point(3/3,4/3)
-        @test +Point(2,-9) === Point(2,-9)
-        @test -Point(2,-9) === Point(-2,9)
-        @test +BoundingBox((2,4),(3,5)) === BoundingBox((2,4),(3,5))
-        @test -BoundingBox((2,4),(3,5)) === BoundingBox((-3,-5),(-2,-4))
-        @test Point(2,-9) + Point(3,7) === Point(5,-2)
-        @test Point(2,-9) - Point(3,7) === Point(-1,-16)
-        α = 3
-        δ = 0.1
-        t = Point(-0.2,0.7)
-        B = BoundingBox((2,4),(3,5))
-        @test α*B === B*α === BoundingBox(xmin = α*B.xmin, xmax = α*B.xmax,
-                                          ymin = α*B.ymin, ymax = α*B.ymax)
-        @test (-α)*B === B*(-α) === BoundingBox(xmin = -α*B.xmax, xmax = -α*B.xmin,
-                                                ymin = -α*B.ymax, ymax = -α*B.ymin)
-        @test α\B === B/α === BoundingBox(xmin = B.xmin/α, xmax = B.xmax/α,
-                                          ymin = B.ymin/α, ymax = B.ymax/α)
-        @test (-α)\B === B/(-α) === BoundingBox(xmin = B.xmax/-α, xmax = B.xmin/-α,
-                                                ymin = B.ymax/-α, ymax = B.ymin/-α)
-        @test B + δ === BoundingBox(xmin = B.xmin - δ, xmax = B.xmax + δ,
-                                    ymin = B.ymin - δ, ymax = B.ymax + δ)
-        @test B - δ === BoundingBox(xmin = B.xmin + δ, xmax = B.xmax - δ,
-                                    ymin = B.ymin + δ, ymax = B.ymax - δ)
-        @test B + t === BoundingBox(xmin = B.xmin + t.x, xmax = B.xmax + t.x,
-                                    ymin = B.ymin + t.y, ymax = B.ymax + t.y)
-        @test B - t === BoundingBox(xmin = B.xmin - t.x, xmax = B.xmax - t.x,
-                                    ymin = B.ymin - t.y, ymax = B.ymax - t.y)
-    end
-end
-
-@testset "Bounding-box algorithm" begin
-    if true
-        # Exhaustively test all possibilities.
-        A = Array{Bool,2}(undef, (5,4))
-        n = (one(UInt64) << length(A)) # number of possibilities
-        for bits in 0:n-1
-            unpack_bits!(A, bits)
+            # Semi-exhaustive testing of the bounding box algorithm.
+            A = zeros(Bool, (7,8))
+            fill!(A,false)[1,3] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,true)[2:end-1,2:end-1] .= false
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[1,1] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[1,end] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[end,1] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[end,end] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[3,4] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            A[2,7] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            A[5,end] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[end,4] = true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[1,:] .= true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[:,1] .= true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[end,:] .= true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[:,end] .= true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[1,2:end-1] .= true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[2:end-1,1] .= true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[end,2:end-1] .= true
+            @test BoundingBox(A) === naive_bounding_box(A)
+            fill!(A,false)[2:end-1,end] .= true
             @test BoundingBox(A) === naive_bounding_box(A)
         end
-    else
-        # Semi-exhaustive testing of the bounding box algorithm.
-        A = zeros(Bool, (7,8))
-        fill!(A,false)[1,3] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,true)[2:end-1,2:end-1] .= false
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[1,1] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[1,end] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[end,1] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[end,end] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[3,4] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        A[2,7] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        A[5,end] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[end,4] = true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[1,:] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[:,1] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[end,:] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[:,end] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[1,2:end-1] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[2:end-1,1] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[end,2:end-1] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
-        fill!(A,false)[2:end-1,end] .= true
-        @test BoundingBox(A) === naive_bounding_box(A)
     end
-end
 
-@testset "AffineTransforms" begin
-    tol = 1e-14
-    I = AffineTransform()
-    A = AffineTransform(1, 0, -3, 0.1, 1, +2)
-    B = AffineTransform(-0.4,  0.1, -4.2, -0.3,  0.7,  1.1)
-    C = AffineTransform( 2.3, -0.9, -6.1,  0.7, -3.1, -5.2)
-    vectors = ((0.2,1.3), (-1,π), (-sqrt(2),3//4))
-    scales = (2, 0.1, φ)
-    angles = (-2π/11, π/7, 0.1)
-    types = (BigFloat, Float64, Float32, Float16)
+    @testset "AffineTransforms" begin
+        tol = 1e-14
+        I = AffineTransform()
+        A = AffineTransform(1, 0, -3, 0.1, 1, +2)
+        B = AffineTransform(-0.4,  0.1, -4.2, -0.3,  0.7,  1.1)
+        C = AffineTransform( 2.3, -0.9, -6.1,  0.7, -3.1, -5.2)
+        vectors = ((0.2,1.3), (-1,π), (-sqrt(2),3//4))
+        scales = (2, 0.1, φ)
+        angles = (-2π/11, π/7, 0.1)
+        types = (BigFloat, Float64, Float32, Float16)
 
-    @testset "construction/conversion" begin
-        for T1 in types, T2 in types
-            @testset "T = $T" for T in types
-                @test_throws MethodError T(A)
-                if VERSION ≥ v"1.3"
-                    # FIXME: This makes old Julia versions panic on illegal instruction...
-                    @test_throws MethodError T.(A)
+        @testset "construction/conversion" begin
+            for T1 in types, T2 in types
+                @testset "T = $T" for T in types
+                    @test_throws MethodError T(A)
+                    if VERSION ≥ v"1.3"
+                        # FIXME: This makes old Julia versions panic on illegal instruction...
+                        @test_throws MethodError T.(A)
+                    end
                 end
+                @test promote_type(AffineTransform{T1}, AffineTransform{T2}) ===
+                    AffineTransform{promote_type(T1,T2)}
             end
-            @test promote_type(AffineTransform{T1}, AffineTransform{T2}) ===
-                AffineTransform{promote_type(T1,T2)}
-        end
-        @test AffineTransform(A) === A
-        @test AffineTransform{bare_type(A)}(A) === A
-        for G in (I, A, B)
-            for T in types
-                H = @inferred AffineTransform{T}(G)
-                @test typeof(H) <: AffineTransform{T}
-                @test bare_type(H) === T
-                @test real_type(H) === T
-                @test floating_point_type(H) === T
-                @test factors_type(H) === T
-                @test offsets_type(H) === T
-                @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≈ map(T, Tuple(G))
-                H = @inferred convert(AffineTransform{T}, G)
-                @test typeof(H) <: AffineTransform{T}
-                @test bare_type(H) === T
-                @test real_type(H) === T
-                @test floating_point_type(H) === T
-                @test factors_type(H) === T
-                @test offsets_type(H) === T
-                @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≈ map(T, Tuple(G))
-                H = @inferred convert_bare_type(T, G)
-                @test typeof(H) <: AffineTransform{T}
-                @test bare_type(H) === T
-                @test real_type(H) === T
-                @test floating_point_type(H) === T
-                @test factors_type(H) === T
-                @test offsets_type(H) === T
-                @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≈ map(T, Tuple(G))
-                H = @inferred convert_real_type(T, G)
-                @test typeof(H) <: AffineTransform{T}
-                @test bare_type(H) === T
-                @test real_type(H) === T
-                @test floating_point_type(H) === T
-                @test factors_type(H) === T
-                @test offsets_type(H) === T
-                @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≈ map(T, Tuple(G))
-                H = @inferred convert_floating_point_type(T, G)
-                @test typeof(H) <: AffineTransform{T}
-                @test bare_type(H) === T
-                @test real_type(H) === T
-                @test floating_point_type(H) === T
-                @test factors_type(H) === T
-                @test offsets_type(H) === T
-                @test (H === G) == (bare_type(H) === bare_type(G))
-                @test Tuple(H) ≈ map(T, Tuple(G))
-            end
-        end
-    end
-
-    @testset "identity" begin
-        @test isone(det(I))
-        @test inv(I) ≈ I
-        for v in vectors
-            @test I(v) ≈ v
-        end
-    end
-
-    @testset "apply" begin
-        for G in (I, A, B),
-            v in vectors
-            @test G(v...) ≈ G(v)
-            @test G*v ≈ G(v)
-            @test G(Point(v)) ≈ Point(G(v))
-            @test G*Point(v) ≈ Point(G(v))
-        end
-    end
-
-    @testset "composition" begin
-        for G in (I, B, A)
-            @test G === @inferred compose(G)
-            for H in (A, B)
-                @test G*H ≈ compose(G,H)
-                @test G⋅H ≈ compose(G,H)
-                @test G∘H ≈ compose(G,H)
-                for v in vectors
-                    @test (G*H)(v) ≈ G(H(v))
+            @test AffineTransform(A) === A
+            @test AffineTransform{bare_type(A)}(A) === A
+            for G in (I, A, B)
+                for T in types
+                    H = @inferred AffineTransform{T}(G)
+                    @test typeof(H) <: AffineTransform{T}
+                    @test bare_type(H) === T
+                    @test real_type(H) === T
+                    @test floating_point_type(H) === T
+                    @test factors_type(H) === T
+                    @test offsets_type(H) === T
+                    @test (H === G) == (bare_type(H) === bare_type(G))
+                    @test Tuple(H) ≈ map(T, Tuple(G))
+                    H = @inferred convert(AffineTransform{T}, G)
+                    @test typeof(H) <: AffineTransform{T}
+                    @test bare_type(H) === T
+                    @test real_type(H) === T
+                    @test floating_point_type(H) === T
+                    @test factors_type(H) === T
+                    @test offsets_type(H) === T
+                    @test (H === G) == (bare_type(H) === bare_type(G))
+                    @test Tuple(H) ≈ map(T, Tuple(G))
+                    H = @inferred convert_bare_type(T, G)
+                    @test typeof(H) <: AffineTransform{T}
+                    @test bare_type(H) === T
+                    @test real_type(H) === T
+                    @test floating_point_type(H) === T
+                    @test factors_type(H) === T
+                    @test offsets_type(H) === T
+                    @test (H === G) == (bare_type(H) === bare_type(G))
+                    @test Tuple(H) ≈ map(T, Tuple(G))
+                    H = @inferred convert_real_type(T, G)
+                    @test typeof(H) <: AffineTransform{T}
+                    @test bare_type(H) === T
+                    @test real_type(H) === T
+                    @test floating_point_type(H) === T
+                    @test factors_type(H) === T
+                    @test offsets_type(H) === T
+                    @test (H === G) == (bare_type(H) === bare_type(G))
+                    @test Tuple(H) ≈ map(T, Tuple(G))
+                    H = @inferred convert_floating_point_type(T, G)
+                    @test typeof(H) <: AffineTransform{T}
+                    @test bare_type(H) === T
+                    @test real_type(H) === T
+                    @test floating_point_type(H) === T
+                    @test factors_type(H) === T
+                    @test offsets_type(H) === T
+                    @test (H === G) == (bare_type(H) === bare_type(G))
+                    @test Tuple(H) ≈ map(T, Tuple(G))
                 end
             end
         end
-        for T1 in types, T2 in types
-            T = promote_type(T1, T2)
-            @test bare_type(AffineTransform{T1}(A)*AffineTransform{T2}(B)) == T
-        end
-        for v in vectors
-            @test compose(A,B,C)(v) ≈ A(B(C(v)))
-            @test (A*B*C)(v) ≈ A(B(C(v)))
-            @test compose(A,C,B,C)(v) ≈ A(C(B(C(v))))
-            @test (A*C*B*C)(v) ≈ A(C(B(C(v))))
-        end
-    end
 
-    @testset "jacobian" begin
-        for M in (I, B, A)
-            @test jacobian(M) == abs(det(M))
-        end
-    end
-
-    @testset "inverse" begin
-        for M in (B, A)
-            if det(M) == 0
-                continue
-            end
-            @test det(inv(M)) ≈ 1/det(M)
-            @test M/M ≈ M*inv(M)
-            @test M\M ≈ inv(M)*M
-            @test M\M ≈ I
-            @test M/M ≈ I
+        @testset "identity" begin
+            @test isone(det(I))
+            @test inv(I) ≈ I
             for v in vectors
-                @test M(inv(M)(v)) ≈ v
-                @test inv(M)(M(v)) ≈ v
-                @test (M\M)(v) ≈ v
-                @test (M/M)(v) ≈ v
+                @test I(v) ≈ v
             end
         end
-        for T1 in types, T2 in types
-            T = promote_type(T1, T2)
-            @test bare_type(AffineTransform{T1}(A)/AffineTransform{T2}(B)) == T
-            @test bare_type(AffineTransform{T1}(A)\AffineTransform{T2}(B)) == T
-        end
-    end
 
-    @testset "scale" begin
-        for M in (A, B, C), α in scales, v in vectors
-            @test (α*M)(v) ≈ α.*M(v)
-            @test (M*α)(v) ≈ M(α.*v)
-            for T in types
-                @test bare_type(T(α)*M) === promote_type(T, bare_type(M))
-                @test bare_type(M*T(α)) === promote_type(T, bare_type(M))
-                H = @inferred AffineTransform{T}(M)
-                @test bare_type(T(α)*H) === bare_type(H)
-                @test bare_type(H*T(α)) === bare_type(H)
+        @testset "apply" begin
+            for G in (I, A, B),
+                v in vectors
+                @test G(v...) ≈ G(v)
+                @test G*v ≈ G(v)
+                @test G(Point(v)) ≈ Point(G(v))
+                @test G*Point(v) ≈ Point(G(v))
             end
         end
-    end
 
-    @testset "translation" begin
-        for M in (B, A), t in vectors, v in vectors
-            @test translate(t, M)(v) ≈ t .+ M(v)
-            @test translate(t, M)(v) ≈ (t + M)(v)
-            @test translate(M, t)(v) ≈ M(v .+ t)
-            @test translate(M, t)(v) ≈ (M + t)(v)
-        end
-        for v in vectors
-            @test A - v ≈ A + (-v[1], -v[2])
-            @test A + Point(v) ≈ translate(A, v...)
-            @test Point(v) + A ≈ translate(v..., A)
-            @test A - Point(v) ≈ A - v
-        end
-        for G in (A, B, C), v in vectors, T in types
-            @test bare_type(T.(v) + G) === promote_type(T, bare_type(G))
-            @test bare_type(G + T.(v)) === promote_type(T, bare_type(G))
-            H = @inferred AffineTransform{T}(G)
-            @test bare_type(T.(v) + H) === T
-            @test bare_type(H + T.(v)) === T
-        end
-    end
-
-    @testset "rotation" begin
-        for θ in angles
-            R = @inferred rotate(+θ, I)
-            Q = @inferred rotate(-θ, I)
-            @test R*Q ≈ I
-            @test Q*R ≈ I
-            for G in (A, B, C), v in vectors
-                @test rotate(θ, G)(v) ≈ (R*G)(v)
-                @test rotate(G, θ)(v) ≈ (G*R)(v)
+        @testset "composition" begin
+            for G in (I, B, A)
+                @test G === @inferred compose(G)
+                for H in (A, B)
+                    @test G*H ≈ compose(G,H)
+                    @test G⋅H ≈ compose(G,H)
+                    @test G∘H ≈ compose(G,H)
+                    for v in vectors
+                        @test (G*H)(v) ≈ G(H(v))
+                    end
+                end
+            end
+            for T1 in types, T2 in types
+                T = promote_type(T1, T2)
+                @test bare_type(AffineTransform{T1}(A)*AffineTransform{T2}(B)) == T
+            end
+            for v in vectors
+                @test compose(A,B,C)(v) ≈ A(B(C(v)))
+                @test (A*B*C)(v) ≈ A(B(C(v)))
+                @test compose(A,C,B,C)(v) ≈ A(C(B(C(v))))
+                @test (A*C*B*C)(v) ≈ A(C(B(C(v))))
             end
         end
-        for G in (A, B, C), θ in angles, T in types
-            @test bare_type(rotate(T(θ), G)) === promote_type(T, bare_type(G))
-            @test bare_type(rotate(G, T(θ))) === promote_type(T, bare_type(G))
-            H = @inferred AffineTransform{T}(G)
-            @test bare_type(rotate(T(θ), H)) === T
-            @test bare_type(rotate(H, T(θ))) === T
-        end
-    end
 
-    @testset "intercept" begin
-        for M in (I, A, B)
-            x, y = intercept(M)
-            @test M(x, y) ≈ (0,0) atol=16*eps(Float64)
-            P = intercept(Point, M)
-            @test M*P ≈ Point(0,0) atol=16*eps(Float64)
+        @testset "jacobian" begin
+            for M in (I, B, A)
+                @test jacobian(M) == abs(det(M))
+            end
         end
-    end
 
-    @testset "show" begin
-        for M in (I, A, B, C)
-            @test occursin(r"\bAffineTransform\b", string(M))
+        @testset "inverse" begin
+            for M in (B, A)
+                if det(M) == 0
+                    continue
+                end
+                @test det(inv(M)) ≈ 1/det(M)
+                @test M/M ≈ M*inv(M)
+                @test M\M ≈ inv(M)*M
+                @test M\M ≈ I
+                @test M/M ≈ I
+                for v in vectors
+                    @test M(inv(M)(v)) ≈ v
+                    @test inv(M)(M(v)) ≈ v
+                    @test (M\M)(v) ≈ v
+                    @test (M/M)(v) ≈ v
+                end
+            end
+            for T1 in types, T2 in types
+                T = promote_type(T1, T2)
+                @test bare_type(AffineTransform{T1}(A)/AffineTransform{T2}(B)) == T
+                @test bare_type(AffineTransform{T1}(A)\AffineTransform{T2}(B)) == T
+            end
+        end
+
+        @testset "scale" begin
+            for M in (A, B, C), α in scales, v in vectors
+                @test (α*M)(v) ≈ α.*M(v)
+                @test (M*α)(v) ≈ M(α.*v)
+                for T in types
+                    @test bare_type(T(α)*M) === promote_type(T, bare_type(M))
+                    @test bare_type(M*T(α)) === promote_type(T, bare_type(M))
+                    H = @inferred AffineTransform{T}(M)
+                    @test bare_type(T(α)*H) === bare_type(H)
+                    @test bare_type(H*T(α)) === bare_type(H)
+                end
+            end
+        end
+
+        @testset "translation" begin
+            for M in (B, A), t in vectors, v in vectors
+                @test translate(t, M)(v) ≈ t .+ M(v)
+                @test translate(t, M)(v) ≈ (t + M)(v)
+                @test translate(M, t)(v) ≈ M(v .+ t)
+                @test translate(M, t)(v) ≈ (M + t)(v)
+            end
+            for v in vectors
+                @test A - v ≈ A + (-v[1], -v[2])
+                @test A + Point(v) ≈ translate(A, v...)
+                @test Point(v) + A ≈ translate(v..., A)
+                @test A - Point(v) ≈ A - v
+            end
+            for G in (A, B, C), v in vectors, T in types
+                @test bare_type(T.(v) + G) === promote_type(T, bare_type(G))
+                @test bare_type(G + T.(v)) === promote_type(T, bare_type(G))
+                H = @inferred AffineTransform{T}(G)
+                @test bare_type(T.(v) + H) === T
+                @test bare_type(H + T.(v)) === T
+            end
+        end
+
+        @testset "rotation" begin
+            for θ in angles
+                R = @inferred rotate(+θ, I)
+                Q = @inferred rotate(-θ, I)
+                @test R*Q ≈ I
+                @test Q*R ≈ I
+                for G in (A, B, C), v in vectors
+                    @test rotate(θ, G)(v) ≈ (R*G)(v)
+                    @test rotate(G, θ)(v) ≈ (G*R)(v)
+                end
+            end
+            for G in (A, B, C), θ in angles, T in types
+                @test bare_type(rotate(T(θ), G)) === promote_type(T, bare_type(G))
+                @test bare_type(rotate(G, T(θ))) === promote_type(T, bare_type(G))
+                H = @inferred AffineTransform{T}(G)
+                @test bare_type(rotate(T(θ), H)) === T
+                @test bare_type(rotate(H, T(θ))) === T
+            end
+        end
+
+        @testset "intercept" begin
+            for M in (I, A, B)
+                x, y = intercept(M)
+                @test M(x, y) ≈ (0,0) atol=16*eps(Float64)
+                P = intercept(Point, M)
+                @test M*P ≈ Point(0,0) atol=16*eps(Float64)
+            end
+        end
+
+        @testset "show" begin
+            for M in (I, A, B, C)
+                @test occursin(r"\bAffineTransform\b", string(M))
+            end
         end
     end
 end

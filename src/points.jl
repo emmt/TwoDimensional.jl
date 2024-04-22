@@ -79,14 +79,23 @@ Point{T}(pnt::AbstractPoint) where {T} = Point{T}(pnt.x, pnt.y)
 Base.convert(::Type{T}, pnt::T) where {T<:Point} = pnt
 Base.convert(::Type{T}, obj::PointLike) where {T<:Point} = T(obj)
 
+# Extend basic methods for abstract points.
+Base.eltype(::AbstractPoint{T}) where {T} = T
+Base.eltype(::Type{<:AbstractPoint{T}}) where {T} = T
+Base.CartesianIndex(pnt::AbstractPoint{<:Integer}) = CartesianIndex(get_xy(pnt)...)
+
 # Make points indexable iterators.
-Base.length(      pnt::Point) = 2
-Base.firstindex(  pnt::Point) = 1
-Base.lastindex(   pnt::Point) = 2
-Base.first(       pnt::Point) = pnt[1]
-Base.last(        pnt::Point) = pnt[2]
-Base.IteratorSize(pnt::Point) = Base.IteratorSize(typeof(pnt))
-Base.IteratorSize(::Type{<:Point}) = Base.HasLength()
+Base.length(        pnt::Point) = 2
+Base.firstindex(    pnt::Point) = 1
+Base.lastindex(     pnt::Point) = 2
+Base.first(         pnt::Point) = pnt[1]
+Base.last(          pnt::Point) = pnt[2]
+Base.eltype(        pnt::Point) = eltype(typeof(pnt))
+Base.IteratorSize(  pnt::Point) = Base.IteratorSize(typeof(pnt))
+Base.IteratorEltype(pnt::Point) = Base.IteratorEltype(typeof(pnt))
+Base.eltype(        ::Type{<:Point{T}}) where {T} = T
+Base.IteratorSize(  ::Type{<:Point}) = Base.HasLength()
+Base.IteratorEltype(::Type{<:Point}) = Base.HasEltype()
 @inline Base.iterate(pnt::Point, i::Int = 1) =
     i == 1 ? (first(pnt), 2) :
     i == 2 ? (last( pnt), 3) : nothing

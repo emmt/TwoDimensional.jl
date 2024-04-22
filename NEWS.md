@@ -19,9 +19,12 @@
   used/imported. For example: `using TwoDimensional: AffineTransform2D,
   rotate`.
 
-- Exported method `coord_type` yields the type of the coordinates for a
-  geometric object or for its type. Method `promote_coord_type` yields the
-  promoted coordinates type from a list of geometric objects/types.
+- **Coordinate type:** Method `coord_type` yields the type of the coordinates
+  for a geometric object or for its type. Method `convert_coord_type` converts
+  the coordinate type of a geometric object/type. Finally, method
+  `promote_coord_type`, with a list a list of geometric types, yields the
+  promoted coordinates type and , with a list of geometric objects, yields the
+  objects promoted to the same coordinate type.
 
 - New geometric object type `Rectangle` which is similar to `BoundingBox`
   except that rectangles can never be empty (a rectangle contains at least a

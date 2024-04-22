@@ -10,35 +10,40 @@ be re-built without ambiguities. For example, for a point `pnt`:
 both hold.
 
 Geometrical objects that have homogeneous parts extend the `Base.Tuple` method
-to return these parts and extend the `Base.getindex` method to directly index
-among these parts.
+to return these parts, the `Base.getindex` method to directly index among these
+parts, and the ['TwoDimensional.apply`](@ref) method.
 
 """
 parts(pnt::Point) = getfield(pnt, 1)
 parts(rect::Rectangle) = getfield(rect, 1)
 parts(box::BoundingBox) = getfield(box, 1)
 
-# Extend methods `Base.Tuple`, `map`, `Broadcast.broadcasted`, and
-# `Base.getindex` for geometric objects having homogeneous parts.
+# Extend methods `Base.Tuple` and `Base.getindex` for geometric objects having
+# homogeneous parts.
 for type in (:Point, :Rectangle, :BoundingBox)
     @eval begin
         Base.Tuple(obj::$type) = parts(obj)
-        Broadcast.broadcasted(::Type{T}, obj::$type) where {T} = map(T, obj)
-        Broadcast.broadcasted(f::Function, obj::$type) = map(f, obj)
         @inline @propagate_inbounds Base.getindex(obj::$type, i::Integer) =
             getindex(parts(obj), as(Int, i))
     end
-    if type === :BoundingBox
-        @eval begin
-            @inline Base.map(f, box::BoundingBox; swap::Bool = false) =
-                BoundingBox(map(f, swap ? swap(parts(box)) : parts(box)))
-        end
-    else
-        @eval begin
-            @inline Base.map(f, obj::$type) = $type(map(f, parts(obj)))
-        end
-    end
 end
+
+"""
+    TwoDimensional.apply(f, obj)
+
+applies function `f` to each part of geometric object `obj` and rebuild an
+object of the same king with the result.
+
+If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether
+to swap the first and las end-points of the box.
+
+See also ['TwoDimensional.parts`](@ref).
+
+"""
+@inline apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
+@inline apply(f, rect::Rectangle) = Rectangle(f(rect[1]), f(rect[2]))
+@inline apply(f, box::BoundingBox; swap::Bool = false) =
+    BoundingBox(f(box[swap ? 2 : 1]), f(box[swap ? 1 : 2]))
 
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
@@ -61,10 +66,9 @@ as(::Type{T}, x) where {T} = convert(T, x)::T
 # Basic constructors (with tuple argument) for points and bounding boxes and
 # API to make them indexable iterators.
 for (type, like, len) in ((:Point,         :PointLike,         2),
-                          (:BoundingBox,   :BoundingBoxLike,   4),)
+                          (:Rectangle,     :RectangleLike,     2),
+                          (:BoundingBox,   :BoundingBoxLike,   2),)
     @eval begin
-        Base.eltype(obj::$type) = eltype(typeof(obj))
-        Base.eltype(::Type{<:$type{T}}) where {T} = T
         Base.promote_type(::Type{$type{T}}, ::Type{$type{T}}) where {T} = $type{T}
         Base.promote_type(::Type{$type{T₁}}, ::Type{$type{T₂}}) where {T₁,T₂} =
             $type{promote_type(T₁,T₂)}
@@ -72,11 +76,6 @@ for (type, like, len) in ((:Point,         :PointLike,         2),
 end
 
 Base.show(io::IO, ::MIME"text/plain", obj::GeometricObject) = show(io, obj)
-
-# Extend basic methods for abstract points.
-Base.eltype(::AbstractPoint{T}) where {T} = T
-Base.eltype(::Type{<:AbstractPoint{T}}) where {T} = T
-Base.CartesianIndex(pnt::AbstractPoint{<:Integer}) = CartesianIndex(get_xy(pnt)...)
 
 """
     coord_type(obj) -> T
@@ -149,7 +148,7 @@ type `T`.
 """
 convert_coord_type(::Type{T}, objs::GeometricObject{T}...) where {T} = objs
 convert_coord_type(::Type{T}, objs::GeometricObject...) where {T} =
-    map(Base.Fix1(convert_coord_type, T), objs)
+    map(Fix1(convert_coord_type, T), objs)
 
 """
     TwoDimensional.is_nothing(x)
