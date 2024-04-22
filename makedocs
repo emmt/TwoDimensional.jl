@@ -1,0 +1,5 @@
+#! /usr/bin/bash
+exe=`realpath "$0"`
+dir=`dirname "$exe"`
+julia --project="$dir/docs/" -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+julia --project="$dir/docs/" docs/make.jl

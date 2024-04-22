@@ -1,5 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+TwoDimensional = "1907e7ba-7586-4310-a2ba-dd01462aeb50"
 
 [compat]
-Documenter = "0.24"
+Documenter = "1"
+julia = "1"
