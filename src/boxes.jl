@@ -13,9 +13,9 @@ the type used to store coordinates, it may be omitted.
 Bounding-boxes have the following properties which reflect the keywords
 accepted by their constructor:
 
-    box.xmin  -> xmax::T
+    box.xmin  -> xmin::T
     box.xmax  -> xmax::T
-    box.ymin  -> ymax::T
+    box.ymin  -> ymin::T
     box.ymax  -> ymax::T
     box.start -> start::Point{T}
     box.stop  -> stop::Point{T}
@@ -55,16 +55,21 @@ BoundingBox{T}(start::Point, stop::Point) where {T} =
 
 # Bounding-box constructors for `start` and `stop` specified as other
 # point-like objects than points.
-for type in (:(NTuple{2,Any}), :(CartesianIndex{2}))
+for type in (:AbstractPoint, :(NTuple{2,Any}), :(CartesianIndex{2}))
     @eval begin
+        # `start` and `stop` provided as 2 arguments.
         BoundingBox(start::$type, stop::$type) = BoundingBox(Point(start), Point(stop))
         BoundingBox{T}(start::$type, stop::$type) where {T} =
             BoundingBox{T}(Point(start), Point(stop))
+
+        # `start` and `stop` provided as a 2-tuple.
+        BoundingBox((start, stop)::NTuple{2,$type}) = BoundingBox(start, stop)
+        BoundingBox{T}((start, stop)::NTuple{2,$type}) where {T} =
+            BoundingBox{T}(start, stop)
     end
 end
 
-# Bounding-box constructors for `start` and `stop` specified as integer-valued
-# unit-ranges.
+# Bounding-box constructors for bounds specified as integer-valued unit-ranges.
 function BoundingBox(xrng::AbstractUnitRange{<:Integer},
                      yrng::AbstractUnitRange{<:Integer})
     T = promote_type(eltype(xrng), eltype(yrng))
@@ -75,22 +80,13 @@ function BoundingBox{T}(xrng::AbstractUnitRange{<:Integer},
     return BoundingBox{T}(xmin = as(T, first(xrng)), xmax = as(T, last(xrng)),
                           ymin = as(T, first(yrng)), ymax = as(T, last(yrng)))
 end
+BoundingBox((xrng, yrng)::NTuple{2,AbstractUnitRange{<:Integer}}) = BoundingBox(xrng, yrng)
+BoundingBox{T}((xrng, yrng)::NTuple{2,AbstractUnitRange{<:Integer}}) where {T} =
+    BoundingBox{T}(xrng, yrng)
 
 # Bounding-box constructors for box limits specified by Cartesian indices.
 BoundingBox(inds::CartesianIndices{2}) = BoundingBox(first(inds), last(inds))
 BoundingBox{T}(inds::CartesianIndices{2}) where {T} = BoundingBox{T}(first(inds), last(inds))
-
-# Unpack `(start,stop)` or `(xrng, yrng)` provided as a 2-tuple.
-for type in (:Point, :(NTuple{2,Any}), :(CartesianIndex{2}))
-    @eval begin
-        BoundingBox((start, stop)::NTuple{2,$type}) = BoundingBox(start, stop)
-        BoundingBox{T}((start, stop)::NTuple{2,$type}) where {T} =
-            BoundingBox{T}(start, stop)
-    end
-end
-BoundingBox((xrng, yrng)::NTuple{2,AbstractUnitRange{<:Integer}}) = BoundingBox(xrng, yrng)
-BoundingBox{T}((xrng, yrng)::NTuple{2,AbstractUnitRange{<:Integer}}) where {T} =
-    BoundingBox{T}(xrng, yrng)
 
 # Keyword-only bounding-box constructors.
 @inline BoundingBox(; kwds...) = build(BoundingBox; kwds...)

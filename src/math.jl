@@ -248,7 +248,7 @@ yields the Euclidean distance between the 2 points `A` and `B`.
 distance(A::Point, B::Point) = hypot(A - B)
 
 """
-    area(rect)
+    TwoDimensional.area(rect)
 
 yields the area of the rectangle `rect`.
 
