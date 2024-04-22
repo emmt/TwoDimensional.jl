@@ -4,42 +4,35 @@
 
 ### General changes
 
-- Points, bounding-boxes, and affine transforms coefficients may have units.
+- **Coordinate type:** Coordinates of geometric objects may be of any type
+  implementing basic arithmetic operations and may thus have units.
 
-- Julia versions older than 1.0 are no longer supported.
+  - Method `coord_type` yields the type of the coordinates for a geometric
+    object or for its type. Method `convert_coord_type` converts the coordinate
+    type of a geometric object/type. Finally, method `promote_coord_type`, with
+    a list of geometric types, yields the promoted coordinates type and, with a
+    list of geometric objects, yields the objects promoted to the same
+    coordinate type.
 
-- Sub-module `TwoDimensional.Suffixed` has been suppressed, aliases must
-  specifically used/imported. For example with: `using TwoDimensional:
-  AffineTransform2D, Point2D, BoundingBox2D`.
+  - Method `float` may be called to convert the coordinate type of a geometric
+    object/type to a floating-point type.
 
-- `AffineTransforms` is no longer a sub-module of `TwoDimensional`. If only
-  2-dimensional affine transforms are needed, do `using TwoDimensional:
-  AffineTransform` or `using TwoDimensional: AffineTransform2D`. Most related
-  operations are available by symbolic operators; otherwise, they can also be
-  used/imported. For example: `using TwoDimensional: AffineTransform2D,
-  rotate`.
-
-- **Coordinate type:** Method `coord_type` yields the type of the coordinates
-  for a geometric object or for its type. Method `convert_coord_type` converts
-  the coordinate type of a geometric object/type. Finally, method
-  `promote_coord_type`, with a list a list of geometric types, yields the
-  promoted coordinates type and , with a list of geometric objects, yields the
-  objects promoted to the same coordinate type.
+  - For objects having homogeneous components (points are like 2-tuple of
+    coordinates, rectangles and boxes are like 2-tuple of points, polygons are
+    like vectors of points), `length(obj)` and `eltype(obj)` yield the number
+    and the type of these components.
 
 - New geometric object type `Rectangle` which is similar to `BoundingBox`
   except that rectangles can never be empty (a rectangle contains at least a
   single point) and they are converted into polygons when transformed by an
   affine coordinate transform.
 
-### Points and bounding-boxes
-
-- `map` and broadcasting rules have been extended to be more consistent for
-  points and bounding-boxes:
-  - for a point: `f.(pnt) = map(f,pnt) = Point(map(f,Tuple(pnt)))`
-  - for a bounding-box: `f.(box) = map(f,box) = BoundingBox(map(f,Tuple(box)))`
-    and `map` takes a `swap` keyword (`false` by default) to specify whether to
-    swap the inferior and superior bounds along each dimension which is needed
-    when, for example, multiplying a bounding-box by a negative factor.
+- Non-exported method `TwoDimensional.apply(f, obj)` applies the function `f`
+  to each component of the geometric object `obj` and rebuilds an object of the
+  same kind with the result. This only work for geometric objects having
+  homogeneous parts: points, rectangles, bounding-boxes, and polygons. For
+  bounding-boxes, keyword `swap` specifies whether to swap the bounds of the
+  box, `box.start` and `box.stop`.
 
 - `zero(obj)` and `one(one)` yield the additive and multiplicative identities
   for the type of object `obj`, a point or a bounding-box. That is such that
@@ -47,6 +40,16 @@
   == obj` hold. These rules implies that `one(obj)` is the scalar
   `one(eltype(obj))`; while, `zero(obj)` is an object of the same type as `obj`
   with all values set to zero.
+
+- `Base.convert` method has been specialized to implement most allowed
+   conversion from point-like objects (2-tuple of coordinates, abstract points,
+   and Cartesian indices) to points, bounding-box-like objects (2-tuple of
+   points, of Cartesian indices, of unit-ranges, of 2-tuple of coordinates,
+   etc.) to bounding-boxes, and similarly for rectangles and other geometric
+   object types. Hence, the `TypeUtils.as` method no longer needs to be is
+   extended to perform those conversions.
+
+### Points and bounding-boxes
 
 - Use `A ⊆ B` to check whether bounding-box `A` is contained in bounding-box
   `B` (the syntax `A ∈ B` is no longer implemented for that) and `P ∈ B` to
@@ -61,28 +64,12 @@
 - `BoundingBox(obj)` yields the bounding-box of the geometric object `obj`.
   `BoundingBox(f,arr)` yields the bounding-box of the entries of the
   2-dimensional array `A` such that `f(A[i,j])` is true. If `A` is an array of
-  Booleans, `f` is assumed to the identity if not specified.
-
-- Four arguments constructor `BoundingBox(xmin,xmax,ymin,xmax)` is no longer
-  supported as it was a source of confusion and of many errors. Use
-  `BoundingBox((xmin,ymin),(xmax,xmax))` or `BoundingBox(xmin:xmax,ymin:xmax)`
-  (for integer coordinates), or use keywords `BoundingBox(xmin=..., xmax=...,
-  ymin=..., xmax=...)`.
-
-- Weighted points, of non-exported type `TwoDimensional.WeightedPoint`, have
-  been removed due to coordinates possibly having units. They may come back but
-  with 2 type parameters: one for the weight, the other for the coordinates.
+  Booleans, `f` is assumed to be the identity if not specified.
 
 ### Bounding-boxes
 
 - Addition and subtraction of bounding-boxes, say `C = A ± B`, yields the
   bounding-box `C` for all points `c = a ± b` whatever `a ∈ A` and `b ∈ B`.
-
-- Deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))` has been
-  removed.
-
-- Method `TypeUtils.as` is extended to convert points and bounding-boxes
-  to/from tuples.
 
 - Taking the center of an empty bounding-box throws an error.
 
@@ -106,8 +93,37 @@
   `convert_floating_point_type(T,A)` to convert the floating-point type of the
   coefficients of `A` (these methods require `using Unitless`).
 
-- Method `TwoDimensional.compose` is no longer exported. Use `*`, `⋅`
-  (`\cdot<tab>`), or `∘` (`\circ<tab>`) to compose affine transforms.
+- Method `TwoDimensional.compose` is no longer exported. Explicitly use/import
+  it or use `*`, `⋅` (`\cdot<tab>`), or `∘` (`\circ<tab>`) to compose affine
+  transforms.
+
+### Things no longer supported
+
+- **Weighted points**, of non-exported type `TwoDimensional.WeightedPoint`, have
+  been removed due to coordinates possibly having units. They may come back but
+  with 2 type parameters: one for the weight, the other for the coordinates.
+
+- Four arguments constructor `BoundingBox(xmin,xmax,ymin,xmax)` is no longer
+  supported as it was a source of confusion and of many errors. Use
+  `BoundingBox((xmin,ymin),(xmax,xmax))` or `BoundingBox(xmin:xmax,ymin:xmax)`
+  (for integer coordinates), or use keywords `BoundingBox(xmin=..., xmax=...,
+  ymin=..., xmax=...)`.
+
+- Julia versions older than 1.0 are no longer supported.
+
+- Sub-module `TwoDimensional.Suffixed` has been suppressed, aliases must
+  specifically be used/imported. For example with: `using TwoDimensional:
+  AffineTransform2D, Point2D, BoundingBox2D`.
+
+- `AffineTransforms` is no longer a sub-module of `TwoDimensional`. If only
+  2-dimensional affine transforms are needed, do `using TwoDimensional:
+  AffineTransform` or `using TwoDimensional: AffineTransform2D`. Most related
+  operations are available by symbolic operators; otherwise, they can also be
+  used/imported. For example: `using TwoDimensional: AffineTransform2D,
+  rotate`.
+
+- Deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))` has been
+  removed.
 
 ## Version 0.4.1
 
