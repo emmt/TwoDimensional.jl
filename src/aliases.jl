@@ -1,31 +1,40 @@
 """
-    AbstractPoint2D{T}
+    TwoDimensional.AbstractPoint2D{T}
 
-is an alias for [`TwoDimensional.AbstractPoint{T}`](@ref AbstractPoint).
+is an alias for [`TwoDimensional.AbstractPoint{T}`](@ref TwoDimensional.AbstractPoint).
 
 """
 const AbstractPoint2D{T} = AbstractPoint{T}
 
 """
-    Point2D{T}
+    TwoDimensional.Point2D{T}
 
-is an alias for [`TwoDimensional.Point{T}`](@ref Point).
+is an alias for [`TwoDimensional.Point{T}`](@ref TwoDimensional.Point).
 
 """
 const Point2D{T} = Point{T}
 
 """
-    BoundingBox2D{T}
+    TwoDimensional.Rectangle2D{T}
 
-is an alias for [`TwoDimensional.BoundingBox{T}`](@ref BoundingBox).
+is an alias for [`TwoDimensional.Rectangle{T}`](@ref TwoDimensional.Rectangle).
+
+"""
+const Rectangle2D{T} = Point{T}
+
+"""
+    TwoDimensional.BoundingBox2D{T}
+
+is an alias for [`TwoDimensional.BoundingBox{T}`](@ref TwoDimensional.BoundingBox).
 
 """
 const BoundingBox2D{T} = BoundingBox{T}
 
 """
-    AffineTransform2D{T,R,S}
+    TwoDimensional.AffineTransform2D{T,R,S}
 
-is an alias for [`TwoDimensional.AffineTransform{T}`](@ref AffineTransform).
+is an alias for [`TwoDimensional.AffineTransform{T,R,S}`](@ref
+TwoDimensional.AffineTransform).
 
 """
 const AffineTransform2D{T,R,S} = AffineTransform{T,R,S}

@@ -1,6 +1,6 @@
 # Points
 
-Any object whose type is derived from [`AbstractPoint{T}`](@ref AbstractPoint)
+Any object whose type is derived from [`AbstractPoint{T}`](@ref TwoDimensional.AbstractPoint)
 has 2-D coordinates: its abscissa and ordinate respectively named `x` and `y`.
 The parameter `T` is the type of the coordinates and can be retrieved by the
 `eltype` method.
@@ -26,7 +26,7 @@ to have `Point2D`, `AbstractPoint2D` provided as respective aliases to
 
 ## Construction
 
-The most simple concrete type is [`Point{T}`](@ref Point) constructed by:
+The most simple concrete type is [`Point{T}`](@ref TwoDimensional.Point) constructed by:
 
 ```julia
 Point(x,y)

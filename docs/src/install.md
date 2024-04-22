@@ -1,8 +1,7 @@
 # Installation
 
-TwoDimensional is not yet an [offical Julia
-package](https://pkg.julialang.org/) but it is easy to install it from Julia as
-explained here.
+`TwoDimensional` is an [offical Julia package](https://pkg.julialang.org/)
+which can be installed in several ways as explained here.
 
 
 ## Using the package manager
@@ -13,17 +12,12 @@ hit the `]` key to switch to the package manager REPL (you should get a
 `... pkg>` prompt) and type:
 
 ```julia
-pkg> add https://github.com/emmt/TwoDimensional.jl
+pkg> add TwoDimensional
 ```
 
-where `pkg>` represents the package manager prompt and `https` protocol has
-been assumed; if `ssh` is more suitable for you, then type:
+where `pkg>` represents the package manager prompt.
 
-```julia
-pkg> add git@github.com:emmt/TwoDimensional.jl
-```
-
-instead.  To check whether the TwoDimensional package works correctly, type:
+To check whether the `TwoDimensional` package works correctly, type:
 
 ```julia
 pkg> test TwoDimensional
@@ -38,12 +32,12 @@ pkg> test TwoDimensional
 ```
 
 If something goes wrong, it may be because you already have an old version of
-TwoDimensional.  Uninstall TwoDimensional as follows:
+`TwoDimensional`. Uninstall `TwoDimensional` as follows:
 
 ```julia
 pkg> rm TwoDimensional
 pkg> gc
-pkg> add https://github.com/emmt/TwoDimensional.jl
+pkg> add TwoDimensional
 ```
 
 before re-installing.
@@ -53,7 +47,7 @@ To revert to Julia's REPL, hit the `Backspace` key at the `... pkg>` prompt.
 
 ## Installation in scripts
 
-To install TwoDimensional in a Julia script, write:
+To install `TwoDimensional` in a Julia script, write:
 
 ```julia
 if VERSION >= v"0.7.0-"; using Pkg; end
