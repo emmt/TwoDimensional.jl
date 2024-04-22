@@ -1,23 +1,56 @@
 # Bounding-Boxes
 
-2-D bounding-boxes are built by:
+Given the coordinates `start=(xmin,ymin)` and `stop=(xmax,ymax)` of the first
+and last 2-dimensional position in a rectangular region whose axes are aligned
+with the coordinate axes, a 2-D bounding-box representing this region is built
+by one of:
 
 ```julia
-BoundingBox(xmin,xmax,ymin,ymax)
+box = BoundingBox(start, stop)
+box = BoundingBox(; start=..., stop=...)
+box = BoundingBox((xmin,ymin), (xmax,ymax))
+box = BoundingBox(; xmin=..., ymin=..., xmax=..., ymax=...)
 ```
 
-to represent a 2D rectangular box whose sides are aligned with the coordinate
-axes and containing points of coordinates `(x,y)` such that `xmin ≤ x ≤ xmax`
-and `ymin ≤ y ≤ ymax`.
+All points of coordinates `(x,y)` such that `xmin ≤ x ≤ xmax` and `ymin ≤ y ≤
+ymax` are considered as being part of the bounding-box. Hence, if `xmin ≤ xmax`
+and `ymin ≤ ymax` do not both hold, the box is empty as can be tested by
+`isempty(box)`.
 
-The type of the bounds, say `T`, can be explicitly specified:
+Arguments `start` and `stop` may also be two points (of type [`Point`](@ref
+TwoDimensional.Point)) or, for integer-valued coordinates, two Cartesian
+indices or two unit ranges:
 
 ```julia
-BoundingBox{T}(xmin,xmax,ymin,ymax)
+box = BoundingBox(Point(xmin,ymin), Point(xmax,ymax))
+box = BoundingBox(xmin:xmax, ymin:ymax)
 ```
 
-If unspecified, it is assumed to be he types of the bounds promoted to a common
-type.  The type of the bounds and can be retrieved by the `eltype` method.
+As a convenience, all arguments can be given by a single tuple. For example:
+
+```julia
+box = BoundingBox((start, stop))
+box = BoundingBox((xmin:xmax, ymin:ymax))
+```
+
+
+## Coordinate type
+
+The coordinate type, say `T`, can be explicitly specified with the constructor,
+for example:
+
+```julia
+box = BoundingBox{T}(start, stop)
+```
+
+If `T` is unspecified, it is inferred from the coordinate type of the arguments
+promoted to a common type.
+
+The coordinate type of a bounding-box can be retrieved by the
+[`coord_type`](@ref TwoDimensional.coord_type) and `eltype` methods.
+
+Converting an existing bounding-box to another coordinate type can done by
+[`convert_coord_type`](@ref TwoDimensional.convert_coord_type).
 
 
 ## Aliases
@@ -25,7 +58,7 @@ type.  The type of the bounds and can be retrieved by the `eltype` method.
 Call:
 
 ```julia
-using TwoDimensional.Suffixed
+using TwoDimensional: BoundingBox2D
 ```
 
 instead of:
@@ -34,8 +67,9 @@ instead of:
 using TwoDimensional
 ```
 
-to have [`BoundingBox2D`](@ref BoundingBox2D) provided as an alias to
-[`TwoDimensional.BoundingBox`](@ref BoundingBox).
+to have [`BoundingBox2D`](@ref TwoDimensional.BoundingBox2D) provided as an
+alias to [`TwoDimensional.BoundingBox`](@ref TwoDimensional.BoundingBox) and
+possibly avoid conflict with other packages.
 
 
 ## Construction
@@ -43,7 +77,6 @@ to have [`BoundingBox2D`](@ref BoundingBox2D) provided as an alias to
 The coordinates of a bounding-box can be specified by keywords:
 
 ```julia
-BoundingBox(xmin=x0, ymin=y0, xmax=x1, ymax=y1)
 ```
 
 There are no default values for keywords `xmin`, `xmax`, `ymin` and `ymax` so
@@ -199,7 +232,6 @@ BoundingBox{T}(nothing)
 
 yields the same result as `typemin(BoundingBox{T})`.
 
-The method `isempty(B)` yields whether a bounding-box `B` is empty or not.
 
 
 ## Interior, Exterior, Nearest, etc.

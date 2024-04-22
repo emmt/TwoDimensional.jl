@@ -37,8 +37,13 @@ using TwoDimensional: AffineTransform2D, Point2D, BoundingBox2D
 ## Table of contents
 
 ```@contents
-Pages = ["install.md", "AffineTransforms.md",
-         "Points.md", "BoundingBoxes.md", "reference.md"]
+Pages = [
+    "install.md",
+    "points.md",
+    "boxes.md",
+    "xforms.md",
+    "reference.md",
+]
 ```
 
 ## Index

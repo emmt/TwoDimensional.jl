@@ -2,8 +2,6 @@ using Documenter
 
 push!(LOAD_PATH, "../src/")
 using TwoDimensional
-using TwoDimensional: WeightedPoint, WeightedPoint2D
-using TwoDimensional.Suffixed
 
 DEPLOYDOCS = (get(ENV, "CI", nothing) == "true")
 
@@ -13,8 +11,14 @@ makedocs(
         prettyurls = DEPLOYDOCS,
     ),
     authors = "Éric Thiébaut and contributors",
-    pages = ["index.md", "install.md", "AffineTransforms.md",
-             "Points.md", "BoundingBoxes.md", "reference.md"]
+    pages = [
+        "index.md",
+        "install.md",
+        "points.md",
+        "boxes.md",
+        "xforms.md",
+        "reference.md",
+    ]
 )
 
 if DEPLOYDOCS

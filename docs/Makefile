@@ -1,10 +1,10 @@
 SOURCES = \
     make.jl \
-    src/AffineTransforms.md \
-    src/BoundingBoxes.md \
+    src/xforms.md \
+    src/boxes.md \
     src/index.md \
     src/install.md \
-    src/Points.md \
+    src/points.md \
     src/reference.md
 
 default: build/index.html
