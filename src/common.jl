@@ -22,17 +22,9 @@ parts(circ::Circle) = (center(circ), radius(circ))
 parts(box::BoundingBox) = getfield(box, 1)
 
 # Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
-for type in (:Point, :Rectangle, :Circle, :BoundingBox)
-    @eval begin
-        Base.Tuple(obj::$type) = parts(obj)
-    end
-end
-for type in (:Point, :Rectangle, :BoundingBox)
-    @eval begin
-        @inline @propagate_inbounds Base.getindex(obj::$type, i::Integer) =
-            getindex(parts(obj), as(Int, i))
-    end
-end
+Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = parts(obj)
+@inline @propagate_inbounds Base.getindex(obj::Union{Point,Rectangle,BoundingBox}, i::Integer) =
+    getindex(parts(obj), as(Int, i))
 
 """
     TwoDimensional.apply(f, obj)
