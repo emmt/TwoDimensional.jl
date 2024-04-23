@@ -138,6 +138,10 @@ for func in (:bare_type, :real_type, :floating_point_type)
     end
 end
 
+# An affine transform is already of floating-point type.
+Base.float(A::AffineTransform) = A
+Base.float(::Type{T}) where {T<:AffineTransform} = T
+
 """
     TwoDimensional.factors_type(A) -> R
 
@@ -160,11 +164,19 @@ type of an affine transform.
 offsets_type(A::AffineTransform) = offsets_type(typeof(A))
 offsets_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = S
 
+Base.convert(::Type{T}, A::T) where {T<:AffineTransform} = A
 Base.convert(::Type{T}, A::AffineTransform) where {T<:AffineTransform} = T(A)
-Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{U}}) where {T,U} =
-    AffineTransform{promote_type(T,U)}
-Base.promote_type(::Type{AffineTransform{T}}, ::Type{AffineTransform{T}}) where {T} =
-    AffineTransform{T}
+
+Base.promote_type(::Type{T}, ::Type{T}) where {T<:AffineTransform} = T
+function Base.promote_type(::Type{A}, ::Type{B}) where {A<:AffineTransform,B<:AffineTransform}
+    T = promote_type(floating_point_type(A),
+                     floating_point_type(B))
+    R = promote_type(convert_floating_point_type(T, factors_type(A)),
+                     convert_floating_point_type(T, factors_type(B)))
+    S = promote_type(convert_floating_point_type(T, offsets_type(A)),
+                     convert_floating_point_type(T, offsets_type(B)))
+    return AffineTransform{T,R,S}
+end
 
 Base.propertynames(::AffineTransform) = (:xx, :xy, :x, :yx, :yy, :y)
 Base.getproperty(A::AffineTransform, key::Symbol) =

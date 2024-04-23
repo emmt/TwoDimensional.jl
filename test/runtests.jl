@@ -560,16 +560,19 @@ end
         types = (BigFloat, Float64, Float32, Float16)
 
         @testset "construction/conversion" begin
+            @test @inferred(float(A)) === A
+            @test @inferred(float(typeof(A))) === typeof(A)
             for T1 in types, T2 in types
-                @testset "T = $T" for T in types
-                    @test_throws MethodError T(A)
-                    if VERSION ≥ v"1.3"
-                        # FIXME: This makes old Julia versions panic on illegal instruction...
-                        @test_throws MethodError T.(A)
-                    end
+                T = promote_type(T1,T2)
+                @test promote_type(AffineTransform{T1,T1,T1}, AffineTransform{T2,T2,T2}) ===
+                    AffineTransform{T,T,T}
+            end
+            @testset "T = $T" for T in types
+                @test_throws MethodError T(A)
+                if VERSION ≥ v"1.3"
+                    # FIXME: This makes old Julia versions panic on illegal instruction...
+                    @test_throws MethodError T.(A)
                 end
-                @test promote_type(AffineTransform{T1}, AffineTransform{T2}) ===
-                    AffineTransform{promote_type(T1,T2)}
             end
             @test AffineTransform(A) === A
             @test AffineTransform{bare_type(A)}(A) === A
@@ -577,6 +580,8 @@ end
                 for T in types
                     H = @inferred AffineTransform{T}(G)
                     @test typeof(H) <: AffineTransform{T}
+                    @test @inferred(float(H)) === H
+                    @test @inferred(float(typeof(H))) === typeof(H)
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -586,6 +591,8 @@ end
                     @test Tuple(H) ≈ map(T, Tuple(G))
                     H = @inferred convert(AffineTransform{T}, G)
                     @test typeof(H) <: AffineTransform{T}
+                    @test @inferred(float(H)) === H
+                    @test @inferred(float(typeof(H))) === typeof(H)
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -595,6 +602,8 @@ end
                     @test Tuple(H) ≈ map(T, Tuple(G))
                     H = @inferred convert_bare_type(T, G)
                     @test typeof(H) <: AffineTransform{T}
+                    @test @inferred(float(H)) === H
+                    @test @inferred(float(typeof(H))) === typeof(H)
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -604,6 +613,8 @@ end
                     @test Tuple(H) ≈ map(T, Tuple(G))
                     H = @inferred convert_real_type(T, G)
                     @test typeof(H) <: AffineTransform{T}
+                    @test @inferred(float(H)) === H
+                    @test @inferred(float(typeof(H))) === typeof(H)
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -613,6 +624,8 @@ end
                     @test Tuple(H) ≈ map(T, Tuple(G))
                     H = @inferred convert_floating_point_type(T, G)
                     @test typeof(H) <: AffineTransform{T}
+                    @test @inferred(float(H)) === H
+                    @test @inferred(float(typeof(H))) === typeof(H)
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
