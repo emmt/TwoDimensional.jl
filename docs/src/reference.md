@@ -51,6 +51,8 @@ TwoDimensional.compose
 TwoDimensional.intercept
 TwoDimensional.jacobian
 TwoDimensional.rotate
+TwoDimensional.factors_type
+TwoDimensional.offsets_type
 ```
 
 ## Other Public Methods

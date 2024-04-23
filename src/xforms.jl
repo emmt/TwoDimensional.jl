@@ -9,15 +9,15 @@ that:
     A(pnt::Point) -> Point(A(pnt.x, pnt.y))
     A(pnt::CartesianIndex{2}) -> Point(A(pnt[1], pnt[2]))
 
-The constructor takes one or three parameters:
+The constructor optionally takes one or three parameters:
 
     AffineTransform{T}(Axx, Axy, Ax, Ayx, Ayy, Ay)
     AffineTransform{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay)
 
-where `T` is the concrete floating-point type of the coefficients (`Float64` by
-default), `R` is the type for storing the factors `Axx`, `Axy`, `Ayx`, and
-`Ayy`, and `S` is the type for storing the offsets `Ax` and `Ay`. The bare type
-of `R` and `S` must be `T` but they may have units.
+where `T` is the concrete floating-point type of the coefficients, `R` is the
+type for storing the factors `Axx`, `Axy`, `Ayx`, and `Ayy`, and `S` is the
+type for storing the offsets `Ax` and `Ay`. The bare types of `R` and `S` must
+be `T` but they may have units.
 
 Changing the floating-point type of an existing 2-dimensional affine transform
 `A` can be done by one of:
@@ -38,14 +38,13 @@ Applying the 2-dimensional affine transform `A` can be done by:
 ```julia
 (xp, yp) = A(x,y)       # apply affine transform A to coordinates (x,y)
 (xp, yp) = A*(x,y)      # idem
-(xp, yp) = A((x,y))     # idem, with pnt = (x,y)
-(xp, yp) = A*(x,y)      # idem
+(xp, yp) = A((x,y))     # idem
 
 A(Point(x,y)) -> Point(xp, yp)
 A*Point(x,y)  -> Point(xp, yp)
 
-C = compose(A, B, ...)  # compose 2 (or more) transforms, C = apply B then A
-C = A∘B                 # idem
+C = compose(A, B, ...)  # compose 2 (or more) transforms, apply C = apply B then A
+C = A∘B                 # compose A and B
 C = A*B                 # idem
 
 B = translate(x, y, A)  # B = apply A then translate by (x,y)
@@ -65,8 +64,8 @@ C = scale(A, ρ)    # C = scale by ρ then apply A
 C = A*ρ            # idem
 
 B = inv(A)         # reciprocal coordinate transform
-C = A/B            # right division, same as: C = compose(A, inv(B))
-C = A\\B            # left division, same as: C = compose(inv(A), B)
+C = A/B            # right division, same as: C = A ∘ inv(B)
+C = A\\B            # left division, same as: C = inv(A) ∘ B
 ```
 
 "`∘`" can be typed by `\\circ<tab>`.
@@ -149,6 +148,8 @@ yields the type of the factors of the 2-dimensional affine transform `A`. The
 factors of `A` are the coefficients `A.xx`, `A,xy`, `A.yx`, and `A.yy`.
 Argument may also be the type of an affine transform.
 
+See also: [`offsets_type`](@ref TwoDimensional.offsets_type).
+
 """
 factors_type(A::AffineTransform) = factors_type(typeof(A))
 factors_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = R
@@ -159,6 +160,8 @@ factors_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = R
 yields the type of the offsets of the 2-dimensional affine transform `A`. The
 offsets of `A` are the coefficients `A.x` and `A.y`. Argument may also be the
 type of an affine transform.
+
+See also: [`factors_type`](@ref TwoDimensional.factors_type).
 
 """
 offsets_type(A::AffineTransform) = offsets_type(typeof(A))
@@ -277,7 +280,10 @@ yield 2-dmensional affine transforms `B` and `C` such that:
     B(x,y) -> ρ*A(x,y)
     C(x,y) -> A(ρ*x,ρ*y)
 
-See also: [`AffineTransform`](@ref), [`rotate`](@ref), [`translate`](@ref).
+See also:
+[`AffineTransform`](@ref TwoDimensional.AffineTransform),
+[`rotate`](@ref TwoDimensional.rotate),
+[`translate`](@ref TwoDimensional.translate).
 
 """ scale
 
@@ -318,7 +324,10 @@ where `R` implements rotation by angle `θ` counterclockwise around the origin
 at coordimates `(0,0)`. The rotation angle `θ` is assumed to be in radians if
 it has no units.
 
-See also: [`AffineTransform`](@ref), [`scale`](@ref), [`translate`](@ref).
+See also:
+[`AffineTransform`](@ref TwoDimensional.AffineTransform),
+[`scale`](@ref TwoDimensional.scale),
+[`translate`](@ref TwoDimensional.translate).
 
 """
 function rotate(θ, A::AffineTransform)
@@ -350,7 +359,7 @@ yields the determinant of the linear part of the affine transform `A`.
 det(A::AffineTransform) = A.xx*A.yy - A.xy*A.yx
 
 """
-    jacobian(A::TwoDimensional.AffineTransform)
+    TwoDimensional.jacobian(A::AffineTransform)
 
 yields the Jacobian of the affine transform `A`, that is the absolute value of
 the determinant of its linear part.
@@ -376,7 +385,7 @@ function inv(A::AffineTransform)
 end
 
 """
-    compose(A::TwoDimensional.AffineTransform, B::TwoDimensional.AffineTransform)
+    TwoDimensional.compose(A::AffineTransform, B::AffineTransform)
 
 yields the affine transform which combines the two affine transforms `A` and
 `B`, that is the affine transform which applies `B` and then `A`. Composition
@@ -404,10 +413,10 @@ compose(A::AffineTransform, B::AffineTransform) =
 ∘(A::AffineTransform, B::AffineTransform) = compose(A, B)
 
 """
-    rightdivide(A, B)
+    TwoDimensional.rightdivide(A, B)
 
-yields `A/B`, the right division of the affine transform `A` by the affine
-transform `B`.
+implements `A/B` which yields the right division of the affine transform `A` by
+the affine transform `B`.
 
 """ rightdivide
 
@@ -425,10 +434,10 @@ rightdivide(A::AffineTransform, B::AffineTransform) = begin
 end
 
 """
-    leftdivide(A, B)
+    TwoDimensional.leftdivide(A, B)
 
-yields `A\\B`, the left division of the affine transform `A` by the affine
-transform `B`.
+implements `A\\B` which yields the left division of the affine transform `A` by
+the affine transform `B`.
 
 """ leftdivide
 
@@ -452,8 +461,8 @@ leftdivide(A::AffineTransform, B::AffineTransform) = begin
 end
 
 """
-    intercept(A)
-    intercept(T<:Point, A)
+    TwoDimensional.intercept(A)
+    TwoDimensional.intercept(T<:Point, A)
 
 return the tuple `(x,y)` such that `A(x,y) = (0,0)`. If a `Point` type T is
 specified, a point of this type with coordinates `(x,y)` is returned.

@@ -36,10 +36,10 @@
 
 - Non-exported method `TwoDimensional.apply(f, obj)` applies the function `f`
   to each component of the geometric object `obj` and rebuilds an object of the
-  same kind with the result. This only work for geometric objects having
-  homogeneous parts: points, rectangles, bounding-boxes, and polygons. For
-  bounding-boxes, keyword `swap` specifies whether to swap the bounds of the
-  box, `box.start` and `box.stop`.
+  same kind with the result. This method is only applicable to geometric
+  objects having homogeneous parts: points, rectangles, bounding-boxes, and
+  polygons. For bounding-boxes, keyword `swap` specifies whether to swap the
+  bounds of the box, `box.start` and `box.stop`.
 
 - `zero(obj)` and `one(obj)` yield the additive and multiplicative identities
   for the type of the geometric object `obj`. That is such that `zero(obj) +
@@ -50,7 +50,7 @@
 
 - `Base.convert` method has been specialized to implement most allowed
    conversion from point-like objects (2-tuple of coordinates, abstract points,
-   and Cartesian indices) to points, bounding-box-like objects (2-tuple of
+   and Cartesian indices) to points, from bounding-box-like objects (2-tuple of
    points, of Cartesian indices, of unit-ranges, of 2-tuple of coordinates,
    etc.) to bounding-boxes, and similarly for rectangles and other geometric
    object types. Hence, the `TypeUtils.as` method no longer needs to be is
@@ -62,11 +62,10 @@
   `B` (the syntax `A ∈ B` is no longer implemented for that) and `P ∈ B` to
   check whether point `P` is inside bounding-box `B`.
 
-- Points can be defined by their polar coordinates and `hypot`, `abs`, and
-  `norm` yield the distance of a point distance to the origin, while `atan`
-  yields its polar angle and `abs2` yields its squared distance to the origin.
-  `TwoDimensional.inner` and `TwoDimensional.outer` compute the inner and outer
-  products of two points.
+- Points can be defined by their polar coordinates with `pnt = Point(r=...,
+  θ=...)`. `hypot(pnt)` and `abs(pnt)` yield the distance `r` of `pnt` to the
+  origin, `atan(pnt)` yields its polar angle `θ`, and `abs2(pnt)` yields its
+  squared distance `r^2` to the origin.
 
 - Points are considered as 2-dimensional vectors for some operations: `norm(a)`
   yields the Euclidean norm of the point `a`; `dot(a, b)` or `a ⋅ b` compute
@@ -75,11 +74,9 @@
   vector product or directed area product).
 
 - `BoundingBox(obj)` yields the bounding-box of the geometric object `obj`.
-  `BoundingBox(f,arr)` yields the bounding-box of the entries of the
+  `BoundingBox(f, A)` yields the bounding-box of the entries of the
   2-dimensional array `A` such that `f(A[i,j])` is true. If `A` is an array of
   Booleans, `f` is assumed to be the identity if not specified.
-
-### Bounding-boxes
 
 - Addition and subtraction of bounding-boxes, say `C = A ± B`, yields the
   bounding-box `C` for all points `c = a ± b` whatever `a ∈ A` and `b ∈ B`.
