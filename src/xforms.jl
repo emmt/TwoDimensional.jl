@@ -282,17 +282,28 @@ See also: [`AffineTransform`](@ref), [`rotate`](@ref), [`translate`](@ref).
 """ scale
 
 *(ρ::Number, A::AffineTransform) = scale(ρ, A)
-scale(ρ, A::AffineTransform) = AffineTransform(ρ*A.xx, ρ*A.xy, ρ*A.x,
-                                               ρ*A.yx, ρ*A.yy, ρ*A.y)
+scale(ρ, A::AffineTransform) = apply(Fix1(*, ρ), A)
 
 *(A::AffineTransform, ρ::Number) = scale(A, ρ)
-scale(A::AffineTransform, ρ) = AffineTransform(ρ*A.xx, ρ*A.xy, A.x,
-                                               ρ*A.yx, ρ*A.yy, A.y)
+scale(A::AffineTransform, ρ) = apply(Fix1(*, ρ), identity, A)
 
 # Negating (unary minus) of a transform amounts to negating its output or to
 # left-multiply the transform by -1. Hence, it is sufficient to negate all its
 # coefficients.
--(A::AffineTransform) = AffineTransform(map(-, Tuple(A))...)
+-(A::AffineTransform) = apply(-, A)
+
+"""
+    TwoDimensional.apply(f, g=f, A::AffineTransform)
+
+applies functions `f` and `g` respectively to each factors and each offsets of
+the affine tranform `A` and rebuild an affine transform with the resulting
+values.
+
+"""
+apply(f::Callable, A::AffineTransform) = apply(f, f, A)
+apply(f::Callable, g::Callable, A::AffineTransform) =
+    AffineTransform(f(A.xx), f(A.xy), g(A.x),
+                    f(A.yx), f(A.yy), g(A.y))
 
 """
     B = rotate(θ, A)
