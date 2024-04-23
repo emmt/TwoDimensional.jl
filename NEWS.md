@@ -7,12 +7,14 @@
 - **Coordinate type:** Coordinates of geometric objects may be of any type
   implementing basic arithmetic operations and may thus have units.
 
-  - Method `coord_type` yields the type of the coordinates for a geometric
-    object or for its type. Method `convert_coord_type` converts the coordinate
-    type of a geometric object/type. Finally, method `promote_coord_type`, with
-    a list of geometric types, yields the promoted coordinates type and, with a
-    list of geometric objects, yields the objects promoted to the same
-    coordinate type.
+  - Method `coord_type` yields the type of the coordinates of a geometric
+    object/type. Method `convert_coord_type` converts the coordinate type of a
+    geometric object/type. Finally, method `promote_coord_type`, with a list of
+    geometric types, yields the promoted coordinates type and, with a list of
+    geometric objects, yields the objects promoted to the same coordinate type.
+    Methods `convert_bare_type`, `convert_real_type`, and
+    `convert_floating_point_type` of the `Unitless` package have been extended
+    to convert the numerical type of the coordinates of graphical objects.
 
   - Method `float` may be called to convert the coordinate type of a geometric
     object/type to a floating-point type.

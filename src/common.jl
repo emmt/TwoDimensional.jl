@@ -139,6 +139,17 @@ end
 Base.float(obj::GeometricObject{T}) where {T} = convert_coord_type(float(T), obj)
 Base.float(::Type{G}) where {T,G<:GeometricObject{T}} = convert_coord_type(float(T), G)
 
+for (func, type)  in ((:convert_bare_type,           Real),
+                      (:convert_real_type,           Real),
+                      (:convert_floating_point_type, AbstractFloat),)
+    @eval begin
+        Unitless.$func(::Type{T}, obj::GeometricObject) where {T<:$type} =
+            convert_coord_type($func(T, coord_type(obj)), obj)
+        Unitless.$func(::Type{T}, ::Type{G}) where {T<:$type,G<:GeometricObject} =
+            convert_coord_type($func(T, coord_type(G)), G)
+    end
+end
+
 """
     convert_coord_type(T::Type, objs::GeometricObject...) -> objs′
 

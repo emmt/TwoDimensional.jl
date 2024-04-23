@@ -354,7 +354,7 @@ end
         # Functions specific to bounding-boxes.
     end
 
-    @testset "Promote coord. type" begin
+    @testset "Coordinate type" begin
         let pnt_i16 = Point{Int16}(-1,2),
             rec_i32 = Rectangle{Int32}(pnt_i16, 2*pnt_i16),
             box_f32 = BoundingBox{Float32}(rec_i32),
@@ -387,6 +387,66 @@ end
                 @test @inferred(promote_coord_type(pnt_i16, rec_i32, box_f32)) === (Point{Float32}(pnt_i16), Rectangle{Float32}(rec_i32), box_f32)
                 @test @inferred(promote_coord_type(pnt_i16, rec_i32, box_f32, pnt_f64)) === (Point{Float64}(pnt_i16), Rectangle{Float64}(rec_i32), BoundingBox{Float64}(box_f32), pnt_f64)
             end
+
+            @test @inferred(float(typeof(pnt_i16))) === Point{float(coord_type(pnt_i16))}
+            @test @inferred(float(pnt_i16))         === Point{float(coord_type(pnt_i16))}(pnt_i16)
+            @test @inferred(float(typeof(rec_i32))) === Rectangle{float(coord_type(rec_i32))}
+            @test @inferred(float(rec_i32))         === Rectangle{float(coord_type(rec_i32))}(rec_i32)
+            @test @inferred(float(typeof(box_f32))) === typeof(box_f32)
+            @test @inferred(float(box_f32))         === box_f32
+            @test @inferred(float(typeof(pnt_f64))) === typeof(pnt_f64)
+            @test @inferred(float(pnt_f64))          === pnt_f64
+
+            @test @inferred(convert_bare_type(Int16, typeof(pnt_i16)))   === typeof(pnt_i16)
+            @test @inferred(convert_bare_type(Int16, pnt_i16))           === pnt_i16
+            @test @inferred(convert_bare_type(Int, typeof(pnt_i16)))     === Point{Int}
+            @test @inferred(convert_bare_type(Int, pnt_i16))             === Point{Int}(pnt_i16)
+            @test @inferred(convert_bare_type(Float64, typeof(pnt_i16))) === Point{Float64}
+            @test @inferred(convert_bare_type(Float64, pnt_i16))         === Point{Float64}(pnt_i16)
+            @test @inferred(convert_bare_type(Int, typeof(rec_i32)))     === Rectangle{Int}
+            @test @inferred(convert_bare_type(Int, rec_i32))             === Rectangle{Int}(rec_i32)
+            @test @inferred(convert_bare_type(Float32, typeof(rec_i32))) === Rectangle{Float32}
+            @test @inferred(convert_bare_type(Float32, rec_i32))         === Rectangle{Float32}(rec_i32)
+            @test @inferred(convert_bare_type(Float64, typeof(pnt_f64))) === typeof(pnt_f64)
+            @test @inferred(convert_bare_type(Float64, pnt_f64))         === pnt_f64
+            @test @inferred(convert_bare_type(Float32, typeof(pnt_f64))) === Point{Float32}
+            @test @inferred(convert_bare_type(Float32, pnt_f64))         === Point{Float32}(pnt_f64)
+            @test @inferred(convert_bare_type(Float64, typeof(box_f32))) === BoundingBox{Float64}
+            @test @inferred(convert_bare_type(Float64, box_f32))         === BoundingBox{Float64}(box_f32)
+            @test @inferred(convert_bare_type(Float32, typeof(box_f32))) === typeof(box_f32)
+            @test @inferred(convert_bare_type(Float32, box_f32))         === box_f32
+
+            @test @inferred(convert_real_type(Int16, typeof(pnt_i16)))   === typeof(pnt_i16)
+            @test @inferred(convert_real_type(Int16, pnt_i16))           === pnt_i16
+            @test @inferred(convert_real_type(Int, typeof(pnt_i16)))     === Point{Int}
+            @test @inferred(convert_real_type(Int, pnt_i16))             === Point{Int}(pnt_i16)
+            @test @inferred(convert_real_type(Float64, typeof(pnt_i16))) === Point{Float64}
+            @test @inferred(convert_real_type(Float64, pnt_i16))         === Point{Float64}(pnt_i16)
+            @test @inferred(convert_real_type(Int, typeof(rec_i32)))     === Rectangle{Int}
+            @test @inferred(convert_real_type(Int, rec_i32))             === Rectangle{Int}(rec_i32)
+            @test @inferred(convert_real_type(Float32, typeof(rec_i32))) === Rectangle{Float32}
+            @test @inferred(convert_real_type(Float32, rec_i32))         === Rectangle{Float32}(rec_i32)
+            @test @inferred(convert_real_type(Float64, typeof(pnt_f64))) === typeof(pnt_f64)
+            @test @inferred(convert_real_type(Float64, pnt_f64))         === pnt_f64
+            @test @inferred(convert_real_type(Float32, typeof(pnt_f64))) === Point{Float32}
+            @test @inferred(convert_real_type(Float32, pnt_f64))         === Point{Float32}(pnt_f64)
+            @test @inferred(convert_real_type(Float64, typeof(box_f32))) === BoundingBox{Float64}
+            @test @inferred(convert_real_type(Float64, box_f32))         === BoundingBox{Float64}(box_f32)
+            @test @inferred(convert_real_type(Float32, typeof(box_f32))) === typeof(box_f32)
+            @test @inferred(convert_real_type(Float32, box_f32))         === box_f32
+
+            @test @inferred(convert_floating_point_type(Float64, typeof(pnt_i16))) === Point{Float64}
+            @test @inferred(convert_floating_point_type(Float64, pnt_i16))         === Point{Float64}(pnt_i16)
+            @test @inferred(convert_floating_point_type(Float32, typeof(rec_i32))) === Rectangle{Float32}
+            @test @inferred(convert_floating_point_type(Float32, rec_i32))         === Rectangle{Float32}(rec_i32)
+            @test @inferred(convert_floating_point_type(Float64, typeof(pnt_f64))) === typeof(pnt_f64)
+            @test @inferred(convert_floating_point_type(Float64, pnt_f64))         === pnt_f64
+            @test @inferred(convert_floating_point_type(Float32, typeof(pnt_f64))) === Point{Float32}
+            @test @inferred(convert_floating_point_type(Float32, pnt_f64))         === Point{Float32}(pnt_f64)
+            @test @inferred(convert_floating_point_type(Float64, typeof(box_f32))) === BoundingBox{Float64}
+            @test @inferred(convert_floating_point_type(Float64, box_f32))         === BoundingBox{Float64}(box_f32)
+            @test @inferred(convert_floating_point_type(Float32, typeof(box_f32))) === typeof(box_f32)
+            @test @inferred(convert_floating_point_type(Float32, box_f32))         === box_f32
         end
     end
 

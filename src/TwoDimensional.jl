@@ -45,8 +45,6 @@ using LinearAlgebra
 
 # Imports for extension.
 import Base: +, -, *, ∘, /, \, inv
-import Base: Float16, Float32, Float64
-import Base.MPFR: BigFloat
 import LinearAlgebra: ⋅, det
 
 include("types.jl")
