@@ -1,19 +1,13 @@
-- Remove/deprecate `TwoDimensional.Suffixed`.
-
-- Use `IntervalSets`.
-
-- `BoundingBox(pnt::Point) = BoundingBox(pnt, pnt)` and
-  `BoundingBox{T}(pnt::Point) where {T} = BoundingBox{T}(pnt, pnt)`
-
-- Add geometrical shape objects: `Rectangle`, `Polygon`, `Circle`, and `Ellipse`.
+- Use `IntervalSets` for bounding-boxes.
 
 - Add masks.
 
-- Iterating and indexing bounding-boxes yield `Point(xmin,ymin)` and
-  `Point(xmax,ymax)`.
+- Implement `Ellipse` and/or `TransformedCircle` to be able to apply an affine
+  transform to circles (and ellipses).
 
-- Deprecate/discard weighted points or weight may have different units than
-  coordinates.
+- Implement [Welzl's
+  algorithm](https://en.wikipedia.org/wiki/Smallest-circle_problem) for
+  determining the diameter of a polygon.
 
 - Extending `convert` for other purpose of type conversion is potentially
   dangerous as this method is called by type constructors to set fields:
