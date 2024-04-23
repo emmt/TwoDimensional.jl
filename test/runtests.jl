@@ -301,6 +301,7 @@ end
         c, r = circ
         (x, y), r′ = circ
         @test r′ === r && c.x === x && c.y === y
+        @test circ.diameter == r + r
         @test circ === @inferred Circle(c, r)
         @test circ === @inferred Circle((x, y), r)
         @test circ === @inferred Circle((c, r))

@@ -2,18 +2,17 @@
     circ = Circle{T}(center::Point, radius)
     circ = Circle{T}((x, y), radius)
     circ = Circle{T}(; center=..., radius=...)
-    circ = Circle{T}(; center=..., diameter=...)
 
 construct a circle of given `center` and `radius` or `diameter`. The center may
 be specified by its coordinates `(x,y)` along the Cartesian axes. Parameter `T`
 is the type used to store coordinates, it may be omitted.
 
 Circles have the following properties which reflect the keywords accepted by
-their constructor:
+their constructor (`diameter` is provided for convenience):
 
     circ.center   -> center::Point{T}
     circ.radius   -> radius::T
-    circ.diameter -> diameter::T
+    circ.diameter -> 2*circ.radius
 
 Circles can be iterated to retrieve their center and their radius (in that order):
 
@@ -34,18 +33,10 @@ end
 Circle((center, radius)::Tuple{PointLike,Number}) = Circle(center, radius)
 Circle{T}((center, radius)::Tuple{PointLike,Number}) where {T} = Circle{T}(center, radius)
 
-# Keyword-only constructors.
-@inline Circle(; kwds...) = build(Circle; kwds...)
-@inline Circle{T}(; kwds...) where {T} = build(Circle{T}; kwds...)
-@inline build(::Type{T}; center, radius=nothing, diameter=nothing) where{T<:Circle} =
-    if is_something(radius) & is_nothing(diameter)
-        return T(center, radius)
-    elseif is_something(radius) & is_something(radius)
-        return T(center, diameter/2) # FIXME force coord. type to be at least Float64
-    else
-        throw(ArgumentError(
-            "exclusively one of the `radius` or `diameter` keywords must be specified"))
-    end
+# Keyword-only constructors. NOTE Having `diameter` as a possible keyword is not a good idea
+# because dividing it by 2 enforces that coordinate type be at least `Float64`.
+@inline Circle(; center, radius) = Circle(center, radius)
+@inline Circle{T}(; center, radius) where {T} = Circle{T}(center, radius)
 
 # Convert/copy constructors.
 Circle(circ::Circle) = circ
