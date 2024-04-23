@@ -638,7 +638,6 @@ end
                 @test G === @inferred compose(G)
                 for H in (A, B)
                     @test G*H ≈ compose(G,H)
-                    @test G⋅H ≈ compose(G,H)
                     @test G∘H ≈ compose(G,H)
                     for v in vectors
                         @test (G*H)(v) ≈ G(H(v))

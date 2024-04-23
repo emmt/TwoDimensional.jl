@@ -43,12 +43,10 @@ Applying the 2-dimensional affine transform `A` can be done by:
 
 A(Point(x,y)) -> Point(xp, yp)
 A*Point(x,y)  -> Point(xp, yp)
-A⋅Point(x,y)  -> Point(xp, yp)
 
 C = compose(A, B, ...)  # compose 2 (or more) transforms, C = apply B then A
 C = A∘B                 # idem
 C = A*B                 # idem
-C = A⋅B                 # idem
 
 B = translate(x, y, A)  # B = apply A then translate by (x,y)
 B = translate(pnt, A)   # idem with pnt = (x,y)
@@ -71,7 +69,7 @@ C = A/B            # right division, same as: C = compose(A, inv(B))
 C = A\\B            # left division, same as: C = compose(inv(A), B)
 ```
 
-"`∘`" and "`⋅`" can be typed by `\\circ<tab>` and `\\cdot<tab>`.
+"`∘`" can be typed by `\\circ<tab>`.
 
 """
 function AffineTransform(Axx, Axy, Ax,
@@ -209,7 +207,6 @@ Base.length(A::AffineTransform) = 6
                                               A.yx*x + A.yy*y + A.y)
 
 *(A::AffineTransform, pnt::PointLike) = A(pnt)
-⋅(A::AffineTransform, pnt::PointLike) = A(pnt)
 
 #------------------------------------------------------------------------------
 # Combine a translation with an affine transform.
@@ -356,8 +353,7 @@ end
 
 yields the affine transform which combines the two affine transforms `A` and
 `B`, that is the affine transform which applies `B` and then `A`. Composition
-is accessible via: `A∘B`, `A*B` or `A⋅B` ("`∘`" and "`⋅`" can be typed by
-`\\circ<tab>` and `\\cdot<tab>`).
+is accessible via: `A*B` or `A∘B` ("`∘`" can be typed by `\\circ<tab>`).
 
 It is possible to compose more than two affine transforms. For instance,
 `compose(A,B,C)` yields the affine transform which applies `C` then `B`, then
@@ -377,11 +373,8 @@ compose(A::AffineTransform, B::AffineTransform) =
 @inline compose(A::AffineTransform, B::AffineTransform, C::AffineTransform...) =
     compose(compose(A, B), C...)
 
-for op in (:∘, :*, :⋅)
-    @eval begin
-        $op(A::AffineTransform, B::AffineTransform) = compose(A, B)
-    end
-end
+*(A::AffineTransform, B::AffineTransform) = compose(A, B)
+∘(A::AffineTransform, B::AffineTransform) = compose(A, B)
 
 """
     rightdivide(A, B)

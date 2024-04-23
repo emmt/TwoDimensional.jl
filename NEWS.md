@@ -61,13 +61,16 @@
   `TwoDimensional.inner` and `TwoDimensional.outer` compute the inner and outer
   products of two points.
 
+- Points are considered as 2-dimensional vectors for some operations: `norm(a)`
+  yields the Euclidean norm of the point `a`; `dot(a, b)` or `a ⋅ b` compute
+  the dot product (a.k.a. scalar product or inner product) of the two points
+  `a` and `b`; while `cross(a, b)` or `a*b` compute their cross product (a.k.a.
+  vector product or directed area product).
+
 - `BoundingBox(obj)` yields the bounding-box of the geometric object `obj`.
   `BoundingBox(f,arr)` yields the bounding-box of the entries of the
   2-dimensional array `A` such that `f(A[i,j])` is true. If `A` is an array of
   Booleans, `f` is assumed to be the identity if not specified.
-
-- Points are considered as 2-dimensional vectors in `dot` product (also `⋅`
-  operator), `cross` product (also `*` operator), and `norm`.
 
 ### Bounding-boxes
 
@@ -97,8 +100,7 @@
   coefficients of `A` (these methods require `using Unitless`).
 
 - Method `TwoDimensional.compose` is no longer exported. Explicitly use/import
-  it or use `*`, `⋅` (`\cdot<tab>`), or `∘` (`\circ<tab>`) to compose affine
-  transforms.
+  it or use `*`, or `∘` (`\circ<tab>`) to compose affine transforms.
 
 ### Things no longer supported
 
@@ -111,6 +113,11 @@
   `BoundingBox((xmin,ymin),(xmax,xmax))` or `BoundingBox(xmin:xmax,ymin:xmax)`
   (for integer coordinates), or use keywords `BoundingBox(xmin=..., xmax=...,
   ymin=..., xmax=...)`.
+
+- Operator `⋅` (`\cdot<tab>`) is reserved for the dot product. Applying an
+  affine transform `A` to an object `obj` is done by `A(obj)` or `A*obj`.
+  Composing affine transforms `A` and `B` is done by `A*B` or `A∘B` (with `∘`
+  given by `\circ<tab>` in the REPL)
 
 - Julia versions older than 1.0 are no longer supported.
 
