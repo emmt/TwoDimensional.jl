@@ -548,57 +548,6 @@ end
         end
     end
 
-    @testset "Bounding-box algorithm" begin
-        if true # false for debugging to avoid too many errors, true for production
-            # Exhaustively test all possibilities.
-            A = Array{Bool,2}(undef, (5,4))
-            n = (one(UInt64) << length(A)) # number of possibilities
-            for bits in 0:n-1
-                unpack_bits!(A, bits)
-                @test BoundingBox(A) === naive_bounding_box(A)
-            end
-        else
-            # Semi-exhaustive testing of the bounding box algorithm.
-            A = zeros(Bool, (7,8))
-            fill!(A,false)[1,3] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,true)[2:end-1,2:end-1] .= false
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[1,1] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[1,end] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[end,1] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[end,end] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[3,4] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            A[2,7] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            A[5,end] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[end,4] = true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[1,:] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[:,1] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[end,:] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[:,end] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[1,2:end-1] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[2:end-1,1] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[end,2:end-1] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-            fill!(A,false)[2:end-1,end] .= true
-            @test BoundingBox(A) === naive_bounding_box(A)
-        end
-    end
-
     @testset "AffineTransforms" begin
         tol = 1e-14
         I = AffineTransform()
@@ -816,6 +765,57 @@ end
                 @test occursin(r"\bAffineTransform\b", string(M))
             end
         end
+    end
+end
+
+@testset "Bounding-box algorithm" begin
+    if true # false for debugging to avoid too many errors, true for production
+        # Exhaustively test all possibilities.
+        A = Array{Bool,2}(undef, (5,4))
+        n = (one(UInt64) << length(A)) # number of possibilities
+        for bits in 0:n-1
+            unpack_bits!(A, bits)
+            @test BoundingBox(A) === naive_bounding_box(A)
+        end
+    else
+        # Semi-exhaustive testing of the bounding box algorithm.
+        A = zeros(Bool, (7,8))
+        fill!(A,false)[1,3] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,true)[2:end-1,2:end-1] .= false
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[1,1] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[1,end] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[end,1] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[end,end] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[3,4] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        A[2,7] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        A[5,end] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[end,4] = true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[1,:] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[:,1] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[end,:] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[:,end] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[1,2:end-1] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[2:end-1,1] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[end,2:end-1] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
+        fill!(A,false)[2:end-1,end] .= true
+        @test BoundingBox(A) === naive_bounding_box(A)
     end
 end
 
