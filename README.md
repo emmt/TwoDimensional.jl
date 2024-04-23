@@ -5,7 +5,7 @@
 [![Dev][doc-dev-img]][doc-dev-url]
 [![Build Status][github-ci-img]][github-ci-url]
 [![Build Status][appveyor-img]][appveyor-url]
-[![Coverage][codecov-img]][codecov-url]
+[![codecov](https://codecov.io/gh/emmt/TwoDimensional.jl/graph/badge.svg?token=m7V2JI1HA6)](https://codecov.io/gh/emmt/TwoDimensional.jl)
 
 **TwoDimensional** is a [Julia][julia-url] package which provides useful types
 and methods to define and manipulate 2-dimensional objects (points,
@@ -74,9 +74,6 @@ Pkg.add("TwoDimensional")
 
 [appveyor-img]: https://ci.appveyor.com/api/projects/status/github/emmt/TwoDimensional.jl?svg=true
 [appveyor-url]: https://ci.appveyor.com/project/emmt/TwoDimensional-jl
-
-[codecov-img]: https://codecov.io/gh/emmt/TwoDimensional.jl/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/emmt/TwoDimensional.jl
 
 [julia-url]: https://julialang.org/
 [julia-pkgs-url]: https://pkg.julialang.org/
