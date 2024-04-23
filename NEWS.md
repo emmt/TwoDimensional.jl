@@ -34,12 +34,12 @@
   bounding-boxes, keyword `swap` specifies whether to swap the bounds of the
   box, `box.start` and `box.stop`.
 
-- `zero(obj)` and `one(one)` yield the additive and multiplicative identities
-  for the type of object `obj`, a point or a bounding-box. That is such that
-  `zero(obj) + obj == obj + zero(obj) == obj` and `one(obj)*obj == obj*one(obj)
-  == obj` hold. These rules implies that `one(obj)` is the scalar
-  `one(eltype(obj))`; while, `zero(obj)` is an object of the same type as `obj`
-  with all values set to zero.
+- `zero(obj)` and `one(obj)` yield the additive and multiplicative identities
+  for the type of the geometric object `obj`. That is such that `zero(obj) +
+  obj == obj + zero(obj) == obj` and `one(obj)*obj == obj*one(obj) == obj`
+  hold. These rules implies that `one(obj)` is the scalar
+  `one(coord_type(obj))`; while, `zero(obj)` is a point with the same
+  coordinate type as `obj` and with coordinates equal to zero.
 
 - `Base.convert` method has been specialized to implement most allowed
    conversion from point-like objects (2-tuple of coordinates, abstract points,

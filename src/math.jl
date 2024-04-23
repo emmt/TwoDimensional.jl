@@ -60,33 +60,29 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
 
 # Scaling of geometric objects and corresponding multiplicative identity.
 Base.one(obj::GeometricObject) = one(typeof(obj))
+Base.one(::Type{<:GeometricObject{T}}) where {T} = one(T)
 
-Base.one(::Type{Point{T}}) where {T} = one(T)
 *(α::Number, pnt::Point) = apply(Fix1(*, α), pnt)
 /(pnt::Point, α::Number) = apply(Fix2(/, α), pnt)
 
-Base.one(::Type{Rectangle{T}}) where {T} = one(T)
 *(α::Number, rect::Rectangle) =  apply(Fix1(*, α), rect)
 /(rect::Rectangle, α::Number) =  apply(Fix2(/, α), rect)
 
-Base.one(::Type{BoundingBox{T}}) where {T} = one(T)
 *(α::Number, box::BoundingBox) = apply(Fix1(*, α), box; swap = α < zero(α))
 /(box::BoundingBox, α::Number) = apply(Fix2(/, α), box; swap = α < zero(α))
 
 # Translate a geometric object by adding or subtracting a point and
 # corresponding addtive identity.
 Base.zero(obj::GeometricObject) = zero(typeof(obj))
+Base.one(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
 
-Base.zero(::Type{Point{T}}) where {T} = Point(zero(T), zero(T))
 +(A::Point{T}, B::Point{T}) where {T} = Point(A.x + B.x, A.y + B.y)
 -(A::Point{T}, B::Point{T}) where {T} = Point(A.x - B.x, A.y - B.y)
 
-Base.zero(::Type{Rectangle{T}}) where {T} = zero(Point{T})
 +(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), rect)
 -(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), rect)
 -(pnt::Point{T}, rect::Rectangle{T}) where {T} = apply(Fix1(-, pnt), rect)
 
-Base.zero(::Type{BoundingBox{T}}) where {T} = zero(Point{T})
 +(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), box; swap = false)
 -(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), box)
 -(pnt::Point{T}, box::BoundingBox{T}) where {T} = apply(Fix1(-, pnt), box; swap = true)
