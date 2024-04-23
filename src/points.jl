@@ -130,6 +130,8 @@ point_type(::Type{Tuple{X,Y}}) where {X<:Number,Y<:Number} = Point{promote_type(
 for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
     @eval begin
         point_type(pnt::$type) = point_type(typeof(pnt))
+        point_type(arr::AbstractVector{<:$type}) = point_type(typeof(arr))
+        point_type(::Type{<:AbstractVector{T}}) where {T<:$type} = point_type(T)
         point_type(tup::Tuple{Vararg{$type}}) = _point_type(point_type(first(tup)), tail(tup))
     end
 end

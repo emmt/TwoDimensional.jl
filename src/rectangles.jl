@@ -80,6 +80,14 @@ end
     end
 end
 
+# Build rectangles from other geometric objects.
+Rectangle(pnt::Point) = Rectangle(pnt, pnt)
+Rectangle{T}(pnt::Point) where {T} = Rectangle{T}(pnt, pnt)
+Rectangle(pnt::AbstractPoint) = Rectangle(Point(pnt))
+Rectangle{T}(pnt::AbstractPoint) where {T} = Rectangle{T}(Point(pnt))
+Rectangle(obj::RectangularObject) = Rectangle(first(obj), last(obj))
+Rectangle{T}(obj::RectangularObject) where {T} = Rectangle{T}(first(obj), last(obj))
+
 # Convert/copy constructors.
 Rectangle(rect::Rectangle) = rect
 Rectangle{T}(rect::Rectangle{T}) where {T} = rect

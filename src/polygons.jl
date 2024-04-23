@@ -101,6 +101,11 @@ end
     return poly
 end
 
+# Properties of polygons.
+Base.propertynames(::Polygon) = (:vertices,)
+Base.getproperty(poly::Polygon, key::Symbol) =
+    key === :vertices ? vec(poly) : throw(KeyError(key))
+
 function Base.show(io::IO, poly::Polygon{T,V}) where {T,V}
     print(io, "Polygon{", T, ",", V, "}((")
     flag = false

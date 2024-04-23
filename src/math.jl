@@ -3,6 +3,8 @@ Base.:(==)(a::Point, b::Point) =
     (a.x == b.x) & (a.y == b.y)
 Base.:(==)(a::Rectangle, b::Rectangle) =
     (first(a) == first(b)) & (last(a) == last(b))
+Base.:(==)(a::Polygon, b::Polygon) =
+    vec(a) === vec(b) || vec(a) == vec(b)
 Base.:(==)(a::BoundingBox, b::BoundingBox) =
     isempty(a) ? isempty(b) : ((first(a) == first(b)) & (last(a) == last(b)))
 
@@ -10,9 +12,11 @@ Base.:(==)(a::BoundingBox, b::BoundingBox) =
 Base.isapprox(a::Point, b::Point; kwds...) =
     isapprox(a.x, b.x; kwds...) && isapprox(a.y, b.y; kwds...)
 Base.isapprox(a::Rectangle, b::Rectangle; kwds...) =
-    isapprox(first(a), first(b)) && isapprox(last(a), last(b))
+    isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
+Base.isapprox(a::Polygon, b::Polygon; kwds...) =
+    vec(a) === vec(b) || isapprox(vec(a), vec(b); kwds...)
 Base.isapprox(a::BoundingBox, b::BoundingBox; kwds...) =
-    isapprox(first(a), first(b)) && isapprox(last(a), last(b))
+    isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
 
 # Extend ∈ operator.
 Base.in(pnt::AbstractPoint, box::BoundingBox) =
@@ -56,6 +60,7 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
 # Unary minus negates coordinates and should as multiplying by -1.
 -(pnt::Point) = apply(-, pnt)
 -(rect::Rectangle) = apply(-, rect)
+-(poly::Polygon) = apply(-, poly)
 -(box::BoundingBox) = apply(-, box; swap = true)
 
 # Scaling of geometric objects and corresponding multiplicative identity.
@@ -67,6 +72,9 @@ Base.one(::Type{<:GeometricObject{T}}) where {T} = one(T)
 
 *(α::Number, rect::Rectangle) =  apply(Fix1(*, α), rect)
 /(rect::Rectangle, α::Number) =  apply(Fix2(/, α), rect)
+
+*(α::Number, poly::Polygon) =  apply(Fix1(*, α), poly)
+/(poly::Polygon, α::Number) =  apply(Fix2(/, α), poly)
 
 *(α::Number, box::BoundingBox) = apply(Fix1(*, α), box; swap = α < zero(α))
 /(box::BoundingBox, α::Number) = apply(Fix2(/, α), box; swap = α < zero(α))
@@ -82,6 +90,10 @@ Base.zero(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
 +(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), rect)
 -(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), rect)
 -(pnt::Point{T}, rect::Rectangle{T}) where {T} = apply(Fix1(-, pnt), rect)
+
++(poly::Polygon{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), poly)
+-(poly::Polygon{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), poly)
+-(pnt::Point{T}, poly::Polygon{T}) where {T} = apply(Fix1(-, pnt), poly)
 
 +(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), box; swap = false)
 -(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), box)

@@ -6,7 +6,7 @@ using TwoDimensional: get_axis_bounds
 using Test, LinearAlgebra, Unitless
 import Base.MathConstants: φ
 
-struct MyPoint{T} <: AbstractPoint{T}
+struct NamedPoint{T} <: AbstractPoint{T}
     name::String
     x::T
     y::T
@@ -116,7 +116,7 @@ end
         xy = 1, 2
         pnt = @inferred Point(map(T, xy)...)
         pnt_f64 = @inferred Point{Float64}(xy)
-        pnt_misc = @inferred MyPoint{T}("yet another point", xy...)
+        pnt_misc = @inferred NamedPoint{T}("yet another point", xy...)
         @test pnt isa Point{T}
         @test typeof(pnt) === Point{T}
         @test coord_type(pnt) === coord_type(typeof(pnt)) === T
@@ -254,6 +254,17 @@ end
                 end
             end
         end
+        # Other constructors.
+        @test rec === @inferred Rectangle(BoundingBox(rec.start, rec.stop))
+        @test rec === @inferred Rectangle{T}(BoundingBox{Float64}(rec.start, rec.stop))
+        pnt = Point(3.1,2.7)
+        small_rec = @inferred(Rectangle(pnt))
+        @test Tuple(small_rec) === (pnt, pnt)
+        @test coord_type(small_rec) === coord_type(pnt)
+        pnt = NamedPoint{Float32}("some point", 3.1, -2.7)
+        small_rec = @inferred(Rectangle(pnt))
+        @test Tuple(small_rec) === (Point(pnt), Point(pnt))
+        @test coord_type(small_rec) === coord_type(pnt)
         # Conversions.
         @test rec === @inferred convert(Rectangle, rec)
         @test rec === @inferred convert(Rectangle{T}, rec)
@@ -270,6 +281,85 @@ end
         end
         # Functions specific to rectangles.
         @test area(rec) == (rec.x1 - rec.x0)*(rec.y1 - rec.y0)
+    end
+
+    @testset "Polygons ($T)" for T in (Int16, Int, Float32)
+        @assert !(T === Float64) # this is assumed by the tests
+        pnts = ((-1, 2), (3, 4), (5, -6))
+        poly = @inferred Polygon{T}(pnts)
+        poly_f64 = @inferred Polygon{Float64}(pnts) # same with other type
+        @test poly isa Polygon{T}
+        @test typeof(poly) <: Polygon{T}
+        @test coord_type(poly) === coord_type(typeof(poly)) === T
+        @test eltype(poly) === eltype(typeof(poly)) === Point{T}
+        @test vec(poly) == collect(map(Point{T}, pnts))
+        @test vec(poly) === TwoDimensional.parts(poly)
+        @test vec(poly) === TwoDimensional.vertices(poly)
+        @test poly === Polygon(vec(poly))
+        @test length(poly) === length(pnts)
+        @test firstindex(poly) === 1
+        @test lastindex(poly) === length(pnts)
+        @test eachindex(poly) == firstindex(poly):lastindex(poly)
+        @test size(poly) === (length(poly),)
+        @test axes(poly) == (firstindex(poly):lastindex(poly),)
+        @test keys(poly) === eachindex(poly)
+        @test values(poly) === vec(poly)
+        @test Base.IteratorSize(poly) === Base.IteratorSize(typeof(poly)) === Base.HasLength()
+        @test Base.IteratorEltype(poly) === Base.IteratorEltype(typeof(poly)) === Base.HasEltype()
+        @test_throws BoundsError poly[firstindex(poly) - 1]
+        @test_throws BoundsError poly[lastindex(poly) + 1]
+        @test Set(Base.propertynames(poly)) == Set((:vertices,))
+        @test poly.vertices === vec(poly)
+        @test_throws KeyError poly.non_existing_property
+        @test occursin(r"^Polygon\b", string(poly))
+        let arr = @inferred(collect(poly)),
+            tup = (vec(poly)...,),
+            arr_xy = map(p -> (p.x, p.y), vec(poly)),
+            arr_xy_mix = map(p -> (p.x, Float64(p.y)), vec(poly))
+            # Same values but not same object.
+            @test arr !== vec(poly)
+            @test arr == vec(poly)
+            @test poly === @inferred Polygon(vec(poly))
+            @test poly === @inferred Polygon{T}(vec(poly))
+            @test poly ==  @inferred Polygon(arr)
+            @test poly ==  @inferred Polygon(arr...)
+            @test poly ==  @inferred Polygon((arr...,))
+            @test poly ==  @inferred Polygon{T}(arr)
+            @test poly ==  @inferred Polygon{T}(arr...)
+            @test poly ==  @inferred Polygon{T}((arr...,))
+            @test poly ==  @inferred Polygon(arr_xy)
+            @test poly ==  @inferred Polygon(arr_xy...)
+            @test poly ==  @inferred Polygon((arr_xy...,))
+            @test poly ==  @inferred Polygon{T}(arr_xy)
+            @test poly ==  @inferred Polygon{T}(arr_xy...)
+            @test poly ==  @inferred Polygon{T}((arr_xy...,))
+            @test poly ==  @inferred Polygon{T}(arr_xy_mix)
+            @test poly ==  @inferred Polygon{T}(arr_xy_mix...)
+            @test poly ==  @inferred Polygon{T}((arr_xy_mix...,))
+        end
+        if T <: Int
+            let arr = map(CartesianIndex, vec(poly)), tup = (arr...,)
+                @test poly == @inferred Polygon(arr)
+                @test poly == @inferred Polygon{T}(arr)
+                @test poly == @inferred Polygon(tup...)
+                @test poly == @inferred Polygon{T}(tup...)
+                @test poly == @inferred Polygon(tup)
+                @test poly == @inferred Polygon{T}(tup)
+            end
+        end
+        # Bounding-box of a polygon and conversely.
+        box  = @inferred BoundingBox(poly)
+        @test (box.xmin, box.xmax) === extrema(map(p -> p.x, vec(poly)))
+        @test (box.ymin, box.ymax) === extrema(map(p -> p.y, vec(poly)))
+        p = @inferred Polygon(box)
+        @test p isa Polygon{T}
+        @test length(p) == 4
+        pnts = (Point(box.xmin, box.ymin), Point(box.xmax, box.ymin),
+                Point(box.xmax, box.ymax), Point(box.xmin, box.ymax),)
+        @test p[1] ∈ pnts
+        @test p[2] ∈ pnts
+        @test p[3] ∈ pnts
+        @test p[4] ∈ pnts
     end
 
     @testset "BoundingBoxes ($T)" for T in (Int16, Int, Float32)
@@ -337,6 +427,10 @@ end
         @test box === @inferred BoundingBox{T}(; xmin = first(xrng), xmax = last(xrng), ymin = first(yrng), ymax = last(yrng))
         @test box === @inferred BoundingBox(Rectangle(box.start, box.stop))
         @test @inferred(BoundingBox(box.start)) === @inferred(BoundingBox(box.start, box.start))
+        pnt = Point(3.1,2.7)
+        smallest_box = @inferred(BoundingBox(pnt))
+        @test Tuple(smallest_box) === (pnt, pnt)
+        @test !isempty(smallest_box)
         # Conversions.
         @test box === @inferred convert(BoundingBox, box)
         @test box === @inferred convert(BoundingBox{T}, box)
@@ -455,6 +549,7 @@ end
         @inferred(Point(-1, 3)),
         @inferred(Rectangle((-1.0f0, 2.0f0), (3.0f0, 4.0f0))),
         @inferred(BoundingBox((-1.0, 2.0), (3.0, 4.0))),
+        @inferred(Polygon((-1.0, 2.0), (3.0, 4.0), (5.0, -6.0))),
         )
 
         # The following tests require that the bounding-box be not empty.
@@ -466,12 +561,19 @@ end
         @test +obj === obj
 
         # Unary minus negates coordinates and should as multiplying by -1.
-        @test -obj === -one(coord_type(obj))*obj
+        if obj isa Polygon
+            # Vertices are the same but are stored in another object.
+            @test -obj == -one(coord_type(obj))*obj
+        else
+            @test -obj === -one(coord_type(obj))*obj
+        end
         if obj isa Point
             @test -obj === @inferred Point(-obj.x, -obj.y)
         elseif obj isa Rectangle
             @test -obj === @inferred Rectangle(-first(obj), -last(obj))
             @test -obj === @inferred Rectangle((-obj.x0, -obj.y0), (-obj.x1, -obj.y1))
+        elseif obj isa Polygon
+            @test -obj == @inferred Polygon(map(-, vec(obj)))
         elseif obj isa BoundingBox
             @test !isempty(obj)
             @test -obj === @inferred BoundingBox(-last(obj), -first(obj))
@@ -481,14 +583,26 @@ end
         # Multiplicative identity.
         @test isone(one(obj))
         @test one(obj) === one(typeof(obj)) === one(coord_type(obj))
-        @test one(obj)*obj === obj
-        @test obj*one(obj) === obj
-        @test one(obj)\obj === @inferred float(obj)
-        @test obj/one(obj) === @inferred float(obj)
-        @test (-one(obj))*obj === -obj
-        @test obj*(-one(obj)) === -obj
-        @test (-one(obj))\obj === -float(obj)
-        @test obj/(-one(obj)) === -float(obj)
+        if obj isa Polygon
+            # Vertices are the same but are stored in another object.
+            @test one(obj)*obj == obj
+            @test obj*one(obj) == obj
+            @test one(obj)\obj == @inferred float(obj)
+            @test obj/one(obj) == @inferred float(obj)
+            @test (-one(obj))*obj == -obj
+            @test obj*(-one(obj)) == -obj
+            @test (-one(obj))\obj == -float(obj)
+            @test obj/(-one(obj)) == -float(obj)
+        else
+            @test one(obj)*obj === obj
+            @test obj*one(obj) === obj
+            @test one(obj)\obj === @inferred float(obj)
+            @test obj/one(obj) === @inferred float(obj)
+            @test (-one(obj))*obj === -obj
+            @test obj*(-one(obj)) === -obj
+            @test (-one(obj))\obj === -float(obj)
+            @test obj/(-one(obj)) === -float(obj)
+        end
 
         # Multiplying/dividing a geometric object by a number amounts to
         # scaling around origin.
@@ -501,6 +615,9 @@ end
             @test α*obj === @inferred Rectangle((α*obj.x0, α*obj.y0), (α*obj.x1, α*obj.y1))
             @test α\obj === @inferred Rectangle(α\first(obj), α\last(obj))
             @test α\obj === @inferred Rectangle((α\obj.x0, α\obj.y0), (α\obj.x1, α\obj.y1))
+        elseif obj isa Polygon
+            @test α*obj == @inferred Polygon(map(vertex -> α*vertex, vec(obj)))
+            @test α\obj == @inferred Polygon(map(vertex -> α\vertex, vec(obj)))
         elseif obj isa BoundingBox
             @test α*obj === @inferred BoundingBox(α*first(obj), α*last(obj))
             @test α*obj === @inferred BoundingBox((α*obj.xmin, α*obj.ymin), (α*obj.xmax, α*obj.ymax), )
@@ -511,22 +628,43 @@ end
             @test (-α)\obj === @inferred BoundingBox(-α\last(obj), -α\first(obj))
             @test (-α)\obj === @inferred BoundingBox((-α\obj.xmax, -α\obj.ymax), (-α\obj.xmin, -α\obj.ymin))
         end
-        @test obj*α === α*obj
-        @test obj/α === α\obj
+        if obj isa Polygon
+            # Vertices are the same but are stored in another object.
+            @test obj*α == α*obj
+            @test obj/α == α\obj
+        else
+            @test obj*α === α*obj
+            @test obj/α === α\obj
+        end
 
         # Additive identity.
         @test iszero(zero(obj))
         @test zero(obj) === zero(typeof(obj))
-        @test obj + zero(obj) === obj
-        @test zero(obj) + obj === obj
-        @test obj - zero(obj) === obj
-        @test zero(obj) - obj === -obj
+        if obj isa Polygon
+            # Vertices are the same but are stored in another object.
+            @test obj + zero(obj) == obj
+            @test zero(obj) + obj == obj
+            @test obj - zero(obj) == obj
+            @test zero(obj) - obj == -obj
+        else
+            @test obj + zero(obj) === obj
+            @test zero(obj) + obj === obj
+            @test obj - zero(obj) === obj
+            @test zero(obj) - obj === -obj
+        end
 
         # Adding a point to a geometric object amounts to shifting the object.
         pnt = Point{Int8}(7,-3)
-        @test obj + pnt === pnt + obj
-        @test obj - pnt === obj + (-pnt)
-        @test obj - pnt === -pnt + obj
+        if obj isa Polygon
+            # Vertices are the same but are stored in another object.
+            @test obj + pnt == pnt + obj
+            @test obj - pnt == obj + (-pnt)
+            @test obj - pnt == -pnt + obj
+        else
+            @test obj + pnt === pnt + obj
+            @test obj - pnt === obj + (-pnt)
+            @test obj - pnt === -pnt + obj
+        end
         if obj isa Point
             @test obj + pnt === Point(obj.x + pnt.x, obj.y + pnt.y)
             @test obj - pnt === Point(obj.x - pnt.x, obj.y - pnt.y)
@@ -538,6 +676,11 @@ end
             @test obj - pnt === @inferred Rectangle((obj.x0 - pnt.x, obj.y0 - pnt.y), (obj.x1 - pnt.x, obj.y1 - pnt.y))
             @test pnt - obj === @inferred Rectangle(pnt - first(obj), pnt - last(obj))
             @test pnt - obj === @inferred Rectangle((pnt.x - obj.x0, pnt.y - obj.y0), (pnt.x - obj.x1, pnt.y - obj.y1))
+        elseif obj isa Polygon
+            @test obj + pnt == @inferred Polygon(map(vertex -> vertex + pnt, vec(obj)))
+            @test pnt + obj == @inferred Polygon(map(vertex -> pnt + vertex, vec(obj)))
+            @test obj - pnt == @inferred Polygon(map(vertex -> vertex - pnt, vec(obj)))
+            @test pnt - obj == @inferred Polygon(map(vertex -> pnt - vertex, vec(obj)))
         elseif obj isa BoundingBox
             @test obj + pnt === @inferred BoundingBox(first(obj) + pnt, last(obj) + pnt)
             @test obj + pnt === @inferred BoundingBox((obj.xmin + pnt.x, obj.ymin + pnt.y), (obj.xmax + pnt.x, obj.ymax + pnt.y))
