@@ -206,9 +206,13 @@ Base.iterate(A::AffineTransform, i::Int=1) =
     i == 5 ? (A.yy, 6) :
     i == 6 ? (A.y,  7) : nothing
 
-Base.IteratorSize(A::AffineTransform) = Base.IteratorSize(typeof(A))
-Base.IteratorSize(::Type{<:AffineTransform}) = Base.HasLength()
+Base.IteratorEltype(A::AffineTransform) = IteratorEltype(typeof(A))
+Base.IteratorEltype(::Type{<:AffineTransform}) = HasEltype()
+Base.IteratorSize(A::AffineTransform) = IteratorSize(typeof(A))
+Base.IteratorSize(::Type{<:AffineTransform}) = HasLength()
 Base.length(A::AffineTransform) = 6
+Base.eltype(A::AffineTransform) = eltype(typeof(A))
+Base.eltype(::Type{<:AffineTransform{T,R,S}}) where {T,R,S} = R === S ? R : Union{R,S}
 
 #------------------------------------------------------------------------------
 # Apply the transform to some coordinates (promoted to the same type).

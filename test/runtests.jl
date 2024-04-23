@@ -582,6 +582,8 @@ end
                     @test typeof(H) <: AffineTransform{T}
                     @test @inferred(float(H)) === H
                     @test @inferred(float(typeof(H))) === typeof(H)
+                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
+                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -593,6 +595,8 @@ end
                     @test typeof(H) <: AffineTransform{T}
                     @test @inferred(float(H)) === H
                     @test @inferred(float(typeof(H))) === typeof(H)
+                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
+                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -604,6 +608,8 @@ end
                     @test typeof(H) <: AffineTransform{T}
                     @test @inferred(float(H)) === H
                     @test @inferred(float(typeof(H))) === typeof(H)
+                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
+                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -615,6 +621,8 @@ end
                     @test typeof(H) <: AffineTransform{T}
                     @test @inferred(float(H)) === H
                     @test @inferred(float(typeof(H))) === typeof(H)
+                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
+                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
@@ -626,6 +634,8 @@ end
                     @test typeof(H) <: AffineTransform{T}
                     @test @inferred(float(H)) === H
                     @test @inferred(float(typeof(H))) === typeof(H)
+                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
+                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
                     @test bare_type(H) === T
                     @test real_type(H) === T
                     @test floating_point_type(H) === T
