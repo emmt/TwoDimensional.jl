@@ -150,11 +150,13 @@ for type in (:Point, :Rectangle, :Polygon, :BoundingBox)
     end
 end
 for type in (:GeometricObject, :GeometricElement, :ShapeElement, :MaskElement,
-             :AbstractPoint, :Point, :Rectangle, :Polygon, :BoundingBox,)
+             :AbstractPoint, :Point, :Rectangle, :BoundingBox,)
     @eval begin
         convert_coord_type(::Type{T}, ::Type{<:$type}) where {T} = $type{T}
     end
 end
+convert_coord_type(::Type{T}, ::Type{<:Polygon}) where {T} = Polygon{T,Vector{Point{T}}}
+convert_coord_type(::Type{T}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
 
 Base.float(obj::GeometricObject{T}) where {T} = convert_coord_type(float(T), obj)
 Base.float(::Type{G}) where {T,G<:GeometricObject{T}} = convert_coord_type(float(T), G)
