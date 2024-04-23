@@ -74,7 +74,7 @@ Base.one(::Type{<:GeometricObject{T}}) where {T} = one(T)
 # Translate a geometric object by adding or subtracting a point and
 # corresponding addtive identity.
 Base.zero(obj::GeometricObject) = zero(typeof(obj))
-Base.one(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
+Base.zero(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
 
 +(A::Point{T}, B::Point{T}) where {T} = Point(A.x + B.x, A.y + B.y)
 -(A::Point{T}, B::Point{T}) where {T} = Point(A.x - B.x, A.y - B.y)
