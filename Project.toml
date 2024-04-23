@@ -5,11 +5,11 @@ version = "0.4.1"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-#TypeUtils = "c3b1956e-8857-4d84-9b79-890df85b1e67"
+TypeUtils = "c3b1956e-8857-4d84-9b79-890df85b1e67"
 Unitless = "c904d999-9673-4878-a3dd-e3ef1851788a"
 
 [compat]
-#TypeUtils = "0.3"
+TypeUtils = "0.3.8"
 Unitless = "2.1"
 julia = "1"
 

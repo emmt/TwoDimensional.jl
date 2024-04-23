@@ -31,6 +31,16 @@ is an alias for [`TwoDimensional.BoundingBox{T}`](@ref TwoDimensional.BoundingBo
 const BoundingBox2D{T} = BoundingBox{T}
 
 """
+    TwoDimensional.MaskElement2D{T,S}
+
+is an alias for [`TwoDimensional.MaskElement{T,S}`](@ref
+TwoDimensional.MaskElement). `T` is the coordinate type, `S` is the type of the
+elementary geometrical object defining the shape of the mask.
+
+"""
+const MaskElement2D{T,S} = MaskElement{T,S}
+
+"""
     TwoDimensional.AffineTransform2D{T,R,S}
 
 is an alias for [`TwoDimensional.AffineTransform{T,R,S}`](@ref

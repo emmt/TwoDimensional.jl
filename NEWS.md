@@ -2,6 +2,11 @@
 
 ## Version 0.5.0
 
+This version of `TwoDimensional` introduces new geometric object types
+(`Rectangle`, `Polygon`, and `Circle`), the possibility for coordinates to have
+units, more consistent arithmetic rules, and methods to build complex masks by
+composing elementary geometric objects.
+
 ### General changes
 
 - **Coordinate type:** Coordinates of geometric objects may be of any type
@@ -28,11 +33,6 @@
   are similar to bounding-boxes except that they can never be empty (a
   rectangle contains at least a single point) and that they are converted into
   polygons when transformed by an affine coordinate transform.
-
-- New geometric object type `Rectangle` which is similar to `BoundingBox`
-  except that rectangles can never be empty (a rectangle contains at least a
-  single point) and that they are converted into polygons when transformed by
-  an affine coordinate transform.
 
 - Non-exported method `TwoDimensional.apply(f, obj)` applies the function `f`
   to each component of the geometric object `obj` and rebuilds an object of the
@@ -105,6 +105,12 @@
 
 - Method `TwoDimensional.compose` is no longer exported. Explicitly use/import
   it or use `*`, or `∘` (`\circ<tab>`) to compose affine transforms.
+
+### Masks
+
+It is now possible to define and apply arbitrary masks by combining elementary
+*obscurations* (opaque elementary geometric objects) and *apertures*
+(transparent elementary geometric objects).
 
 ### Things no longer supported
 

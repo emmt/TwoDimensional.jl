@@ -275,7 +275,7 @@ translate(A::AffineTransform, x, y) = AffineTransform(A.xx, A.xy, A.xx*x + A.xy*
     C = scale(A, ρ)
     C = A*ρ
 
-yield 2-dmensional affine transforms `B` and `C` such that:
+yield 2-dimensional affine transforms `B` and `C` such that:
 
     B(x,y) -> ρ*A(x,y)
     C(x,y) -> A(ρ*x,ρ*y)

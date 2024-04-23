@@ -23,6 +23,8 @@ Base.isapprox(a::BoundingBox, b::BoundingBox; kwds...) =
     isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
 
 # Extend ∈ operator for points.
+Base.in(pnt::AbstractPoint, msk::MaskElement) = pnt ∈ shape(msk)
+
 Base.in(pnt::AbstractPoint, box::BoundingBox) =
     (box.xmin ≤ pnt.x ≤ box.xmax) & (box.ymin ≤ pnt.y ≤ box.ymax)
 
@@ -32,7 +34,15 @@ Base.in(pnt::AbstractPoint, rect::Rectangle) =
 Base.in(pnt::AbstractPoint, circ::Circle) =
     distance(pnt - center(circ)) ≤ radius(circ)
 
+Base.in(pnt::Point, poly::Polygon) =
+    # FIXME: Converting to the same coordinate type has some cost...
+    in(promote_coord_type(pnt, poly)...)
+Base.in(pnt::Point{T}, poly::Polygon{T}) where {T} =
+    winding_number_test(pnt, vec(poly))
+
 # Extend ⊆ operator.
+Base.issubset(obj::GeometricObject, msk::MaskElement) = obj ⊆ shape(msk)
+
 function Base.issubset(rect::Rectangle, circ::Circle)
     # Return whether the corner the most distant form the center is inside the
     # circle.
@@ -100,6 +110,7 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
 -(circ::Circle) = Circle(-center(circ), radius(circ))
 -(poly::Polygon) = apply(-, poly)
 -(box::BoundingBox) = apply(-, box; swap = true)
+-(msk::MaskElement) = MaskElement(-shape(msk); opaque = is_opaque(msk))
 
 # Scaling of geometric objects and corresponding multiplicative identity.
 Base.one(obj::GeometricObject) = one(typeof(obj))
@@ -112,13 +123,16 @@ Base.one(::Type{<:GeometricObject{T}}) where {T} = one(T)
 /(rect::Rectangle, α::Number) =  apply(Fix2(/, α), rect)
 
 *(α::Number, circ::Circle) = Circle(α*center(circ), abs(α)*radius(circ))
-/(circ::Circle, α::Number) = Circle(α\center(circ), abs(α)\radius(circ))
+/(circ::Circle, α::Number) = Circle(center(circ)/α, radius(circ)/abs(α))
 
 *(α::Number, poly::Polygon) =  apply(Fix1(*, α), poly)
 /(poly::Polygon, α::Number) =  apply(Fix2(/, α), poly)
 
 *(α::Number, box::BoundingBox) = apply(Fix1(*, α), box; swap = α < zero(α))
 /(box::BoundingBox, α::Number) = apply(Fix2(/, α), box; swap = α < zero(α))
+
+*(α::Number, msk::MaskElement) = MaskElement(α*shape(msk); opaque = is_opaque(msk))
+/(msk::MaskElement,  α::Number) = MaskElement(shape(msk)/α; opaque = is_opaque(msk))
 
 # Translate a geometric object by adding or subtracting a point and
 # corresponding addtive identity.
@@ -144,6 +158,14 @@ Base.zero(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
 -(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), box)
 -(pnt::Point{T}, box::BoundingBox{T}) where {T} = apply(Fix1(-, pnt), box; swap = true)
 
++(msk::MaskElement, pnt::Point) = MaskElement(shape(msk) + pnt; opaque = is_opaque(msk))
+-(msk::MaskElement, pnt::Point) = MaskElement(shape(msk) - pnt; opaque = is_opaque(msk))
+-(pnt::Point, msk::MaskElement) = MaskElement(pnt - shape(msk); opaque = is_opaque(msk))
+
+# Performing a geometric operation on a mask amounts to performing the
+# operation on the embedded shape. Inverting a mask toggles its opacity.
+Base.inv(msk::MaskElement) = MaskElement(shape(msk); opaque = !is_opaque(msk))
+
 # Addition and subtraction of bounding-boxes (following the rules of the
 # addition and subtraction of sets) and corresponding addtive identity.
 function +(A::BoundingBox, B::BoundingBox)
@@ -162,10 +184,11 @@ end
 -(box::BoundingBox, δ::Number) = shrink(box, δ)
 
 # Apply affine transform.
+(A::AffineTransform)(msk::MaskElement) = MaskElement(A(shape(mask)); opaque = is_opaque(msk))
 (A::AffineTransform)(rect::Rectangle) = A(Polygon(rect))
 (A::AffineTransform)(circ::Circle) = error("not yet implemented")
 (A::AffineTransform)(poly::Polygon) = apply(A, poly)
-*(A::AffineTransform, obj::Union{Rectangle,Polygon}) = A(obj)
+*(A::AffineTransform, obj::GeometricObject) = A(obj)
 
 # NOTE: Using the following functor is a bit faster than map with an anonymous
 #       function.
@@ -313,6 +336,7 @@ distance(A::Point, B::Point) = hypot(A - B)
 yields the area of the geometric object `obj`.
 
 """
+area(msk::MaskElement) = area(shape(msk))
 area(pnt::AbstractPoint) = (z = zero(coord_type(pnt)); return z*z) # NOTE coord. may have units
 area(rect::Rectangle) = (rect.x1 - rect.x0)*(rect.y1 - rect.y0)
 area(circ::Circle) = (r = radius(circ); return (π*r)*r) # NOTE take care of correct conversion
@@ -324,6 +348,7 @@ yields the central point of the geometric object `obj`. For a polygon, the
 center of gravity of the vertices is returned.
 
 """
+center(msk::MaskElement) = center(shape(msk))
 center(pnt::AbstractPoint) = Point(pnt.x, pnt.y)
 center(pnt::Point) = pnt
 center(rect::Rectangle) = Point((rect.x0 + rect.y0)/2, (rect.y0 + rect.y1)/2)
@@ -352,6 +377,7 @@ For circle-like and point-like objects with integer coordinate type, the radius
 is also integer. For all other geometric objects, the raius is floating-point.
 
 """
+radius(msk::MaskElement) = radius(shape(msk))
 radius(pnt::AbstractPoint) = zero(coord_type(pnt))
 radius(rect::Rectangle) = half(diameter(rect))
 radius(circ::Circle) = getfield(circ, 2)
@@ -370,9 +396,23 @@ diameter is also integer. For all other geometric objects, the raius is
 floating-point.
 
 """
+diameter(msk::MaskElement) = diameter(shape(msk))
 diameter(pnt::AbstractPoint) = zero(coord_type(pnt))
 diameter(rect::Rectangle) = distance(first(rect), last(rect))
 diameter(circ::Circle) = twice(radius(circ))
 diameter(box::BoundingBox) =
     isempty(box) ? zero(float(coord_type(box))) : distance(first(box), last(box))
 diameter(poly::Polygon) = error("not yet implemented")
+
+"""
+    TwoDimensional.is_convex(obj) -> bool
+
+yields whether the geometric object `obj` is convex.
+
+"""
+is_convex(msk::MaskElement) = is_convex(shape(msk))
+is_convex(pnt::Point) = true
+is_convex(circ::Circle) = true
+is_convex(rect::Rectangle) = true
+is_convex(box::BoundingBox) = !isempty(box)
+is_convex(poly::Polygon) = geometric_properties(poly).convex

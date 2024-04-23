@@ -158,8 +158,15 @@ of objects:
 
 """
 BoundingBox(obj::GeometricObject{T}) where {T} = BoundingBox{T}(obj)
+BoundingBox{T}(obj::MaskElement) where {T} = BoundingBox{T}(shape(obj))
 BoundingBox{T}(pnt::Point) where {T} = BoundingBox{T}(pnt, pnt)
 BoundingBox{T}(rect::Rectangle) where {T} = BoundingBox{T}(first(rect), last(rect))
+function BoundingBox{T}(circ::Circle) where {T}
+    c = center(circ)
+    r = radius(circ)
+    s = Point(r, r)
+    return BoundingBox{T}(c - s, c + s)
+end
 function BoundingBox{T}(poly::Polygon) where {T}
     xmin = ymin = typemax(coord_type(poly))
     xmax = ymax = typemin(coord_type(poly))

@@ -40,7 +40,7 @@ export
     det,
     norm
 
-#using TypeUtils
+using TypeUtils
 using Unitless
 using Base: @propagate_inbounds, Callable, Fix1, Fix2, tail
 using Base: IteratorSize, SizeUnknown, HasLength, HasShape, IsInfinite
@@ -60,6 +60,8 @@ include("circles.jl")
 include("polygons.jl")
 include("boxes.jl")
 include("xforms.jl")
+include("winding.jl")
 include("math.jl")
+include("masks.jl")
 
 end # module TwoDimensional

@@ -20,6 +20,7 @@ parts(rect::Rectangle) = getfield(rect, 1)
 parts(poly::Polygon) = vec(poly)
 parts(circ::Circle) = (center(circ), radius(circ))
 parts(box::BoundingBox) = getfield(box, 1)
+parts(msk::MaskElement) = parts(shape(msk))
 
 # Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
 Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = parts(obj)
@@ -44,6 +45,10 @@ See also ['TwoDimensional.parts`](@ref) and
 @inline apply(f, poly::Polygon) = Polygon(map(f, vec(poly)))
 @inline apply(f, box::BoundingBox; swap::Bool = false) =
     BoundingBox(f(box[swap ? 2 : 1]), f(box[swap ? 1 : 2]))
+@inline apply(f, msk::Union{RectangularMask,CircularMask,PolygonalMask}) =
+    MaskElement(apply(f, shape(msk)); opaque = is_opaque(msk))
+@inline apply(f, g, msk::CircularMask) =
+    MaskElement(apply(f, g, shape(msk)); opaque = is_opaque(msk))
 
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
@@ -53,12 +58,23 @@ twice(x) = x + x
 half(x) = x/twice(one(x))
 
 """
+    TwoDimensional.shape(obj)
+
+yields the elementary geometric object defining the shape of `obj`.
+The result is `obj` itself if it is an elementary geometric object.
+
+"""
+shape(obj::MaskElement) = obj.shape
+shape(obj::ShapeElement) = obj
+
+"""
     TwoDimensional.vertices(obj)
 
 yields the vertices defining the vertex-based graphical object `obj`. The
 result is a tuple or a vector of points.
 
 """
+vertices(msk::Union{RectangularMask,PolygonalMask}) = vertices(shape(msk))
 vertices(poly::Polygon) = vec(poly)
 vertices(pnt::Point) = (pnt,)
 function vertices(rect::Rectangle)
@@ -80,18 +96,19 @@ for func in (:fastmax, :fasmin, :fastminmax)
     @eval $func(x, y) = $func(promote(x, y)...)
 end
 
-# FIXME: use TypeUtils
-as(::Type{T}, x::T) where {T} = x
-as(::Type{T}, x) where {T} = convert(T, x)::T
-
-# Basic constructors (with tuple argument) for points and bounding boxes and
-# API to make them indexable iterators.
-for type in (:Point, :Rectangle, :BoundingBox)
+# Promotion rules.
+for type in (:Point, :Rectangle, :Circle, :BoundingBox)
     @eval begin
         Base.promote_type(::Type{$type{T}}, ::Type{$type{T}}) where {T} = $type{T}
-        Base.promote_type(::Type{$type{T₁}}, ::Type{$type{T₂}}) where {T₁,T₂} =
-            $type{promote_type(T₁,T₂)}
+        Base.promote_type(::Type{$type{A}}, ::Type{$type{B}}) where {A,B} =
+            $type{promote_type(A,B)}
     end
+end
+Base.promote_type(::Type{Polygon{T,V}}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
+function Base.promote_type(::Type{Polygon{A,Vector{Point{A}}}},
+                           ::Type{Polygon{B,Vector{Point{B}}}}) where {A,B}
+    T = promote_type(A, B)
+    return Polygon{T,Vector{Point{T}}}
 end
 
 Base.show(io::IO, ::MIME"text/plain", obj::GeometricObject) = show(io, obj)
@@ -136,13 +153,14 @@ promote_coord_type(obj::GeometricObject) = obj
 
 """
     convert_coord_type(T::Type, obj::GeometricObject)
+    GeometricObject{T}(obj)
 
-converts the coordinate type of a geometrical object `obj` to `T`. If the
+convert the coordinate type of a geometrical object `obj` to `T`. If the
 coordinate type of `obj` is already `T`, `obj` itself is returned.
 
 """
 convert_coord_type(::Type{T}, obj::GeometricObject{T}) where {T} = obj
-for type in (:Point, :Rectangle, :Circle, :Polygon, :BoundingBox)
+for type in (:Point, :Rectangle, :Circle, :Polygon, :BoundingBox, :MaskElement)
     @eval begin
         convert_coord_type(::Type{T}, obj::$type{T}) where {T} = obj
         convert_coord_type(::Type{T}, obj::$type) where {T} = $type{T}(obj)
@@ -156,6 +174,11 @@ for type in (:GeometricObject, :GeometricElement, :ShapeElement, :MaskElement,
 end
 convert_coord_type(::Type{T}, ::Type{<:Polygon}) where {T} = Polygon{T,Vector{Point{T}}}
 convert_coord_type(::Type{T}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
+
+GeometricObject(obj::GeometricObject) = obj
+GeometricObject{T}(obj::GeometricObject{T}) where {T} = obj
+GeometricObject{T}(obj::GeometricObject) where {T} = convert_coord_type(T, obj)
+
 
 Base.float(obj::GeometricObject{T}) where {T} = convert_coord_type(float(T), obj)
 Base.float(::Type{G}) where {T,G<:GeometricObject{T}} = convert_coord_type(float(T), G)

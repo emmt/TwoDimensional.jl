@@ -55,6 +55,28 @@ TwoDimensional.factors_type
 TwoDimensional.offsets_type
 ```
 
+## Masks
+
+```@docs
+TwoDimensional.MaskElement
+TwoDimensional.MaskElement2D
+TwoDimensional.Overlap
+TwoDimensional.apply_mask
+TwoDimensional.apply_mask!
+TwoDimensional.circular_aperture
+TwoDimensional.circular_obscuration
+TwoDimensional.forge_mask
+TwoDimensional.forge_mask!
+TwoDimensional.grid_step
+TwoDimensional.interpolate
+TwoDimensional.is_opaque
+TwoDimensional.is_transparent
+TwoDimensional.polygonal_aperture
+TwoDimensional.polygonal_obscuration
+TwoDimensional.rectangular_aperture
+TwoDimensional.rectangular_obscuration
+```
+
 ## Other Public Methods
 
 ```@docs
@@ -70,11 +92,12 @@ Base.vec(::TwoDimensional.Polygon)
 ## Internal Methods
 
 ```@docs
-TwoDimensional.is_convex
-TwoDimensional.geometric_properties
-TwoDimensional.parts
 TwoDimensional.apply
-TwoDimensional.vertices
-TwoDimensional.is_something
+TwoDimensional.geometric_properties
+TwoDimensional.is_convex
 TwoDimensional.is_nothing
+TwoDimensional.is_something
+TwoDimensional.parts
+TwoDimensional.shape
+TwoDimensional.vertices
 ```

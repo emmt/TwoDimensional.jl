@@ -41,8 +41,18 @@ is the super-type of elementary geometric objects whose coordinates are of type
 """
 abstract type ShapeElement{T} <: GeometricElement{T} end
 
+# Overlapping of a grid cell with a shape.
+@enum Overlap::UInt32 begin
+    OUTSIDE
+    PARTIAL
+    INSIDE
+end
+
+# Default anti-aliasing for forging masks.
+const default_antialiasing = 11
+
 """
-    TwoDimensional.MaskElement(shape::ShapeElement, opaque::Bool)
+    TwoDimensional.MaskElement(shape::ShapeElement; opaque::Bool)
 
 builds a simple mask whose boundaries are defined by `shape` and which is
 opaque (i.e., an obscuration) if `opaque` is true and transparent (i.e., an
@@ -52,7 +62,7 @@ aperture) otherwise.
 struct MaskElement{T,S} <: ShapeElement{T}
     shape::S
     opaque::Bool
-    MaskElement(obj::S, opaque::Bool) where {T,S<:ShapeElement{T}} = new{T,S}(obj, opaque)
+    MaskElement(obj::S; opaque::Bool) where {T,S<:ShapeElement{T}} = new{T,S}(obj, opaque)
 end
 
 """
@@ -106,7 +116,13 @@ struct BoundingBox{T} <: GeometricElement{T}
     BoundingBox{T}(startstop::Vararg{Point{T},2}) where {T} = new{T}(startstop)
 end
 
-const RectangularObject{T} = Union{BoundingBox{T},Rectangle{T}}
+const RectangularMask{T} = MaskElement{T,<:Rectangle{T}}
+const CircularMask{T} = MaskElement{T,<:Circle{T}}
+const PolygonalMask{T} = MaskElement{T,<:Polygon{T}}
+
+const RectangularObject{T} = Union{BoundingBox{T},Rectangle{T},RectangularMask{T}}
+const CircularObject{T} = Union{Circle{T},CircularMask{T}}
+const PolygonalObject{T} = Union{Polygon{T},PolygonalMask{T}}
 
 """
     TwoDimensional.VertexBasedObject{T}

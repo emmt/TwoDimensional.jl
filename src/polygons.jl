@@ -181,11 +181,3 @@ function geometric_properties(poly::Polygon)
     end
     return (convex = convex, direct = direct, singular = singular)
 end
-
-"""
-    TwoDimensional.is_convex(poly) -> bool
-
-yields whether the polygon `poly` is strictly convex.
-
-"""
-is_convex(poly::Polygon) = geometric_properties(poly).convex
