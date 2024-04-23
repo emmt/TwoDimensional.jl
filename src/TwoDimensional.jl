@@ -16,6 +16,7 @@ export
     AbstractPoint,
     AffineTransform,
     BoundingBox,
+    Circle,
     Point,
     Polygon,
     Rectangle,
@@ -23,12 +24,14 @@ export
     center,
     convert_coord_type,
     coord_type,
+    diameter,
     distance,
     exterior,
     intercept,
     interior,
     jacobian,
     promote_coord_type,
+    radius,
     rotate,
     scale,
     translate,
@@ -53,6 +56,7 @@ include("aliases.jl")
 include("common.jl")
 include("points.jl")
 include("rectangles.jl")
+include("circles.jl")
 include("polygons.jl")
 include("boxes.jl")
 include("xforms.jl")

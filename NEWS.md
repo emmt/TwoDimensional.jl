@@ -24,10 +24,10 @@
     are like vectors of points), `length(obj)` and `eltype(obj)` yield the
     number and the type of these components.
 
-- New geometric object types `Rectangle` and `Polygon`. Rectangles are similar
-  to bounding-boxes except that rectangles can never be empty (a rectangle
-  contains at least a single point) and that they are converted into polygons
-  when transformed by an affine coordinate transform.
+- New geometric object types `Rectangle`, `Circle`, and `Polygon`. Rectangles
+  are similar to bounding-boxes except that they can never be empty (a
+  rectangle contains at least a single point) and that they are converted into
+  polygons when transformed by an affine coordinate transform.
 
 - New geometric object type `Rectangle` which is similar to `BoundingBox`
   except that rectangles can never be empty (a rectangle contains at least a

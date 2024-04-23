@@ -172,7 +172,7 @@ end
         if T <: AbstractFloat
             @test @inferred(float(pnt)) === pnt
             @test @inferred(float(typeof(pnt))) === typeof(pnt)
-        elseif T <: Int
+        elseif T <: Integer
             @test @inferred(float(pnt)) === @inferred(Point(float(pnt.x), float(pnt.y)))
             @test @inferred(float(typeof(pnt))) === Point{float(T)}
         end
@@ -275,12 +275,75 @@ end
         if T <: AbstractFloat
             @test @inferred(float(rec)) === rec
             @test @inferred(float(typeof(rec))) === typeof(rec)
-        elseif T <: Int
+        elseif T <: Integer
             @test @inferred(float(rec)) === @inferred(Rectangle(float(rec.start), float(rec.stop)))
             @test @inferred(float(typeof(rec))) === Rectangle{float(T)}
         end
         # Functions specific to rectangles.
         @test area(rec) == (rec.x1 - rec.x0)*(rec.y1 - rec.y0)
+    end
+
+    @testset "Circles ($T)" for T in (Int16, Int, Float32)
+        @assert !(T === Float64) # this is assumed by the tests
+        c, r = (-1, 2), 3
+        circ = @inferred Circle(T.(c), T(r))
+        circ_f64 = @inferred Circle{Float64}(c, r) # same with other type
+        @test circ isa Circle{T}
+        @test typeof(circ) === Circle{T}
+        @test coord_type(circ) === coord_type(typeof(circ)) === T
+        @test eltype(circ) === Union{Point{T}, T}
+        @test Tuple(circ) === (circ...,)
+        @test circ === Circle(circ...,)
+        @test length(circ) == 2
+        @test Set(Base.propertynames(circ)) == Set((:center, :radius, :diameter,))
+        @test Base.IteratorSize(circ) === Base.IteratorSize(typeof(circ)) === Base.HasLength()
+        @test Base.IteratorEltype(circ) === Base.IteratorEltype(typeof(circ)) === Base.HasEltype()
+        c, r = circ
+        (x, y), r′ = circ
+        @test r′ === r && c.x === x && c.y === y
+        @test circ === @inferred Circle(c, r)
+        @test circ === @inferred Circle((x, y), r)
+        @test circ === @inferred Circle((c, r))
+        @test circ === @inferred Circle(((x, y), r))
+        @test (Point(x, y), r) === @inferred Tuple(circ)
+        @test (Point(x, y), r) === (circ...,)
+        @test (Point(x, y), r) === (center(circ), radius(circ))
+        @test (Point(x, y), r) === (circ.center, circ.radius)
+        @test circ.diameter === diameter(circ) ≈ 2*circ.radius
+        @test_throws MethodError circ[1]
+        @test_throws KeyError circ.vec
+        @test occursin(r"^Circle\b", string(circ))
+        @test circ === @inferred Circle(circ...)
+        @test circ === @inferred Circle(Tuple(circ)...)
+        @test circ === @inferred Circle(Tuple(circ))
+        @test circ === @inferred Circle{T}(c, r)
+        @test circ === @inferred Circle(Point(c), r)
+        @test circ === @inferred Circle{T}(Point(c), Float64(r))
+        @test circ === @inferred Circle{T}(NamedPoint("center", x, y), r)
+        @test circ === @inferred Circle(NamedPoint("center", x, y), r)
+        if T === Int
+            let c = CartesianIndex(x, y)
+                @test circ === @inferred Circle(c, r)
+                @test circ === @inferred Circle((c, r))
+                @test circ === @inferred Circle(center=c, radius=r)
+            end
+        end
+        # Conversions.
+        @test circ === @inferred convert(Circle, circ)
+        @test circ === @inferred convert(Circle{T}, circ)
+        @test circ === @inferred convert(Circle{T}, circ_f64)
+        @test circ === @inferred convert(Circle{T}, Tuple(circ_f64))
+        @test convert_coord_type(coord_type(circ_f64), circ) === circ_f64
+        @test convert_coord_type(coord_type(circ), circ_f64) === circ
+        if T <: AbstractFloat
+            @test @inferred(float(circ)) === circ
+            @test @inferred(float(typeof(circ))) === typeof(circ)
+        elseif T <: Integer
+            @test @inferred(float(circ)) === @inferred(Circle(float(circ.center), float(circ.radius)))
+            @test @inferred(float(typeof(circ))) === Circle{float(T)}
+        end
+        # Functions specific to circles.
+        @test area(circ) ≈ π*r*r
     end
 
     @testset "Polygons ($T)" for T in (Int16, Int, Float32)
@@ -441,7 +504,7 @@ end
         if T <: AbstractFloat
             @test @inferred(float(box)) === box
             @test @inferred(float(typeof(box))) === typeof(box)
-        elseif T <: Int
+        elseif T <: Integer
             @test @inferred(float(box)) === @inferred(BoundingBox(float(box.start), float(box.stop)))
             @test @inferred(float(typeof(box))) === BoundingBox{float(T)}
         end
@@ -548,6 +611,7 @@ end
     @testset "Arithmetic ($(typeof(obj)))" for obj in (
         @inferred(Point(-1, 3)),
         @inferred(Rectangle((-1.0f0, 2.0f0), (3.0f0, 4.0f0))),
+        @inferred(Circle((-1.0f0, 2.0f0), 3.0f0)),
         @inferred(BoundingBox((-1.0, 2.0), (3.0, 4.0))),
         @inferred(Polygon((-1.0, 2.0), (3.0, 4.0), (5.0, -6.0))),
         )

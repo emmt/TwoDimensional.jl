@@ -18,13 +18,17 @@ parts, and the ['TwoDimensional.apply`](@ref) method.
 parts(pnt::Point) = getfield(pnt, 1)
 parts(rect::Rectangle) = getfield(rect, 1)
 parts(poly::Polygon) = vec(poly)
+parts(circ::Circle) = (center(circ), radius(circ))
 parts(box::BoundingBox) = getfield(box, 1)
 
-# Extend methods `Base.Tuple` and `Base.getindex` for geometric objects having
-# homogeneous parts.
-for type in (:Point, :Rectangle, :BoundingBox)
+# Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
+for type in (:Point, :Rectangle, :Circle, :BoundingBox)
     @eval begin
         Base.Tuple(obj::$type) = parts(obj)
+    end
+end
+for type in (:Point, :Rectangle, :BoundingBox)
+    @eval begin
         @inline @propagate_inbounds Base.getindex(obj::$type, i::Integer) =
             getindex(parts(obj), as(Int, i))
     end
@@ -52,6 +56,9 @@ See also ['TwoDimensional.parts`](@ref) and
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
 swap(x, y) = (y, x)
+
+twice(x) = x + x
+half(x) = x/twice(one(x))
 
 """
     TwoDimensional.vertices(obj)
@@ -143,14 +150,14 @@ coordinate type of `obj` is already `T`, `obj` itself is returned.
 
 """
 convert_coord_type(::Type{T}, obj::GeometricObject{T}) where {T} = obj
-for type in (:Point, :Rectangle, :Polygon, :BoundingBox)
+for type in (:Point, :Rectangle, :Circle, :Polygon, :BoundingBox)
     @eval begin
         convert_coord_type(::Type{T}, obj::$type{T}) where {T} = obj
         convert_coord_type(::Type{T}, obj::$type) where {T} = $type{T}(obj)
     end
 end
 for type in (:GeometricObject, :GeometricElement, :ShapeElement, :MaskElement,
-             :AbstractPoint, :Point, :Rectangle, :BoundingBox,)
+             :AbstractPoint, :Point, :Rectangle, :Circle, :BoundingBox,)
     @eval begin
         convert_coord_type(::Type{T}, ::Type{<:$type}) where {T} = $type{T}
     end

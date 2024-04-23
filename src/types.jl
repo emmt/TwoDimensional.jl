@@ -72,6 +72,15 @@ struct Point{T} <: AbstractPoint{T}
     Point{T}(xy::Vararg{T,2}) where {T} = new{T}(xy)
 end
 
+struct Circle{T} <: ShapeElement{T}
+    center::Point{T}
+    radius::T
+    function Circle{T}(center::Point, radius) where {T}
+        radius ≥ zero(radius) || throw(ArgumentError("circle radius must be non-negative"))
+        return new{T}(center, radius)
+    end
+end
+
 struct Rectangle{T} <: ShapeElement{T}
     vec::NTuple{2,Point{T}} # Point(x0, y0), Point(x1, y1)
     function Rectangle{T}(start::Point{T}, stop::Point{T}) where {T}
@@ -150,6 +159,19 @@ const RectangleLike = Union{Rectangle,
                             NTuple{2,AbstractPoint},
                             NTuple{2,NTuple{2,Number}},
                             NTuple{2,CartesianIndex{2}}}
+
+"""
+    TwoDimensional.CircleLike
+
+is the union of types that may be used to specify a circle in
+`TwoDimensional` package.
+
+The [`Circle`](@ref) constructor can build an instance from any argument of
+these types.
+
+"""
+const CircleLike = Union{Circle,
+                         Tuple{PointLike,Number}}
 
 """
     TwoDimensional.PolygonLike

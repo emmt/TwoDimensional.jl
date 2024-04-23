@@ -3,6 +3,8 @@ Base.:(==)(a::Point, b::Point) =
     (a.x == b.x) & (a.y == b.y)
 Base.:(==)(a::Rectangle, b::Rectangle) =
     (first(a) == first(b)) & (last(a) == last(b))
+Base.:(==)(a::Circle, b::Circle) =
+    radius(a) == radius(b) && center(a) == center(b)
 Base.:(==)(a::Polygon, b::Polygon) =
     vec(a) === vec(b) || vec(a) == vec(b)
 Base.:(==)(a::BoundingBox, b::BoundingBox) =
@@ -13,20 +15,55 @@ Base.isapprox(a::Point, b::Point; kwds...) =
     isapprox(a.x, b.x; kwds...) && isapprox(a.y, b.y; kwds...)
 Base.isapprox(a::Rectangle, b::Rectangle; kwds...) =
     isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
+Base.isapprox(a::Circle, b::Circle; kwds...) =
+    isapprox(radius(a), radius(b); kwds...) && isapprox(center(a), center(b); kwds...)
 Base.isapprox(a::Polygon, b::Polygon; kwds...) =
     vec(a) === vec(b) || isapprox(vec(a), vec(b); kwds...)
 Base.isapprox(a::BoundingBox, b::BoundingBox; kwds...) =
     isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
 
-# Extend ∈ operator.
+# Extend ∈ operator for points.
 Base.in(pnt::AbstractPoint, box::BoundingBox) =
     (box.xmin ≤ pnt.x ≤ box.xmax) & (box.ymin ≤ pnt.y ≤ box.ymax)
+
 Base.in(pnt::AbstractPoint, rect::Rectangle) =
     (rect.x0 ≤ pnt.x ≤ rect.x1) & (rect.y0 ≤ pnt.y ≤ rect.y1)
-Base.in(A::Rectangle, B::BoundingBox) =
-    (first(A) ∈ B) && (last(A) ∈ B)
+
+Base.in(pnt::AbstractPoint, circ::Circle) =
+    distance(pnt - center(circ)) ≤ radius(circ)
 
 # Extend ⊆ operator.
+function Base.issubset(rect::Rectangle, circ::Circle)
+    # Return whether the corner the most distant form the center is inside the
+    # circle.
+    xmin, ymin = first(rect) - center(circ)
+    xmax, ymax = last(rect) - center(circ)
+    return hypot(max(-xmin, xmax), max(-ymin, ymax)) ≤ radius(circ)
+end
+
+Base.issubset(rect::Rectangle, box::BoundingBox) =
+    (first(rect) ∈ box) && (last(rect) ∈ box)
+
+function Base.issubset(box::BoundingBox, circ::Circle)
+    # Return whether the corner the most distant form the center is inside the
+    # circle.
+    isempty(box) && return true
+    xmin, ymin = first(box) - center(circ)
+    xmax, ymax = last(box) - center(circ)
+    return hypot(max(-xmin, xmax), max(-ymin, ymax)) ≤ radius(circ)
+end
+
+Base.issubset(A::Union{Circle,Polygon}, B::Union{Rectangle,BoundingBox}) =
+    BoundingBox(A) ⊆ B # FIXME optimize as BoundingBox(A) is never empty
+
+function Base.issubset(poly::Polygon, circ::Circle)
+    # Return whether al vertices are inside the circle.
+    for i in eachindex(poly)
+        poly[i] ∈ circ || return false
+    end
+    return true
+end
+
 Base.issubset(A::BoundingBox, B::BoundingBox) =
     (isempty(A)|((A.xmin ≥ B.xmin)&(A.xmax ≤ B.xmax)&
                  (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
@@ -60,6 +97,7 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
 # Unary minus negates coordinates and should as multiplying by -1.
 -(pnt::Point) = apply(-, pnt)
 -(rect::Rectangle) = apply(-, rect)
+-(circ::Circle) = Circle(-center(circ), radius(circ))
 -(poly::Polygon) = apply(-, poly)
 -(box::BoundingBox) = apply(-, box; swap = true)
 
@@ -72,6 +110,9 @@ Base.one(::Type{<:GeometricObject{T}}) where {T} = one(T)
 
 *(α::Number, rect::Rectangle) =  apply(Fix1(*, α), rect)
 /(rect::Rectangle, α::Number) =  apply(Fix2(/, α), rect)
+
+*(α::Number, circ::Circle) = Circle(α*center(circ), abs(α)*radius(circ))
+/(circ::Circle, α::Number) = Circle(α\center(circ), abs(α)\radius(circ))
 
 *(α::Number, poly::Polygon) =  apply(Fix1(*, α), poly)
 /(poly::Polygon, α::Number) =  apply(Fix2(/, α), poly)
@@ -90,6 +131,10 @@ Base.zero(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
 +(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), rect)
 -(rect::Rectangle{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), rect)
 -(pnt::Point{T}, rect::Rectangle{T}) where {T} = apply(Fix1(-, pnt), rect)
+
++(circ::Circle{T}, pnt::Point{T}) where {T} = Circle(center(circ) + pnt, radius(circ))
+-(circ::Circle{T}, pnt::Point{T}) where {T} = Circle(center(circ) - pnt, radius(circ))
+-(pnt::Point{T}, circ::Circle{T}) where {T} = Circle(pnt - center(circ), radius(circ))
 
 +(poly::Polygon{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), poly)
 -(poly::Polygon{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), poly)
@@ -118,6 +163,7 @@ end
 
 # Apply affine transform.
 (A::AffineTransform)(rect::Rectangle) = A(Polygon(rect))
+(A::AffineTransform)(circ::Circle) = error("not yet implemented")
 (A::AffineTransform)(poly::Polygon) = apply(A, poly)
 *(A::AffineTransform, obj::Union{Rectangle,Polygon}) = A(obj)
 
@@ -215,6 +261,7 @@ end
 
 Base.clamp(pnt::Point, box::BoundingBox) = clamp(promote_coord_type(pnt, box)...)
 function Base.clamp(pnt::Point{T}, box::BoundingBox{T}) where {T}
+    isempty(box) && throw(ArgumentError("cannot clamp to empty bounding-box"))
     x = clamp(pnt.x, box.xmin, box.xmax)
     y = clamp(pnt.y, box.ymin, box.ymax)
     return Point{T}(x, y)
@@ -261,22 +308,71 @@ yields the Euclidean distance between the 2 points `A` and `B`.
 distance(A::Point, B::Point) = hypot(A - B)
 
 """
-    TwoDimensional.area(rect)
+    TwoDimensional.area(obj)
 
-yields the area of the rectangle `rect`.
+yields the area of the geometric object `obj`.
 
 """
-area(rect::Rectangle) = (rect.x1 -rect.x0)*(rect.y1 - rect.y0)
+area(pnt::AbstractPoint) = (z = zero(coord_type(pnt)); return z*z) # NOTE coord. may have units
+area(rect::Rectangle) = (rect.x1 - rect.x0)*(rect.y1 - rect.y0)
+area(circ::Circle) = (r = radius(circ); return (π*r)*r) # NOTE take care of correct conversion
 
 """
     center(obj::GeometricObject) -> c::Point
 
-yields the central point of the geometric object `obj`.
+yields the central point of the geometric object `obj`. For a polygon, the
+center of gravity of the vertices is returned.
 
 """
 center(pnt::AbstractPoint) = Point(pnt.x, pnt.y)
 center(pnt::Point) = pnt
 center(rect::Rectangle) = Point((rect.x0 + rect.y0)/2, (rect.y0 + rect.y1)/2)
+center(circ::Circle) = getfield(circ, 1)
 center(box::BoundingBox) =
     isempty(box) ? throw(ArgumentError("cannot get center of empty box")) :
     Point((box.xmin + box.xmax)/2, (box.ymin + box.ymax)/2)
+function center(poly::Polygon)
+    i, i_last = firstindex(poly), lastindex(poly)
+    pnt = float(poly[i])
+    @inbounds while i < i_last
+        i += 1
+        pnt += float(poly[i])
+    end
+    return pnt/length(poly)
+end
+
+"""
+    TwoDimensional.radius(obj::GeometricObject)
+
+yields the radius of the geometric object `obj`. The result is the radius of
+the [smallest circle enclosing the
+object](https://en.wikipedia.org/wiki/Smallest-circle_problem).
+
+For circle-like and point-like objects with integer coordinate type, the radius
+is also integer. For all other geometric objects, the raius is floating-point.
+
+"""
+radius(pnt::AbstractPoint) = zero(coord_type(pnt))
+radius(rect::Rectangle) = half(diameter(rect))
+radius(circ::Circle) = getfield(circ, 2)
+radius(poly::Polygon) = half(diameter(poly))
+radius(box::BoundingBox) = half(diameter(box))
+
+"""
+    TwoDimensional.diameter(obj::GeometricObject)
+
+yields the diameter of the geometric object `obj`. The result is the diameter
+of the [smallest circle enclosing the
+object](https://en.wikipedia.org/wiki/Smallest-circle_problem).
+
+For circle-like and point-like objects with integer coordinate type, the
+diameter is also integer. For all other geometric objects, the raius is
+floating-point.
+
+"""
+diameter(pnt::AbstractPoint) = zero(coord_type(pnt))
+diameter(rect::Rectangle) = distance(first(rect), last(rect))
+diameter(circ::Circle) = twice(radius(circ))
+diameter(box::BoundingBox) =
+    isempty(box) ? zero(float(coord_type(box))) : distance(first(box), last(box))
+diameter(poly::Polygon) = error("not yet implemented")
