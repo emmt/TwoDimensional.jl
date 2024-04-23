@@ -16,7 +16,8 @@ parts, and the ['TwoDimensional.apply`](@ref) method.
 
 """
 parts(pnt::Point) = getfield(pnt, 1)
-parts(rect::Rectangle) = getfield(rect, 1)
+parts(rect::Rectangle) = vec(poly)
+parts(poly::Polygon) = getfield(poly, 1)
 parts(box::BoundingBox) = getfield(box, 1)
 
 # Extend methods `Base.Tuple` and `Base.getindex` for geometric objects having
@@ -44,12 +45,31 @@ See also ['TwoDimensional.parts`](@ref) and
 """
 @inline apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
 @inline apply(f, rect::Rectangle) = Rectangle(f(rect[1]), f(rect[2]))
+@inline apply(f, poly::Polygon) = Polygon(map(f, vec(poly)))
 @inline apply(f, box::BoundingBox; swap::Bool = false) =
     BoundingBox(f(box[swap ? 2 : 1]), f(box[swap ? 1 : 2]))
 
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
 swap(x, y) = (y, x)
+
+"""
+    TwoDimensional.vertices(obj)
+
+yields the vertices defining the vertex-based graphical object `obj`. The
+result is a tuple or a vector of points.
+
+"""
+vertices(poly::Polygon) = vec(poly)
+vertices(pnt::Point) = (pnt,)
+function vertices(rect::Rectangle)
+    (x0, y0), (x1, y1) = rect
+    return (Point(x0, y0), Point(x1, y0), Point(x1, y1), Point(x0, y1))
+end
+function vertices(box::BoundingBox)
+    (xmin, ymin), (xmax, ymax) = box
+    return (Point(xmin, ymin), Point(xmax, ymin), Point(xmax, ymax), Point(xmin, ymax))
+end
 
 # Fast versions of `min` and `max` which return their first argument if any
 # argument is a NaN. The fast version of `minmax` cannot warrant this
@@ -123,14 +143,14 @@ coordinate type of `obj` is already `T`, `obj` itself is returned.
 
 """
 convert_coord_type(::Type{T}, obj::GeometricObject{T}) where {T} = obj
-for type in (:Point, :Rectangle, :BoundingBox)
+for type in (:Point, :Rectangle, :Polygon, :BoundingBox)
     @eval begin
         convert_coord_type(::Type{T}, obj::$type{T}) where {T} = obj
         convert_coord_type(::Type{T}, obj::$type) where {T} = $type{T}(obj)
     end
 end
 for type in (:GeometricObject, :GeometricElement, :ShapeElement, :MaskElement,
-             :AbstractPoint, :Point, :Rectangle, :BoundingBox,)
+             :AbstractPoint, :Point, :Rectangle, :Polygon, :BoundingBox,)
     @eval begin
         convert_coord_type(::Type{T}, ::Type{<:$type}) where {T} = $type{T}
     end

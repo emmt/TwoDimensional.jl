@@ -160,6 +160,18 @@ of objects:
 BoundingBox(obj::GeometricObject{T}) where {T} = BoundingBox{T}(obj)
 BoundingBox{T}(pnt::Point) where {T} = BoundingBox{T}(pnt, pnt)
 BoundingBox{T}(rect::Rectangle) where {T} = BoundingBox{T}(first(rect), last(rect))
+function BoundingBox{T}(poly::Polygon) where {T}
+    xmin = ymin = typemax(coord_type(poly))
+    xmax = ymax = typemin(coord_type(poly))
+    @inbounds for i in eachindex(poly)
+        x, y = poly[i]
+        xmin = min(xmin, x)
+        xmax = max(xmax, x)
+        ymin = min(ymin, y)
+        ymax = max(ymax, y)
+    end
+    return BoundingBox{T}((xmin, ymin), (xmax, ymax))
+end
 
 """
     BoundingBox(f, A::AbstractMatrix)

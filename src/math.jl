@@ -104,6 +104,11 @@ end
 +(box::BoundingBox, δ::Number) = grow(box, δ)
 -(box::BoundingBox, δ::Number) = shrink(box, δ)
 
+# Apply affine transform.
+(A::AffineTransform)(rect::Rectangle) = A(Polygon(rect))
+(A::AffineTransform)(poly::Polygon) = apply(A, poly)
+*(A::AffineTransform, obj::Union{Rectangle,Polygon}) = A(obj)
+
 # NOTE: Using the following functor is a bit faster than map with an anonymous
 #       function.
 struct Round{T,R} <: Function
@@ -135,7 +140,7 @@ Base.round(obj::VertexBasedObject, r::RoundingMode) = apply(Round{Nothing}(r), o
 Base.round(::Type{T}, obj::VertexBasedObject) where {T} = apply(Round{T}(), obj)
 Base.round(::Type{T}, obj::VertexBasedObject, r::RoundingMode) where {T} = apply(Round{T}(r), obj)
 
-for type in (:Point, :Rectangle, :BoundingBox)
+for type in VERTEX_BASED_TYPES
     @eval begin
         Base.round(::Type{$type}, obj::$type) = round(obj)
         Base.round(::Type{$type}, obj::$type, r::RoundingMode) = round(obj, r)
@@ -178,7 +183,7 @@ For bounding-boxes, see also: [`interior`](@ref TwoDimensional.interior),
 """
 Base.ceil(obj::VertexBasedObject) = apply(ceil, obj)
 
-for type in (:Point, :Rectangle, :BoundingBox), func in (:floor, :ceil)
+for type in VERTEX_BASED_TYPES, func in (:floor, :ceil)
     @eval begin
         Base.$func(::Type{$type}, obj::$type) = $func(obj)
         Base.$func(::Type{$type{T}}, obj::$type) where {T} = $func(T, obj)

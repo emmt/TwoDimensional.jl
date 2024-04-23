@@ -112,6 +112,32 @@ Base.show(io::IO, pnt::Point{T}) where {T} =
           ", y = ", pnt.y, ")")
 
 """
+    TwoDimensional.point_type(arg)
+
+yields the equivalent point type of `arg`.
+
+If `arg` is a point-like object (or the type of such an object) the result is
+the point type of `arg` when converted to a `Point`.
+
+If `arg` is a tuple of point-like objects, the result is the promoted type of
+the conversion of each `arg` to a `Point`.
+
+"""
+point_type(::Type{<:AbstractPoint{T}}) where {T} = Point{T}
+point_type(::Type{CartesianIndex{2}}) = Point{Int}
+point_type(::Type{Tuple{X,Y}}) where {X<:Number,Y<:Number} = Point{promote_type(X, Y)}
+
+for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
+    @eval begin
+        point_type(pnt::$type) = point_type(typeof(pnt))
+        point_type(tup::Tuple{Vararg{$type}}) = _point_type(point_type(first(tup)), tail(tup))
+    end
+end
+_point_type(::Type{T}, ::Tuple{}) where {T<:Point} = T
+_point_type(::Type{T}, tup::Tuple) where {T<:Point} =
+    _point_type(promote_type(T, point_type(first(tup))), tail(tup))
+
+"""
     TwoDimensional.get_x(pnt::TwoDimensional.PointLike) -> x
 
 yields the abscissa of point-like object `pnt`.

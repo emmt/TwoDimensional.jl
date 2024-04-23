@@ -72,8 +72,6 @@ struct Point{T} <: AbstractPoint{T}
     Point{T}(xy::Vararg{T,2}) where {T} = new{T}(xy)
 end
 
-const Points{T} = Union{AbstractVector{Point{T}},Tuple{Vararg{Point{T}}}}
-
 struct Rectangle{T} <: ShapeElement{T}
     vec::NTuple{2,Point{T}} # Point(x0, y0), Point(x1, y1)
     function Rectangle{T}(start::Point{T}, stop::Point{T}) where {T}
@@ -84,12 +82,40 @@ struct Rectangle{T} <: ShapeElement{T}
     end
 end
 
+struct Polygon{T,V<:AbstractVector{Point{T}}} <: ShapeElement{T}
+    vertices::V
+    function Polygon{T}(vertices::V) where {T,V<:AbstractVector{<:Point{T}}}
+        len = length(vertices)
+        len ≥ 3 || throw_insufficent_number_of_polygon_vertices(len)
+        isconcretetype(T) || throw(ArgumentError("coordinate type must be concrete"))
+        return new{T,V}(vertices)
+    end
+end
+
 struct BoundingBox{T} <: GeometricElement{T}
     vec::NTuple{2,Point{T}} # Point(xmin, ymin), Point(xmax, ymax)
     BoundingBox{T}(startstop::Vararg{Point{T},2}) where {T} = new{T}(startstop)
 end
 
 const RectangularObject{T} = Union{BoundingBox{T},Rectangle{T}}
+
+"""
+    TwoDimensional.VertexBasedObject{T}
+
+is the union of types of objects defined by their verices and with coordinate
+type `T`.
+
+See also [`TwoDimensional.apply`].
+
+"""
+const VertexBasedObject{T} = Union{Point{T},
+                                   Rectangle{T},
+                                   Polygon{T},
+                                   BoundingBox{T}}
+
+const VERTEX_BASED_TYPES = (:Point, :Rectangle, :Polygon, :BoundingBox)
+
+const TupleOrVector{T} = Union{Tuple{Vararg{T}},AbstractVector{<:T}}
 
 """
     TwoDimensional.PointLike
@@ -126,17 +152,21 @@ const RectangleLike = Union{Rectangle,
                             NTuple{2,CartesianIndex{2}}}
 
 """
-    TwoDimensional.VertexBasedObject{T}
+    TwoDimensional.PolygonLike
 
-is the union of types of objects defined by their verices and with coordinate
-type `T`.
+is the union of types that can be converted into a
+[`TwoDimensional.Polygon`](@ref). These are tuples or vectors of point-like
+objects.
 
-See also [`TwoDimensional.apply`].
+The [`Polygon`](@ref) constructor can build an instance from any argument of
+these types. Accessors [`TwoDimensional.get_x`](@ref) and
+[`TwoDimensional.get_y`](@ref) may be used on objects of such type to retrieve
+their abscissa and ordinate.
 
 """
-const VertexBasedObject{T} = Union{Point{T},
-                                   Rectangle{T},
-                                   BoundingBox{T}}
+const PolygonLike = Union{TupleOrVector{<:AbstractPoint},
+                          TupleOrVector{<:NTuple{2,Number}},
+                          TupleOrVector{<:CartesianIndex{2}}}
 
 """
     TwoDimensional.BoundingBoxLike

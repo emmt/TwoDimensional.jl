@@ -19,15 +19,20 @@
   - Method `float` may be called to convert the coordinate type of a geometric
     object/type to a floating-point type.
 
-  - For objects having homogeneous components (points are like 2-tuple of
-    coordinates, rectangles and boxes are like 2-tuple of points, polygons are
-    like vectors of points), `length(obj)` and `eltype(obj)` yield the number
-    and the type of these components.
+  - For an object `obj` having homogeneous components (points are like 2-tuple
+    of coordinates, rectangles and boxes are like 2-tuple of points, polygons
+    are like vectors of points), `length(obj)` and `eltype(obj)` yield the
+    number and the type of these components.
+
+- New geometric object types `Rectangle` and `Polygon`. Rectangles are similar
+  to bounding-boxes except that rectangles can never be empty (a rectangle
+  contains at least a single point) and that they are converted into polygons
+  when transformed by an affine coordinate transform.
 
 - New geometric object type `Rectangle` which is similar to `BoundingBox`
   except that rectangles can never be empty (a rectangle contains at least a
-  single point) and they are converted into polygons when transformed by an
-  affine coordinate transform.
+  single point) and that they are converted into polygons when transformed by
+  an affine coordinate transform.
 
 - Non-exported method `TwoDimensional.apply(f, obj)` applies the function `f`
   to each component of the geometric object `obj` and rebuilds an object of the

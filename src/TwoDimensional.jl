@@ -17,6 +17,7 @@ export
     AffineTransform,
     BoundingBox,
     Point,
+    Polygon,
     Rectangle,
     area,
     center,
@@ -52,6 +53,7 @@ include("aliases.jl")
 include("common.jl")
 include("points.jl")
 include("rectangles.jl")
+include("polygons.jl")
 include("boxes.jl")
 include("xforms.jl")
 include("math.jl")

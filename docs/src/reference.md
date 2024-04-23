@@ -53,7 +53,7 @@ TwoDimensional.jacobian
 TwoDimensional.rotate
 ```
 
-## Methods
+## Other Public Methods
 
 ```@docs
 TwoDimensional.center
@@ -62,4 +62,17 @@ TwoDimensional.translate
 Base.floor(::TwoDimensional.Point)
 Base.ceil(::TwoDimensional.Point)
 Base.round(::TwoDimensional.Point)
+Base.vec(::TwoDimensional.Polygon)
+```
+
+## Internal Methods
+
+```@docs
+TwoDimensional.is_convex
+TwoDimensional.geometric_properties
+TwoDimensional.parts
+TwoDimensional.apply
+TwoDimensional.vertices
+TwoDimensional.is_something
+TwoDimensional.is_nothing
 ```
