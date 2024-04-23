@@ -16,8 +16,8 @@ parts, and the ['TwoDimensional.apply`](@ref) method.
 
 """
 parts(pnt::Point) = getfield(pnt, 1)
-parts(rect::Rectangle) = vec(poly)
-parts(poly::Polygon) = getfield(poly, 1)
+parts(rect::Rectangle) = getfield(rect, 1)
+parts(poly::Polygon) = vec(poly)
 parts(box::BoundingBox) = getfield(box, 1)
 
 # Extend methods `Base.Tuple` and `Base.getindex` for geometric objects having
