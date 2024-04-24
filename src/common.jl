@@ -10,9 +10,9 @@ be re-built without ambiguities. For example, for a point `pnt`:
 both hold.
 
 Geometrical objects that have homogeneous parts (see
-['TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.Tuple` method to
+[`TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.Tuple` method to
 return these parts, the `Base.getindex` method to directly index among these
-parts, and the ['TwoDimensional.apply`](@ref) method.
+parts, and the [`TwoDimensional.apply`](@ref) method.
 
 """
 parts(pnt::Point) = getfield(pnt, 1)
@@ -36,8 +36,8 @@ object of the same king with the result.
 If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether
 to swap the first and las end-points of the box.
 
-See also ['TwoDimensional.parts`](@ref) and
-['TwoDimensional.VertexBasedObject`](@ref).
+See also [`TwoDimensional.parts`](@ref) and
+[`TwoDimensional.VertexBasedObject`](@ref).
 
 """
 @inline apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))

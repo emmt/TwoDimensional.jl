@@ -273,6 +273,14 @@ function forge_mask(X::AbstractVector,
     return forge_mask!(Matrix{T}(undef, length(X), length(Y)), X, Y, args...; kwds...)
 end
 
+
+"""
+    TwoDimensional.forge_mask!(dst, X, Y, objs...; kwds...) -> dst
+
+In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the
+destination array `dst` with the mask and returns it.
+
+"""
 function forge_mask!(dst::AbstractMatrix,
                      X::AbstractVector,
                      Y::AbstractVector,

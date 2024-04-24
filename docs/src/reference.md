@@ -12,18 +12,14 @@ TwoDimensional.AbstractPoint
 TwoDimensional.AbstractPoint2D
 TwoDimensional.Point
 TwoDimensional.Point2D
+TwoDimensional.PointLike
 TwoDimensional.distance
-```
-
-## Bounding-Boxes
-
-```@docs
-TwoDimensional.BoundingBox
-TwoDimensional.BoundingBox2D
-TwoDimensional.interior
-TwoDimensional.exterior
-TwoDimensional.grow
-TwoDimensional.shrink
+TwoDimensional.get_x
+TwoDimensional.get_xy
+TwoDimensional.get_y
+TwoDimensional.point_type
+LinearAlgebra.cross(::TwoDimensional.Point,::TwoDimensional.Point)
+LinearAlgebra.dot(::TwoDimensional.Point,::TwoDimensional.Point)
 ```
 
 ## Rectangles
@@ -31,7 +27,38 @@ TwoDimensional.shrink
 ```@docs
 TwoDimensional.Rectangle
 TwoDimensional.Rectangle2D
-TwoDimensional.area
+TwoDimensional.RectangleLike
+```
+
+## Circles
+
+```@docs
+TwoDimensional.Circle
+TwoDimensional.Circle2D
+TwoDimensional.CircleLike
+```
+
+## Polygons
+
+```@docs
+TwoDimensional.Polygon
+TwoDimensional.Polygon2D
+TwoDimensional.PolygonLike
+TwoDimensional.cross3
+TwoDimensional.crossing_number_test
+TwoDimensional.winding_number_test
+```
+
+## Bounding-Boxes
+
+```@docs
+TwoDimensional.BoundingBox
+TwoDimensional.BoundingBox2D
+TwoDimensional.BoundingBoxLike
+TwoDimensional.interior
+TwoDimensional.exterior
+TwoDimensional.grow
+TwoDimensional.shrink
 ```
 
 ## Coordinate Type
@@ -48,11 +75,15 @@ TwoDimensional.promote_coord_type
 TwoDimensional.AffineTransform
 TwoDimensional.AffineTransform2D
 TwoDimensional.compose
+TwoDimensional.factors_type
 TwoDimensional.intercept
 TwoDimensional.jacobian
-TwoDimensional.rotate
-TwoDimensional.factors_type
 TwoDimensional.offsets_type
+TwoDimensional.rotate
+TwoDimensional.scale
+TwoDimensional.translate
+TwoDimensional.rightdivide
+TwoDimensional.leftdivide
 ```
 
 ## Masks
@@ -80,18 +111,20 @@ TwoDimensional.rectangular_obscuration
 ## Other Public Methods
 
 ```@docs
+TwoDimensional.area
 TwoDimensional.center
-TwoDimensional.scale
-TwoDimensional.translate
+TwoDimensional.radius
+TwoDimensional.vertices
 Base.floor(::TwoDimensional.Point)
 Base.ceil(::TwoDimensional.Point)
 Base.round(::TwoDimensional.Point)
 Base.vec(::TwoDimensional.Polygon)
 ```
 
-## Internal Methods
+## Internal Methods and Types
 
 ```@docs
+TwoDimensional.VertexBasedObject
 TwoDimensional.apply
 TwoDimensional.geometric_properties
 TwoDimensional.is_convex
@@ -99,5 +132,4 @@ TwoDimensional.is_nothing
 TwoDimensional.is_something
 TwoDimensional.parts
 TwoDimensional.shape
-TwoDimensional.vertices
 ```

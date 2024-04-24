@@ -16,8 +16,8 @@ A point may be multiplied or divided by a scalar to scale its coordinates. The
 addition (resp. subtraction) of two points adds (resp. subtracts) their
 coordinates.
 
-Points  have the following properties which reflect the keywords accepted by
-their constructor:
+Points have the following properties reflecting the keywords accepted by their
+constructor:
 
     pnt.x  ->  x::T
     pnt.y  ->  y::T

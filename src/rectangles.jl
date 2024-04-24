@@ -10,7 +10,7 @@ coordinates, `(x0,y0)` and `(x1,y1)`, may be specified as points, as 2-tuples,
 as 2-dimensional Cartesian indices, or by keywords. Parameter `T` is the type
 used to store coordinates, it may be omitted.
 
-Rectangles have the following properties which reflect the keywords accepted by
+Rectangles have the following properties reflecting the keywords accepted by
 their constructor:
 
     rect.x0  -> min(x0, x1)::T

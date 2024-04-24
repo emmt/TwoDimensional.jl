@@ -130,7 +130,7 @@ const PolygonalObject{T} = Union{Polygon{T},PolygonalMask{T}}
 is the union of types of objects defined by their verices and with coordinate
 type `T`.
 
-See also [`TwoDimensional.apply`].
+See also [`TwoDimensional.apply`](@ref).
 
 """
 const VertexBasedObject{T} = Union{Point{T},

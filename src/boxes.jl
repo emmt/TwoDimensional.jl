@@ -10,7 +10,7 @@ coordinates, `(xmin,ymin)` and `(xmax,ymax)`, may be specified as points, as
 2-tuples, as 2-dimensional Cartesian indices, or by keywords. Parameter `T` is
 the type used to store coordinates, it may be omitted.
 
-Bounding-boxes have the following properties which reflect the keywords
+Bounding-boxes have the following properties reflecting the keywords
 accepted by their constructor:
 
     box.xmin  -> xmin::T
@@ -22,7 +22,8 @@ accepted by their constructor:
 
 A bounding-box is assumed to contain all points of coordinates `(x,y)` such
 that `xmin ≤ x ≤ xmax` and `ymin ≤ y ≤ ymax`. If `xmin > xmax` or `ymin >
-ymax`, the bounding-box is considered as **empty**.
+ymax`, the bounding-box is considered as **empty**. This can be checked with
+`isempty(box)`.
 
 Boxes are used to represent grid cells and bounding-boxes of other geometric
 shape. Use [`TwoDimensional.Rectangle`](@ref) if you want to define rectangular
@@ -148,7 +149,8 @@ Base.show(io::IO, box::BoundingBox{T}) where {T} =
     BoundingBox{T}(obj)
 
 yields the bounding-box of the geometric object `obj`. If the coordinate type
-`T` is not provided, `T = coord_type(obj)` is assumed.
+`T` is not provided, [`T = coord_type(obj)`](@ref TwoDimensional.coord_type) is
+assumed.
 
 This can be used to compute the union or the intersection of the bounding-boxes
 of objects:
@@ -306,9 +308,9 @@ Base.view(arr::AbstractMatrix, box::BoundingBox) = view(arr, axes(box)...)
 yields a new bounding-box object corresponding to the input `box` object with 1st and
 2nd dimensions respectively grown by `dx` and `dy`.
 
-Note that the algebraic (not absolute) values are applied. Hence, if `dx` and
-`dy` are both negative, the bounding-box is effectively shrunk by `abs(dx)` and
-`abs(dy)`.
+Note that the algebraic (not absolute) values of `dx` and `dy` are applied.
+Hence, if `dx` and `dy` are both negative, the bounding-box is effectively
+shrunk by `abs(dx)` and `abs(dy)`.
 
 See also [`TwoDimensional.shrink`](@ref).
 

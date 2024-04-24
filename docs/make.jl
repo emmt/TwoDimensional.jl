@@ -1,7 +1,7 @@
 using Documenter
 
 push!(LOAD_PATH, "../src/")
-using TwoDimensional
+using TwoDimensional, LinearAlgebra
 
 DEPLOYDOCS = (get(ENV, "CI", nothing) == "true")
 
