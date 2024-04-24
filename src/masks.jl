@@ -311,7 +311,8 @@ function forge_mask!(dst::AbstractMatrix,
     # Call the real method.
     return unsafe_forge_mask!(dst, convert_eltype(T, X), convert_eltype(T, Y),
                               map(Fix1(convert_coord_type, T), args)...;
-                              antialiasing, opaque, transparent)
+                              antialiasing = antialiasing, opaque = opaque,
+                              transparent = transparent)
 end
 
 function unsafe_forge_mask!(dst::AbstractMatrix{T},
