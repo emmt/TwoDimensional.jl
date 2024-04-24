@@ -113,6 +113,8 @@ end
     # Constructors.
     @testset "Points ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests
+        @test TwoDimensional.Point2D{Float32} === Point{Float32}
+        @test TwoDimensional.AbstractPoint2D{Float32} === AbstractPoint{Float32}
         xy = 1, 2
         pnt = @inferred Point(map(T, xy)...)
         pnt_f64 = @inferred Point{Float64}(xy)
@@ -196,6 +198,7 @@ end
 
     @testset "Rectangles ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests
+        @test TwoDimensional.Rectangle2D{Float32} === Rectangle{Float32}
         start, stop = (-1, 2), (3, 4)
         @assert start[1] < stop[1] && start[2] < stop[2] # this is assumed by the tests
         rec = @inferred Rectangle(T.(start), T.(stop))
@@ -285,6 +288,7 @@ end
 
     @testset "Circles ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests
+        @test TwoDimensional.Circle2D{Float32} === Circle{Float32}
         c, r = (-1, 2), 3
         circ = @inferred Circle(T.(c), T(r))
         circ_f64 = @inferred Circle{Float64}(c, r) # same with other type
@@ -349,6 +353,7 @@ end
 
     @testset "Polygons ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests
+        @test TwoDimensional.Polygon2D{Float32,Vector{Point{Float32}}} === Polygon{Float32,Vector{Point{Float32}}}
         pnts = ((-1, 2), (3, 4), (5, -6))
         poly = @inferred Polygon{T}(pnts)
         poly_f64 = @inferred Polygon{Float64}(pnts) # same with other type
@@ -428,6 +433,7 @@ end
 
     @testset "BoundingBoxes ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests
+        @test TwoDimensional.BoundingBox2D{Float32} === BoundingBox{Float32}
         start, stop = (-1, 2), (3, 4)
         @assert start[1] < stop[1] && start[2] < stop[2] # this is assumed by the tests
         box = @inferred BoundingBox(T.(start), T.(stop))

@@ -20,7 +20,23 @@ const Point2D{T} = Point{T}
 is an alias for [`TwoDimensional.Rectangle{T}`](@ref TwoDimensional.Rectangle).
 
 """
-const Rectangle2D{T} = Point{T}
+const Rectangle2D{T} = Rectangle{T}
+
+"""
+    TwoDimensional.Circle2D{T}
+
+is an alias for [`TwoDimensional.Circle{T}`](@ref TwoDimensional.Circle).
+
+"""
+const Circle2D{T} = Circle{T}
+
+"""
+    TwoDimensional.Polygon2D{T}
+
+is an alias for [`TwoDimensional.Polygon{T}`](@ref TwoDimensional.Polygon).
+
+"""
+const Polygon2D{T} = Polygon{T}
 
 """
     TwoDimensional.BoundingBox2D{T}
