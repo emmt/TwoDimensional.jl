@@ -140,7 +140,7 @@ _point_type(::Type{T}, tup::Tuple) where {T<:Point} =
     _point_type(promote_type(T, point_type(first(tup))), tail(tup))
 
 """
-    TwoDimensional.get_x(pnt::TwoDimensional.PointLike) -> x
+    TwoDimensional.get_x(pnt::PointLike) -> x
 
 yields the abscissa of point-like object `pnt`.
 
@@ -150,7 +150,7 @@ See also [`TwoDimensional.get_y`](@ref), [`TwoDimensional.get_xy`](@ref), and
 """ get_x
 
 """
-    TwoDimensional.get_y(pnt::TwoDimensional.PointLike) -> y
+    TwoDimensional.get_y(pnt::PointLike) -> y
 
 yields the ordinate of point-like object `pnt`.
 
@@ -173,7 +173,7 @@ for (c, i) in ((:x, 1), (:y, 2))
 end
 
 """
-    TwoDimensional.get_xy(pnt::TwoDimensional.PointLike) -> (x::T, y::T)
+    TwoDimensional.get_xy(pnt::PointLike) -> (x::T, y::T)
 
 yields a 2-tuple with the abscissa `x` and ordinate `y` of point-like object
 `pnt`. This is equivalent to, but more economical than,
