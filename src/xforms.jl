@@ -170,8 +170,8 @@ offsets_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = S
 Base.convert(::Type{T}, A::T) where {T<:AffineTransform} = A
 Base.convert(::Type{T}, A::AffineTransform) where {T<:AffineTransform} = T(A)
 
-Base.promote_type(::Type{T}, ::Type{T}) where {T<:AffineTransform} = T
-function Base.promote_type(::Type{A}, ::Type{B}) where {A<:AffineTransform,B<:AffineTransform}
+Base.promote_rule(::Type{T}, ::Type{T}) where {T<:AffineTransform} = T
+function Base.promote_rule(::Type{A}, ::Type{B}) where {A<:AffineTransform,B<:AffineTransform}
     T = promote_type(floating_point_type(A),
                      floating_point_type(B))
     R = promote_type(convert_floating_point_type(T, factors_type(A)),

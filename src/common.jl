@@ -99,16 +99,16 @@ end
 # Promotion rules.
 for type in (:Point, :Rectangle, :Circle, :BoundingBox)
     @eval begin
-        Base.promote_type(::Type{$type{T}}, ::Type{$type{T}}) where {T} = $type{T}
-        Base.promote_type(::Type{$type{A}}, ::Type{$type{B}}) where {A,B} =
-            $type{promote_type(A,B)}
+        Base.promote_rule(::Type{$type{T}}, ::Type{$type{T}}) where {T} = $type{T}
+        Base.promote_rule(::Type{$type{T}}, ::Type{$type{S}}) where {T,S} =
+            $type{promote_type(T,S)}
     end
 end
-Base.promote_type(::Type{Polygon{T,V}}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
-function Base.promote_type(::Type{Polygon{A,Vector{Point{A}}}},
-                           ::Type{Polygon{B,Vector{Point{B}}}}) where {A,B}
-    T = promote_type(A, B)
-    return Polygon{T,Vector{Point{T}}}
+Base.promote_rule(::Type{Polygon{T,V}}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
+function Base.promote_rule(::Type{Polygon{T,Vector{Point{T}}}},
+                           ::Type{Polygon{S,Vector{Point{S}}}}) where {T,S}
+    R = promote_type(T, S)
+    return Polygon{R,Vector{Point{R}}}
 end
 
 Base.show(io::IO, ::MIME"text/plain", obj::GeometricObject) = show(io, obj)
