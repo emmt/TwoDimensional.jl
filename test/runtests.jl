@@ -988,12 +988,14 @@ end
             end
         end
 
-        @testset "intercept" begin
+        @testset "solve" begin
             for M in (I, A, B)
-                x, y = intercept(M)
+                x, y = @inferred TwoDimensional.solve(M)
                 @test M(x, y) ≈ (0,0) atol=16*eps(Float64)
-                P = intercept(Point, M)
-                @test M*P ≈ Point(0,0) atol=16*eps(Float64)
+                b = Point(1.0, -2.0)
+                c = @inferred TwoDimensional.solve(M, b)
+                @test c isa Point
+                @test M(c) ≈ b atol=16*eps(Float64)
             end
         end
 

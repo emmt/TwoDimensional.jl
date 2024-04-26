@@ -27,7 +27,6 @@ export
     diameter,
     distance,
     exterior,
-    intercept,
     interior,
     jacobian,
     promote_coord_type,

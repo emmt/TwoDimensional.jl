@@ -461,20 +461,25 @@ leftdivide(A::AffineTransform, B::AffineTransform) = begin
 end
 
 """
-    TwoDimensional.intercept(A)
-    TwoDimensional.intercept(T<:Point, A)
+    TwoDimensional.solve(A, b=(0,0)) -> c
 
-return the tuple `(x,y)` such that `A(x,y) = (0,0)`. If a `Point` type T is
-specified, a point of this type with coordinates `(x,y)` is returned.
+return the tuple `c = (x,y)` such that `A*c = b`. If `b` is a `Point`, c is
+returned as a `Point`.
 
 """
-function intercept(A::AffineTransform)
+function solve(A::AffineTransform, b::NTuple{2})
     Δ = det(A)
     iszero(Δ) && error("transformation is not invertible")
-    return ((A.xy*A.y - A.yy*A.x)/Δ, (A.yx*A.x - A.xx*A.y)/Δ)
+    x = A.x - b[1]
+    y = A.y - b[2]
+    return ((A.xy*y - A.yy*x)/Δ, (A.yx*x - A.xx*y)/Δ)
 end
+solve(A::AffineTransform{T,R,S}) where {T,R,S} = solve(A, (zero(S), zero(S)))
+solve(A::AffineTransform, b::NTuple{2,Any}) = solve(A, promote(b...))
+solve(A::AffineTransform, b::Point) = Point(solve(A, (b.x, b.y)))
 
-intercept(::Type{T}, A::AffineTransform) where {T<:Point} = T(intercept(A)...)
+\(A::AffineTransform, b::PointLike) = leftdivide(A, b)
+
 
 Base.show(io::IO, ::MIME"text/plain", A::AffineTransform) =
     print(io, typeof(A),

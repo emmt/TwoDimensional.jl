@@ -106,6 +106,14 @@ composing elementary geometric objects.
 - Method `TwoDimensional.compose` is no longer exported. Explicitly use/import
   it or use `*`, or `∘` (`\circ<tab>`) to compose affine transforms.
 
+- Due to the definition of *"intercept"* in mathematics,
+  `TwoDimensional.intercept(A)`, with `A` an affine transform, has been
+  replaced by `TwoDimensional.solve(A,b=(0,0))` which yields `c` such that `A*c
+  = b` where `b` is `(0,0)` by default. If `b` is specified as a `Point`, `c`
+  is returned as a `Point` as well. With the same (slight) abuse of notation,
+  than `A*c -> A(c)`, the `\\` operator is overloaded so that `A\\b ->
+  solve(A,b)`.
+
 ### Masks
 
 It is now possible to define and apply arbitrary masks by combining elementary
