@@ -930,6 +930,10 @@ end
                 @test bare_type(AffineTransform{T1}(A)/AffineTransform{T2}(B)) == T
                 @test bare_type(AffineTransform{T1}(A)\AffineTransform{T2}(B)) == T
             end
+            @test A\B ≈ inv(A) ∘ B
+            @test B\A ≈ inv(B) ∘ A
+            @test A/B ≈ A ∘ inv(B)
+            @test B/A ≈ B ∘ inv(A)
         end
 
         @testset "scale" begin

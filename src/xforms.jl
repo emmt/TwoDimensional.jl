@@ -430,7 +430,7 @@ rightdivide(A::AffineTransform, B::AffineTransform) = begin
     Ryx = (A.yx*B.yy - A.yy*B.yx)/Δ
     Ryy = (A.yy*B.xx - A.yx*B.xy)/Δ
     return AffineTransform(Rxx, Rxy, A.x - (Rxx*B.x + Rxy*B.y),
-                           Ryx, Ryy, A.y - (Ryx*B.y + Ryy*B.y))
+                           Ryx, Ryy, A.y - (Ryx*B.x + Ryy*B.y))
 end
 
 """
@@ -444,7 +444,7 @@ the affine transform `B`.
 \(A::AffineTransform, B::AffineTransform) = leftdivide(A, B)
 
 leftdivide(A::AffineTransform, B::AffineTransform) = begin
-    Δ = det(B)
+    Δ = det(A)
     iszero(Δ) && error("left operand is not invertible")
     Rxx = A.yy/Δ
     Rxy = A.xy/Δ
