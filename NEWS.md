@@ -157,6 +157,9 @@ It is now possible to define and apply arbitrary masks by combining elementary
 - Deprecated `BoundingBox(A::AbstractArray) -> BoundingBox(axes(A))` has been
   removed.
 
+- Due to the definition of *"Jacobian"* in mathematics, the `jacobian` method
+  has been removed, call `abs(det(A))`.
+
 ## Version 0.4.1
 
 - Tests run on Julia 1.11.

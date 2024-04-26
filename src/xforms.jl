@@ -359,15 +359,6 @@ yields the determinant of the linear part of the affine transform `A`.
 det(A::AffineTransform) = A.xx*A.yy - A.xy*A.yx
 
 """
-    TwoDimensional.jacobian(A::AffineTransform)
-
-yields the Jacobian of the affine transform `A`, that is the absolute value of
-the determinant of its linear part.
-
-"""
-jacobian(A::AffineTransform) = abs(det(A))
-
-"""
     inv(A::TwoDimensional.AffineTransform)
 
 yields the inverse of the affine transform `A`.

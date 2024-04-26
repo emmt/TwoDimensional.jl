@@ -28,7 +28,6 @@ export
     distance,
     exterior,
     interior,
-    jacobian,
     promote_coord_type,
     radius,
     rotate,

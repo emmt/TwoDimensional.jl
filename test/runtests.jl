@@ -902,12 +902,6 @@ end
             end
         end
 
-        @testset "jacobian" begin
-            for M in (I, B, A)
-                @test jacobian(M) == abs(det(M))
-            end
-        end
-
         @testset "inverse" begin
             for M in (B, A)
                 if det(M) == 0

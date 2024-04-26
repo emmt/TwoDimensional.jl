@@ -76,7 +76,6 @@ TwoDimensional.AffineTransform
 TwoDimensional.AffineTransform2D
 TwoDimensional.compose
 TwoDimensional.factors_type
-TwoDimensional.jacobian
 TwoDimensional.offsets_type
 TwoDimensional.rotate
 TwoDimensional.scale

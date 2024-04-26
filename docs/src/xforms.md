@@ -159,9 +159,6 @@ which yields `C` such that `C(x,y) = A(ρ*x,ρ*y)`; or right-scaling as in:
 `det(A)` returns the determinant of the linear part of the affine transform
 `A`.
 
-`jacobian(A)` returns the Jacobian of the affine transform `A`, that is the
-absolute value of the determinant of its linear part.
-
 
 ## Type conversion
 
