@@ -108,11 +108,15 @@ composing elementary geometric objects.
 
 - Due to the definition of *"intercept"* in mathematics,
   `TwoDimensional.intercept(A)`, with `A` an affine transform, has been
-  replaced by `TwoDimensional.solve(A,b=(0,0))` which yields `c` such that `A*c
+  replaced by `TwoDimensional.ldiv(A,b=(0,0))` which yields `c` such that `A*c
   = b` where `b` is `(0,0)` by default. If `b` is specified as a `Point`, `c`
   is returned as a `Point` as well. With the same (slight) abuse of notation,
   than `A*c -> A(c)`, the `\\` operator is overloaded so that `A\\b ->
   solve(A,b)`.
+
+- Non-exported methods `TwoDimensional.leftdivide` and
+  `TwoDimensional.rightdivide` have been fixed and renamed `TwoDimensional.ldiv` and
+  `TwoDimensional.rdiv`.
 
 ### Masks
 

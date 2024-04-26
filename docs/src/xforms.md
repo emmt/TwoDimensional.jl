@@ -75,11 +75,11 @@ C = A⋅B
 all these statements yields an object `C` which applies `B` then `A`.  Note
 that `∘` and `⋅` can be typed by `\\circ<tab>` and `\\cdot<tab>`.
 
-Left and right divisions respectively write:
+Left and right *"divisions"* of affine tansforms respectively write:
 
 ```julia
-R = A/B   # right division, same as: R = compose(A, inv(B))
-L = A\B   # left division, same as: L = compose(inv(A), B)
+A/B -> A∘inv(B)
+A\B -> inv(A)∘B
 ```
 
 

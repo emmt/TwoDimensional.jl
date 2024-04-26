@@ -934,6 +934,16 @@ end
             @test B\A ≈ inv(B) ∘ A
             @test A/B ≈ A ∘ inv(B)
             @test B/A ≈ B ∘ inv(A)
+
+            @test A\C ≈ inv(A) ∘ C
+            @test C\A ≈ inv(C) ∘ A
+            @test A/C ≈ A ∘ inv(C)
+            @test C/A ≈ C ∘ inv(A)
+
+            @test B\C ≈ inv(B) ∘ C
+            @test C\B ≈ inv(C) ∘ B
+            @test B/C ≈ B ∘ inv(C)
+            @test C/B ≈ C ∘ inv(B)
         end
 
         @testset "scale" begin
@@ -992,14 +1002,20 @@ end
             end
         end
 
-        @testset "solve" begin
+        @testset "ldiv" begin
             for M in (I, A, B)
-                x, y = @inferred TwoDimensional.solve(M)
+                x, y = @inferred TwoDimensional.ldiv(M)
                 @test M(x, y) ≈ (0,0) atol=16*eps(Float64)
                 b = Point(1.0, -2.0)
-                c = @inferred TwoDimensional.solve(M, b)
+                c = @inferred TwoDimensional.ldiv(M, b)
                 @test c isa Point
                 @test M(c) ≈ b atol=16*eps(Float64)
+                @test M\b === c
+                b = Point(3.0, -1.0)
+                c = @inferred TwoDimensional.ldiv(M, b)
+                @test c isa Point
+                @test M(c) ≈ b atol=16*eps(Float64)
+                @test M\b === c
             end
         end
 

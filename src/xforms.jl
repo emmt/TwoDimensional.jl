@@ -413,16 +413,22 @@ compose(A::AffineTransform, B::AffineTransform) =
 ∘(A::AffineTransform, B::AffineTransform) = compose(A, B)
 
 """
-    TwoDimensional.rightdivide(A, B)
+    A/B -> A ∘ inv(B)
+    TwoDimensional.rdiv(A::AffineTransform, B::AffineTransform) -> A ∘ inv(B)
 
-implements `A/B` which yields the right division of the affine transform `A` by
-the affine transform `B`.
+yield the *"right division"* of the affine transform `A` by the affine
+transform `B`.
 
-""" rightdivide
+It is an abuse of notation to have `A/B` being a shortcut to `A ∘ inv(B)` but
+this is in-line with the overloading of `*` such that `A * B -> A ∘ B`. This
+function is motivated by the fact that it takes only 29 flops whereas `inv(A) ∘
+B` takes 37 flops (17 flops for `inv` and 20 flops for `∘`).
 
-/(A::AffineTransform, B::AffineTransform) = rightdivide(A, B)
+""" rdiv
 
-rightdivide(A::AffineTransform, B::AffineTransform) = begin
+/(A::AffineTransform, B::AffineTransform) = rdiv(A, B)
+
+function rdiv(A::AffineTransform, B::AffineTransform)
     Δ = det(B)
     iszero(Δ) && error("right operand is not invertible")
     Rxx = (A.xx*B.yy - A.xy*B.yx)/Δ
@@ -434,16 +440,22 @@ rightdivide(A::AffineTransform, B::AffineTransform) = begin
 end
 
 """
-    TwoDimensional.leftdivide(A, B)
+    A\\B -> inv(A) ∘ B
+    TwoDimensional.ldiv(A::AffineTransform, B::AffineTransform) -> inv(A) ∘ B
 
-implements `A\\B` which yields the left division of the affine transform `A` by
-the affine transform `B`.
+yield the *"left division"* of the affine transform `A` by the affine
+transform `B`.
 
-""" leftdivide
+It is an abuse of notation to have `A\\B` being a shortcut to `inv(A) ∘ B` but
+this is in-line with the overloading of `*` such that `A * B -> A ∘ B`. This
+function is motivated by the fact that it takes only 29 flops whereas `inv(A) ∘
+B` takes 37 flops (17 flops for `inv` and 20 flops for `∘`).
 
-\(A::AffineTransform, B::AffineTransform) = leftdivide(A, B)
+""" ldiv
 
-leftdivide(A::AffineTransform, B::AffineTransform) = begin
+\(A::AffineTransform, B::AffineTransform) = ldiv(A, B)
+
+function ldiv(A::AffineTransform, B::AffineTransform)
     Δ = det(A)
     iszero(Δ) && error("left operand is not invertible")
     Rxx = A.yy/Δ
@@ -461,24 +473,25 @@ leftdivide(A::AffineTransform, B::AffineTransform) = begin
 end
 
 """
-    TwoDimensional.solve(A, b=(0,0)) -> c
+    A\b -> c
+    TwoDimensional.ldiv(A::AffineTransform, b=(0,0)) -> c
 
-return the tuple `c = (x,y)` such that `A*c = b`. If `b` is a `Point`, c is
+return the 2-tuple `c = (x,y)` such that `A*c = b`. If `b` is a `Point`, `c` is
 returned as a `Point`.
 
 """
-function solve(A::AffineTransform, b::NTuple{2})
+function ldiv(A::AffineTransform, b::NTuple{2})
     Δ = det(A)
     iszero(Δ) && error("transformation is not invertible")
     x = A.x - b[1]
     y = A.y - b[2]
     return ((A.xy*y - A.yy*x)/Δ, (A.yx*x - A.xx*y)/Δ)
 end
-solve(A::AffineTransform{T,R,S}) where {T,R,S} = solve(A, (zero(S), zero(S)))
-solve(A::AffineTransform, b::NTuple{2,Any}) = solve(A, promote(b...))
-solve(A::AffineTransform, b::Point) = Point(solve(A, (b.x, b.y)))
+ldiv(A::AffineTransform{T,R,S}) where {T,R,S} = ldiv(A, (zero(S), zero(S)))
+ldiv(A::AffineTransform, b::NTuple{2,Any}) = ldiv(A, promote(b...))
+ldiv(A::AffineTransform, b::Point) = Point(ldiv(A, (b.x, b.y)))
 
-\(A::AffineTransform, b::PointLike) = leftdivide(A, b)
+\(A::AffineTransform, b::PointLike) = ldiv(A, b)
 
 
 Base.show(io::IO, ::MIME"text/plain", A::AffineTransform) =
