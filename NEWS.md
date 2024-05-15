@@ -1,5 +1,9 @@
 # User visible changes in the `TwoDimensional` package
 
+## Version 0.5.1
+
+- Package `TypeUtils` version ≥ 1 supersedes and replaces `Unitless`.
+
 ## Version 0.5.0
 
 This version of `TwoDimensional` introduces new geometric object types

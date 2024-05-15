@@ -39,7 +39,6 @@ export
     norm
 
 using TypeUtils
-using Unitless
 using Base: @propagate_inbounds, Callable, Fix1, Fix2, tail
 using Base: IteratorSize, SizeUnknown, HasLength, HasShape, IsInfinite
 using Base: IteratorEltype, EltypeUnknown, HasEltype

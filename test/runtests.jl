@@ -3,7 +3,7 @@ module TwoDimensionalTests
 using TwoDimensional
 using TwoDimensional: PointLike, compose, get_x, get_y, get_xy, factors_type, offsets_type
 using TwoDimensional: get_axis_bounds
-using Test, LinearAlgebra, Unitless
+using Test, LinearAlgebra, TypeUtils
 import Base.MathConstants: φ
 
 struct NamedPoint{T} <: AbstractPoint{T}

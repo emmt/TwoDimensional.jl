@@ -28,7 +28,7 @@ Changing the floating-point type of an existing 2-dimensional affine transform
     B = convert_real_type(T, A)
     B = convert_floating_point_type(T, A)
 
-the 3 last assume `using Unitless`. Using `Unitless` API, the floating-point
+the 3 last assume `using TypeUtils`. Using `TypeUtils` API, the floating-point
 type `T` can be retrieved by either of `bare_type(A)`, real_type(A)`, or
 `floating_point_type(A)` with `A` a 2-dimensional affine transform instance or
 type.
@@ -123,16 +123,16 @@ AffineTransform{T}(A::AffineTransform{T}) where {T<:AbstractFloat} = A
 AffineTransform{T}(A::AffineTransform) where {T<:AbstractFloat} =
     AffineTransform{T}(Tuple(A)...)
 
-# Extend Unitless.bare_type, Unitless.real_type, Unitless.floating_point_type,
-# Unitless.convert_bare_type, Unitless.convert_real_type, and
-# Unitless.convert_floating_point_type,
+# Extend TypeUtils.bare_type, TypeUtils.real_type, TypeUtils.floating_point_type,
+# TypeUtils.convert_bare_type, TypeUtils.convert_real_type, and
+# TypeUtils.convert_floating_point_type,
 for func in (:bare_type, :real_type, :floating_point_type)
     conv = Symbol("convert_",func)
     @eval begin
-        Unitless.$func(A::AffineTransform) = $func(typeof(A))
-        Unitless.$func(::Type{<:AffineTransform{T}}) where {T} = T
-        Unitless.$conv(::Type{T}, A::AffineTransform{T}) where {T} = A
-        Unitless.$conv(::Type{T}, A::AffineTransform) where {T<:AbstractFloat} =
+        TypeUtils.$func(A::AffineTransform) = $func(typeof(A))
+        TypeUtils.$func(::Type{<:AffineTransform{T}}) where {T} = T
+        TypeUtils.$conv(::Type{T}, A::AffineTransform{T}) where {T} = A
+        TypeUtils.$conv(::Type{T}, A::AffineTransform) where {T<:AbstractFloat} =
             AffineTransform{T}(A)
     end
 end
