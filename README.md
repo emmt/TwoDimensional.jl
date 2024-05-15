@@ -7,9 +7,11 @@
 [![Build Status][appveyor-img]][appveyor-url]
 [![codecov](https://codecov.io/gh/emmt/TwoDimensional.jl/graph/badge.svg?token=m7V2JI1HA6)](https://codecov.io/gh/emmt/TwoDimensional.jl)
 
-**TwoDimensional** is a [Julia][julia-url] package which provides useful types
-and methods to define and manipulate 2-dimensional objects (points,
-bounding-boxes) and affine coordinate transforms.
+`TwoDimensional` is a [Julia][julia-url] package which provides useful types
+and methods to define and manipulate 2-dimensional objects (points, rectangles,
+circles, polygons, and bounding-boxes) and affine coordinate transforms. This
+package also offers methods to build masks from the composition of elementary
+shapes.
 
 Other related packages:
 - [CoordinateTransformations](https://github.com/FugroRoames/CoordinateTransformations.jl)

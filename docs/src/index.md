@@ -1,8 +1,10 @@
 # Introduction
 
-`TwoDimensional` is a [Julia](https://julialang.org/) package which provides
-useful types and methods to define and manipulate 2-dimensional objects
-(points, bounding-boxes) and affine coordinate transforms.
+`TwoDimensional` is a [Julia][julia-url] package which provides useful types
+and methods to define and manipulate 2-dimensional objects (points, rectangles,
+circles, polygons, and bounding-boxes) and affine coordinate transforms. This
+package also offers methods to build masks from the composition of elementary
+shapes.
 
 Other related packages:
 - [CoordinateTransformations](https://github.com/FugroRoames/CoordinateTransformations.jl)
@@ -23,7 +25,9 @@ using TwoDimensional
 ```
 
 gives you types [`AffineTransform`](@ref TwoDimensional.AffineTransform),
-[`Point`](@ref TwoDimensional.Point) and [`BoundingBox`](@ref
+[`Point`](@ref TwoDimensional.Point), [`Rectangle`](@ref
+TwoDimensional.Rectangle), [`Circle`](@ref TwoDimensional.Circle),
+[`Polygon`](@ref TwoDimensional.Polygon), and [`BoundingBox`](@ref
 TwoDimensional.BoundingBox).
 
 To avoid conflicts with other packages, you may specifically use/import aliases
@@ -32,7 +36,7 @@ TwoDimensional.AffineTransform2D), [`Point2D`](@ref TwoDimensional.Point2D),
 [`BoundingBox2D`](@ref TwoDimensional.BoundingBox2D), etc. For example:
 
 ```julia
-using TwoDimensional: AffineTransform2D, Point2D, BoundingBox2D
+using TwoDimensional: AffineTransform2D, Point2D, Polygon2D, BoundingBox2D
 ```
 
 ## Table of contents

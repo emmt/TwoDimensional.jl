@@ -50,11 +50,10 @@ To revert to Julia's REPL, hit the `Backspace` key at the `... pkg>` prompt.
 To install `TwoDimensional` in a Julia script, write:
 
 ```julia
-if VERSION >= v"0.7.0-"; using Pkg; end
+using Pkg
 Pkg.add(PackageSpec(url="https://github.com/emmt/TwoDimensional.jl", rev="master"));
 ```
 
-or with `url="git@github.com:emmt/TwoDimensional.jl"` if you want to use
-`ssh`.
+or with `url="git@github.com:emmt/TwoDimensional.jl"` if you want to use `ssh`.
 
 This also works from the Julia REPL.
