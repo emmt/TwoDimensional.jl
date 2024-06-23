@@ -68,7 +68,7 @@ Base.last(obj::RectangularMask) = last(shape(obj))
 yields whether mask element `msk` is opaque.
 
 """
-is_opaque(obj::MaskElement) = obj.opaque
+is_opaque(msk::MaskElement) = msk.opaque
 
 """
     TwoDimensional.is_transparent(msk)
@@ -76,7 +76,25 @@ is_opaque(obj::MaskElement) = obj.opaque
 yields whether mask element `msk` is transparent.
 
 """
-is_transparent(obj::MaskElement) = !is_opaque(obj)
+is_transparent(msk::MaskElement) = !is_opaque(msk)
+
+"""
+    TwoDimensional.aperture(obj)
+
+yields a transparent mask element of same shape as `obj`.
+
+"""
+aperture(obj::ShapeElement) = MaskElement(obj; opaque=false)
+aperture(obj::MaskElement) = aperture(shape(obj))
+
+"""
+    TwoDimensional.obscuration(obj)
+
+yields an opaque mask element of same shape as `obj`.
+
+"""
+obscuration(obj::ShapeElement) = MaskElement(obj; opaque=true)
+obscuration(obj::MaskElement) = obscuration(shape(obj))
 
 """
     TwoDimensional.rectangular_aperture(args...; kwds...)
