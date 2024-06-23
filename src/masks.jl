@@ -81,62 +81,60 @@ is_transparent(obj::MaskElement) = !is_opaque(obj)
 """
     TwoDimensional.rectangular_aperture(args...; kwds...)
 
-yields an elementary mask object representing a rectangular aperture defined by
-given arguments `args...` and keywords `kwds...` and whose edges are aligned
-with the Cartesian axes. See [`TwoDimensional.Rectangle`](@ref) constructor for
-possible arguments and keywords. A rectangular aperture is a transparent
-rectangular mask.
+yields an elementary mask object representing a rectangular aperture defined by given
+arguments `args...` and keywords `kwds...` and whose edges are aligned with the Cartesian
+axes. See [`TwoDimensional.Rectangle`](@ref) constructor for possible arguments and
+keywords. A rectangular aperture is a transparent rectangular mask.
 
 """ rectangular_aperture
 
 """
     TwoDimensional.rectangular_obscuration(args...; kwds...)
 
-yields an elementary mask object representing a rectangular obscuration defined
-by given arguments `args...` and keywords `kwds...` and whose edges are aligned
-with the Cartesian axes. See [`TwoDimensional.Rectangle`](@ref) constructor for
-possible arguments and keywords. A rectangular obscuration is an opaque
-rectangular mask.
+yields an elementary mask object representing a rectangular obscuration defined by given
+arguments `args...` and keywords `kwds...` and whose edges are aligned with the Cartesian
+axes. See [`TwoDimensional.Rectangle`](@ref) constructor for possible arguments and
+keywords. A rectangular obscuration is an opaque rectangular mask.
 
 """ rectangular_obscuration
 
 """
     TwoDimensional.circular_aperture(args...; kwds...)
 
-yields an elementary mask object representing a circular aperture defined by
-given arguments `args...` and keywords `kwds...`. See
-[`TwoDimensional.Circle`](@ref) constructor for possible arguments and keywords.
-A circular aperture is a transparent circular mask.
+yields an elementary mask object representing a circular aperture defined by given
+arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref)
+constructor for possible arguments and keywords. A circular aperture is a transparent
+circular mask.
 
 """ circular_aperture
 
 """
     TwoDimensional.circular_obscuration(args...; kwds...)
 
-yields an elementary mask object representing a circular obscuration defined by
-given arguments `args...` and keywords `kwds...`. See
-[`TwoDimensional.Circle`](@ref) constructor for possible arguments and keywords.
-A circular obscuration is an opaque circular mask.
+yields an elementary mask object representing a circular obscuration defined by given
+arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref)
+constructor for possible arguments and keywords. A circular obscuration is an opaque
+circular mask.
 
 """ circular_obscuration
 
 """
     TwoDimensional.polygonal_aperture(args...; kwds...)
 
-yields an elementary mask object representing a polygonal aperture defined by
-given arguments `args...` and keywords `kwds...`. See
-[`TwoDimensional.Polygon`](@ref) constructor for possible arguments and
-keywords. A polygonal aperture is a transparent polygonal mask.
+yields an elementary mask object representing a polygonal aperture defined by given
+arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref)
+constructor for possible arguments and keywords. A polygonal aperture is a transparent
+polygonal mask.
 
 """ polygonal_aperture
 
 """
     TwoDimensional.polygonal_obscuration(args...; kwds...)
 
-yields an elementary mask object representing a polygonal obscuration defined
-by given arguments `args...` and keywords `kwds...`. See
-[`TwoDimensional.Polygon`](@ref) constructor for possible arguments and
-keywords. A polygonal obscuration is an opaque polygonal mask.
+yields an elementary mask object representing a polygonal obscuration defined by given
+arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref)
+constructor for possible arguments and keywords. A polygonal obscuration is an opaque
+polygonal mask.
 
 """ polygonal_obscuration
 
@@ -154,22 +152,21 @@ end
 """
     TwoDimensional.apply_mask(Aᵢₙ, args...; kwds...) -> Aₒᵤₜ
 
-multiplies the values of the input 2-dimensional array `Aᵢₙ` by a mask defined
-by arguments `args...` and keywords `kwds...` and returns the resulting output
-array `Aₒᵤₜ`. The input array `Aᵢₙ` is left unmodified, method
-[`TwoDimensional.apply_mask!`](@ref) may be used for in-place operation. See
-[`TwoDimensional.forge_mask`](@ref) for how to define a mask.
+multiplies the values of the input 2-dimensional array `Aᵢₙ` by a mask defined by
+arguments `args...` and keywords `kwds...` and returns the resulting output array `Aₒᵤₜ`.
+The input array `Aᵢₙ` is left unmodified, method [`TwoDimensional.apply_mask!`](@ref) may
+be used for in-place operation. See [`TwoDimensional.forge_mask`](@ref) for how to define
+a mask.
 
 """
 apply_mask(A::AbstractMatrix, args...; kwds...) = apply_mask!(copy(A), args...; kwds...)
 
 """
-    TwoDimensional.apply_mask!(A, args...) -> A
+    TwoDimensional.apply_mask!(A, args...; kwds...) -> A
 
-multiplies in-place the 2-dimensional array `A` by a mask defined by arguments
-`args...` and keywords `kwds...` and returns `A`. See
-[`TwoDimensional.apply_mask`](@ref) for an out-of-place version and for
-details.
+multiplies in-place the 2-dimensional array `A` by a mask defined by arguments `args...`
+and keywords `kwds...` and returns `A`. See [`TwoDimensional.apply_mask`](@ref) for an
+out-of-place version and for details.
 
 """
 apply_mask!(A::AbstractMatrix, args...; kwds...) = multiply!(A, forge_mask(A, args...; kwds...))
@@ -207,39 +204,38 @@ end
 """
     TwoDimensional.forge_mask(X, Y, objs...; kwds...) -> msk
 
-yields a 2-dimensional transmission mask with coordinates given by `X` and `Y`
-along the 1st and 2nd dimensions and combining aperture/obscuration objects
-`objs...`. The following *painting* algorithm is used:
+yields a 2-dimensional transmission mask with coordinates given by `X` and `Y` along the
+1st and 2nd dimensions and combining aperture/obscuration objects `objs...`. The following
+*painting* algorithm is used:
 
-- The mask is initially filled with the transparent or opaque value depending
-  on whether the first component is opaque or transparent.
+- The mask is initially filled with the transparent or opaque value depending on whether
+  the first component is opaque or transparent.
 
-- Then, for each component in turn, the cells of the mask that are inside the
-  component are painted with the opaque or transparent value depending on
-  whether the component is opaque or transparent.
+- Then, for each component in turn, the cells of the mask that are inside the component
+  are painted with the opaque or transparent value depending on whether the component is
+  opaque or transparent.
 
-- The parts of the mask overlapping the boundaries of the topmost components
-  are set to an intermediate value between the opaque and transparent ones and
-  (approximately) proportionally to the transparent fraction of the cell area.
+- The parts of the mask overlapping the boundaries of the topmost components are set to an
+  intermediate value between the opaque and transparent ones and (approximately)
+  proportionally to the transparent fraction of the cell area.
 
-Note that the order of the components of the mask is relevant: an aperture
-component drills holes in the previously opaque parts while an obscuration
-hides previously transparent parts.
+Note that the order of the components of the mask is relevant: an aperture component
+drills holes in the previously opaque parts while an obscuration hides previously
+transparent parts.
 
-Keyword `antialiasing` can be set to specify the number of sub-cells (per side)
-to determine the transmission of grid cells partially overlapping the boundary
-delimiting the mask components. By default, `antialiasing =
-$default_antialiasing`. If `antialiasing ≤ 1`, a 50% transmission is assumed
-for partially overlapping cells (sharp edges); otherwise, overlapping cells are
-subdivided in `antialiasing × antialiasing` sub-cells to estimate their partial
-transmission.
+Keyword `antialiasing` can be set to specify the number of sub-cells (per side) to
+determine the transmission of grid cells partially overlapping the boundary delimiting the
+mask components. By default, `antialiasing = $default_antialiasing`. If `antialiasing ≤
+1`, a 50% transmission is assumed for partially overlapping cells (sharp edges);
+otherwise, overlapping cells are subdivided in `antialiasing × antialiasing` sub-cells to
+estimate their partial transmission.
 
-Keywords `opaque` and `transparent` can be used to specify the values of the
-the respectively opaque and transparent parts of the mask. Values of partially
+Keywords `opaque` and `transparent` can be used to specify the values of the the
+respectively opaque and transparent parts of the mask. Values of partially
 opaque/transparent parts will be interpolated between these.
 
-Example to forge a mask representing the primary mirror of a telescope with its
-spider arms:
+Example to forge a mask representing the primary mirror of a telescope with its spider
+arms:
 
     using TwoDimensional
     using Unitful: μm, mm, cm, m
@@ -277,8 +273,8 @@ end
 """
     TwoDimensional.forge_mask!(dst, X, Y, objs...; kwds...) -> dst
 
-In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the
-destination array `dst` with the mask and returns it.
+In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the destination
+array `dst` with the mask and returns it.
 
 """
 function forge_mask!(dst::AbstractMatrix,
@@ -326,8 +322,7 @@ function unsafe_forge_mask!(dst::AbstractMatrix{T},
     δx = grid_step(X)
     δy = grid_step(Y)
 
-    # Determine whether a cell of the mask is fully or partially opaque of
-    # transparent.
+    # Determine whether a cell of the mask is fully or partially opaque or transparent.
     initial = true
     for obj in objs
         unsafe_forge_mask!(dst, X, δx, Y, δy, obj, opaque, partial, transparent, initial)
@@ -472,8 +467,8 @@ end
 """
     TwoDimensional.grid_step(x::AbstractVector) -> stp
 
-yields the step along a vector of coordinates, throwing an error if the
-increment between successive values of `x` is not positive or not uniform.
+yields the step along a vector of coordinates, throwing an error if the increment between
+successive values of `x` is not positive or not uniform.
 
 """
 function grid_step(rng::Union{AbstractRange#= FIXME ,AbstractCoordinates =#})
@@ -501,8 +496,8 @@ end
 """
     TwoDimensional.interpolate(a, b, f) -> x
 
-yields linearly interpolated value between `a` and `b` by a fraction `f`. If
-`f` is a dimensionless factor, then the result is:
+yields linearly interpolated value between `a` and `b` by a fraction `f`. If `f` is a
+dimensionless factor, then the result is:
 
     x = a + f*(b - a)
 
@@ -522,8 +517,8 @@ interpolate(a::T, b::T, f::Number) where {T} = (oneunit(f) - f)*a + f*b
 """
     TwoDimensional.Overlap(pxl, obj)
 
-yields the overlapping of pixel `pxl` with shape object `obj`. `pxl` may be a
-point, a bounding-box, or a rectangle. Returned value is:
+yields the overlapping of pixel `pxl` with shape object `obj`. `pxl` may be a point, a
+bounding-box, or a rectangle. Returned value is:
 
 - `INSIDE` if `pxl` is fully inside the boundaries of `obj`;
 
@@ -578,8 +573,8 @@ function Overlap(point::Point{T}, circle::Circle{T}) where {T}
 end
 
 function Overlap(cell::Rectangle{T}, circle::Circle{T}) where {T}
-    # Get coordinates of cell corners relative to circle center and quickly
-    # check whether cell is certainly outside circle.
+    # Get coordinates of cell corners relative to circle center and quickly check whether
+    # cell is certainly outside circle.
     xc, yc = circle.center
     x0 = cell.x0 - xc
     x1 = cell.x1 - xc
@@ -590,16 +585,15 @@ function Overlap(cell::Rectangle{T}, circle::Circle{T}) where {T}
         return OUTSIDE
     end
     r² = r^2
-    # Most distant point in cell from center of circle is one of the corners.
-    # If this point is inside the circle, then the cell is fully inside the
-    # circle.
+    # Most distant point in cell from center of circle is one of the corners. If this
+    # point is inside the circle, then the cell is fully inside the circle.
     x²max = max(x0^2, x1^2)
     y²max = max(y0^2, y1^2)
     if x²max + y²max ≤ r²
         return INSIDE
     end
-    # Otherwise, if closest point of one of the cell edge is inside the circle,
-    # overlap is partial.
+    # Otherwise, if closest point of one of the cell edge is inside the circle, overlap is
+    # partial.
     if clamp(zero(T), x0, x1)^2 + y²max ≤ r²
         return PARTIAL
     end
@@ -613,14 +607,14 @@ end
 # FIXME: A point can only inside or outside.
 Overlap(point::Point, polygon::Polygon) = point ∈ polygon ? INSIDE : OUTSIDE
 
-# FIXME: Check that the following algorithm is correct for a cell having zero
-#        width or height.
+# FIXME: Check that the following algorithm is correct for a cell having zero width or
+#        height.
 function Overlap(cell::Rectangle{T}, polygon::Polygon{T}) where {T}
     (x0, y0), (x1, y1) = cell # retrieve coordinates of cell vertices
     V = vertices(polygon) # retrieve the list of vertices of the polygon
 
-    # If any polygon edges (strictly) crosses one of the 4 edges of the cell, then
-    # there is some partial overlapping.
+    # If any polygon edges (strictly) crosses one of the 4 edges of the cell, then there
+    # is some partial overlapping.
     A = last(V) # initialize A, the 1st point of edges in cyclic list of points
     @inbounds for B in V # loop over B, the 2nd point of edges
         xmin, xmax = minmax(A.x, B.x)
@@ -656,7 +650,7 @@ function Overlap(cell::Rectangle{T}, polygon::Polygon{T}) where {T}
         A = B # update 1st point of next edge
     end
 
-    # Otherwise, the cell is either fully inside or fully outside the polygon.
-    # This can be tested for any point of the cell, its center for example.
+    # Otherwise, the cell is either fully inside or fully outside the polygon. This can be
+    # tested for any point of the cell, its center for example.
     return Overlap(Point((x0 + x1)/2, (y0 + y1)/2), polygon)
 end

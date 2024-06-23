@@ -157,13 +157,12 @@ const VERTEX_BASED_TYPES = (:Point, :Rectangle, :Polygon, :BoundingBox)
 """
     TwoDimensional.PointLike
 
-is the union of types that can be converted into a
+is the union of types of objects that can be converted into a
 [`TwoDimensional.Point`](@ref).
 
-The [`Point`](@ref) constructor can build an instance from any argument of
-these types. Accessors [`TwoDimensional.get_x`](@ref) and
-[`TwoDimensional.get_y`](@ref) may be used on objects of such type to retrieve
-their abscissa and ordinate.
+The [`Point`](@ref) constructor can build an instance from any argument of these types.
+Accessors [`TwoDimensional.get_x`](@ref) and [`TwoDimensional.get_y`](@ref) may be used on
+objects of such type to retrieve their abscissa and ordinate.
 
 """
 const PointLike = Union{AbstractPoint,
@@ -176,11 +175,11 @@ const PointLike = Union{AbstractPoint,
 """
     TwoDimensional.RectangleLike
 
-is the union of types that may be used to specify a rectangle in
+is the union of types of objects that may be used to specify a rectangle in
 `TwoDimensional` package.
 
-The [`Rectangle`](@ref) constructor can build an instance from any argument of
-these types.
+The [`Rectangle`](@ref) constructor can build an instance from any argument of these
+types.
 
 """
 const RectangleLike = Union{Rectangle,
@@ -191,11 +190,10 @@ const RectangleLike = Union{Rectangle,
 """
     TwoDimensional.CircleLike
 
-is the union of types that may be used to specify a circle in
-`TwoDimensional` package.
+is the union of types of objects that may be used to specify a circle in `TwoDimensional`
+package.
 
-The [`Circle`](@ref) constructor can build an instance from any argument of
-these types.
+The [`Circle`](@ref) constructor can build an instance from any argument of these types.
 
 """
 const CircleLike = Union{Circle,
@@ -204,14 +202,12 @@ const CircleLike = Union{Circle,
 """
     TwoDimensional.PolygonLike
 
-is the union of types that can be converted into a
-[`TwoDimensional.Polygon`](@ref). These are tuples or vectors of point-like
-objects.
+is the union of types of objects that can be converted into a
+[`TwoDimensional.Polygon`](@ref). These are tuples or vectors of point-like objects.
 
-The [`Polygon`](@ref) constructor can build an instance from any argument of
-these types. Accessors [`TwoDimensional.get_x`](@ref) and
-[`TwoDimensional.get_y`](@ref) may be used on objects of such type to retrieve
-their abscissa and ordinate.
+The [`Polygon`](@ref) constructor can build an instance from any argument of these types.
+Accessors [`TwoDimensional.get_x`](@ref) and [`TwoDimensional.get_y`](@ref) may be used on
+objects of such type to retrieve their abscissa and ordinate.
 
 """
 const PolygonLike = Union{List{<:AbstractPoint},
@@ -221,11 +217,11 @@ const PolygonLike = Union{List{<:AbstractPoint},
 """
     TwoDimensional.BoundingBoxLike
 
-is the union of types that may be used to specify a bounding-box in
+is the union of types of objects that may be used to specify a bounding-box in
 `TwoDimensional` package.
 
-The [`BoundingBox`](@ref) constructor can build an instance from any argument
-of these types.
+The [`BoundingBox`](@ref) constructor can build an instance from any argument of these
+types.
 
 """
 const BoundingBoxLike = Union{BoundingBox,

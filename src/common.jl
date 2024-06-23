@@ -1,8 +1,8 @@
 """
     TwoDimensional.parts(obj::GeometricElement)
 
-yields the individual elements of elementary geometric `obj` from which it can
-be re-built without ambiguities. For example, for a point `pnt`:
+yields the individual elements of elementary geometric `obj` from which it can be re-built
+without ambiguities. For example, for a point `pnt`:
 
     Point(parts(pnt)...) === pnt
     Point(parts(pnt)) === pnt
@@ -10,9 +10,9 @@ be re-built without ambiguities. For example, for a point `pnt`:
 both hold.
 
 Geometrical objects that have homogeneous parts (see
-[`TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.Tuple` method to
-return these parts, the `Base.getindex` method to directly index among these
-parts, and the [`TwoDimensional.apply`](@ref) method.
+[`TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.Tuple` method to return these
+parts, the `Base.getindex` method to directly index among these parts, and the
+[`TwoDimensional.apply`](@ref) method.
 
 """
 parts(pnt::Point) = getfield(pnt, 1)
@@ -30,14 +30,13 @@ Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = parts(obj)
 """
     TwoDimensional.apply(f, obj)
 
-applies function `f` to each part of geometric object `obj` and rebuild an
-object of the same king with the result.
+applies function `f` to each part of geometric object `obj` and rebuild an object of the
+same kind with the result.
 
-If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether
-to swap the first and las end-points of the box.
+If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether to swap
+the first and last end-points of the box.
 
-See also [`TwoDimensional.parts`](@ref) and
-[`TwoDimensional.VertexBasedObject`](@ref).
+See also [`TwoDimensional.parts`](@ref) and [`TwoDimensional.VertexBasedObject`](@ref).
 
 """
 @inline apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
