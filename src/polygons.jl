@@ -34,11 +34,11 @@ for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
     @eval begin
         Polygon(pnts::$type...) = Polygon(pnts)
         Polygon{T}(pnts::$type...) where {T} = Polygon{T}(pnts)
-        function Polygon(pnts::TupleOrVector{$type})
+        function Polygon(pnts::List{<:$type})
             T = coord_type(point_type(pnts))
             return Polygon{T}(pnts)
         end
-        function Polygon{T}(pnts::TupleOrVector{$type}) where {T}
+        function Polygon{T}(pnts::List{<:$type}) where {T}
             # Check length before conversion.
             len = length(pnts)
             len ≥ 3 || throw_insufficent_number_of_polygon_vertices(len)

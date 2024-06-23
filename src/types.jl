@@ -12,6 +12,19 @@
 #
 
 """
+    TwoDimensional.List{T}
+
+is a type alias for indexable ordered lists of object of type `T`. This includes tuples
+and vectors. If `T` is an abstract type, specify `TwoDimensional.List{<:T}` to match
+vectors whose elements have concrete type inherited from `T`.
+
+"""
+const List{T} = Union{Tuple{Vararg{T}},AbstractVector{T}}
+
+# NOTE: `const List{T} = Union{Tuple{Vararg{T}},AbstractVector{<:T}}` cannot be used to
+# match vectors whose elements must have a given abstract type `T`.
+
+"""
     TwoDimensional.GeometricObject{T}
 
 is the super-type of geometric objects whose coordinates are of type `T`. Most
@@ -140,7 +153,6 @@ const VertexBasedObject{T} = Union{Point{T},
 
 const VERTEX_BASED_TYPES = (:Point, :Rectangle, :Polygon, :BoundingBox)
 
-const TupleOrVector{T} = Union{Tuple{Vararg{T}},AbstractVector{<:T}}
 
 """
     TwoDimensional.PointLike
@@ -202,9 +214,9 @@ these types. Accessors [`TwoDimensional.get_x`](@ref) and
 their abscissa and ordinate.
 
 """
-const PolygonLike = Union{TupleOrVector{<:AbstractPoint},
-                          TupleOrVector{<:NTuple{2,Number}},
-                          TupleOrVector{<:CartesianIndex{2}}}
+const PolygonLike = Union{List{<:AbstractPoint},
+                          List{<:NTuple{2,Number}},
+                          List{<:CartesianIndex{2}}}
 
 """
     TwoDimensional.BoundingBoxLike

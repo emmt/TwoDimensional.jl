@@ -12,15 +12,15 @@
 # https://web.archive.org/web/20130126163405/http://geomalgorithms.com/a03-_inclusion.html
 
 """
-    TwoDimensional.crossing_number_test(P::Point, V::TupleOrVector{<:Point}) -> bool
+    TwoDimensional.crossing_number_test(P::Point, V::List{<:Point}) -> bool
 
-yields whether point `P` is inside the polygon defined by vertices `V`
-according to the *crossing number* method by Franklin (2000).
+yields whether point `P` is inside the polygon defined by vertices `V` according to the
+*crossing number* method by Franklin (2000).
 
 """
-crossing_number_test(P::Point, V::TupleOrVector{<:Point}) = isodd(crossing_number(P, V))
+crossing_number_test(P::Point, V::List{<:Point}) = isodd(crossing_number(P, V))
 
-function crossing_number(P::Point, V::TupleOrVector{<:Point})
+function crossing_number(P::Point, V::List{<:Point})
     cn = 0 # initialize crossing number counter
     A = last(V) # initialize A, the 1st point of edges in cyclic list of points
     @inbounds for B in V # loop over B, the 2nd point of edges
@@ -39,16 +39,15 @@ function crossing_number(P::Point, V::TupleOrVector{<:Point})
 end
 
 """
-    TwoDimensional.winding_number_test(P::Point, V::TupleOrVector{<:Point}) -> bool
+    TwoDimensional.winding_number_test(P::Point, V::List{<:Point}) -> bool
 
-yields whether point `P` is inside the polygon defined by vertices `V`
-according to the *winding number* method by Dan Sunday ("Inclusion of a Point
-in a Polygon", 2001).
+yields whether point `P` is inside the polygon defined by vertices `V` according to the
+*winding number* method by Dan Sunday ("Inclusion of a Point in a Polygon", 2001).
 
 """
-winding_number_test(P::Point, V::TupleOrVector{<:Point}) = !iszero(winding_number(P, V))
+winding_number_test(P::Point, V::List{<:Point}) = !iszero(winding_number(P, V))
 
-function winding_number(P::Point, V::TupleOrVector{<:Point})
+function winding_number(P::Point, V::List{<:Point})
     wn = 0 # initialize winding number counter
     A = last(V) # initialize A, the 1st point of edges in cyclic list of points
     @inbounds for B in V # loop over B, the 2nd point of edges
@@ -77,8 +76,8 @@ end
 
 yields the cross vectorial product of `AB` by `AC`.
 
-The returned value can be used to determine the position of point `C`
-relatively to the infinite line defined by `(A,B)`:
+The returned value can be used to determine the position of point `C` relatively to the
+infinite line defined by `(A,B)`:
 
 - if `val > 0`, then `C` is left of the line through `A` and `B`;
 - if `val = 0`, then `C` is on the line through `A` and `B`;
