@@ -559,14 +559,16 @@ function grid_step(x::AbstractVector)
     len > 1 || throw(ArgumentError("zero-length vector of coordinates has no defined step"))
     stp = (last(x) - first(x))/(len - 1)
     stp > zero(stp) || throw(ArgumentError("grid step must be positive"))
-    tol = sqrt(eps(floating_point_type(stp)))
-    stpmin = stp*(one(tol) - tol)
-    stpmax = stp*(one(tol) + tol)
-    flag = true
-    @inbounds for i ∈ firstindex(x):lastindex(x)-1
-        flag &= (stpmin ≤ x[i+1] - x[i] ≤ stpmax)
+    if len > 2
+        tol = sqrt(eps(floating_point_type(stp)))
+        stpmin = stp*(one(tol) - tol)
+        stpmax = stp*(one(tol) + tol)
+        flag = true
+        @inbounds for i ∈ firstindex(x):lastindex(x)-1
+            flag &= (stpmin ≤ x[i+1] - x[i] ≤ stpmax)
+        end
+        flag || throw(ArgumentError("vector of coordinates has non-uniform steps"))
     end
-    flag || throw(ArgumentError("vector of coordinates has non-uniform steps"))
     return stp
 end
 
