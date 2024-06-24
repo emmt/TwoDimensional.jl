@@ -127,28 +127,14 @@ coord_type(::Type{<:GeometricObjectLike{T}}) where {T} = T
     coord_type(objs...) -> T
 
 yields the promoted coordinate type of geometrical objects `objs...`. Argument may also be
-a tuple or a vector of geometrical objects. Calling this method is equivalent to calling
-`promote_type(map(coord_type, objs)...)` but may be more efficient.
+a tuple or a vector of geometrical objects.
 
 """
 coord_type(A::GeometricObjectLike...) = coord_type(A)
 coord_type(A::Tuple{}) = Union{}
-coord_type(A::Tuple{Vararg{GeometricObjectLike}}) = _coord_type(Union{}, A)
-coord_type(A::AbstractVector{<:GeometricObjectLike}) = _coord_type(Union{}, A, firstindex(A))
+coord_type(A::Tuple{Vararg{GeometricObjectLike{T}}}) where {T} = T
 coord_type(A::AbstractVector{<:GeometricObjectLike{T}}) where {T} = T
-
-# Walker called by `coord_type` for a vector of objects.
-_coord_type(::Type{A}, B::AbstractVector{<:GeometricObjectLike}, i::Int) where {A} =
-    if i > lastindex(B)
-        return A
-    else
-        return _coord_type(promote_type(A, coord_type(@inbounds B[i])), B, i + 1)
-    end
-
-# Walker called by `coord_type` for a tuple of objects.
-_coord_type(::Type{A}, B::Tuple{}) where {A} = A
-@inline _coord_type(::Type{A}, B::Tuple{Vararg{GeometricObjectLike}}) where {A} =
-    _coord_type(promote_type(A, coord_type(first(B))), tail(B))
+coord_type(A::List{<:GeometricObjectLike}) = mapreduce(coord_type, promote_type, A; init=Union{})
 
 """
     promote_coord_type(types::Type{<:GeometricObject}...) -> T
