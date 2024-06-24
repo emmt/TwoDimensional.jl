@@ -45,11 +45,24 @@ See also [`TwoDimensional.elements`](@ref) and [`TwoDimensional.VertexBasedObjec
 @inline apply(f, poly::Polygon) = Polygon(map(f, vec(poly)))
 @inline apply(f, box::BoundingBox; swap::Bool = false) =
     BoundingBox(f(box[swap ? 2 : 1]), f(box[swap ? 1 : 2]))
-@inline apply(f, msk::Union{RectangularMask,CircularMask,PolygonalMask}) =
-    MaskElement(apply(f, shape(msk)); opaque = is_opaque(msk))
-@inline apply(f, g, msk::CircularMask) =
-    MaskElement(apply(f, g, shape(msk)); opaque = is_opaque(msk))
-@inline apply(f, msk::Mask) = Mask(map(f, values(msk)))
+@inline apply(f, elem::MaskElement) =
+    MaskElement(apply(f, shape(elem)); opaque = is_opaque(elem))
+@inline apply(f, g, elem::CircularMask) =
+    MaskElement(apply(f, g, shape(elem)); opaque = is_opaque(elem))
+@inline apply(f, msk::Mask) = Mask(map(f, elements(msk)))
+
+@inline apply(a::Number, ::typeof(*), b::GeometricObjectLike; kwds...) =
+    apply(Fix1(*, a), b; kwds...)
+@inline apply(a::Number, ::typeof(\), b::GeometricObjectLike; kwds...) =
+    apply(Fix1(\, a), b; kwds...)
+@inline apply(a::GeometricObjectLike, ::typeof(/), b::Number; kwds...) =
+    apply(Fix2(/, b), a; kwds...)
+@inline apply(a::GeometricObjectLike{T}, ::typeof(+), b::Point{T}; kwds...) where {T} =
+    apply(Fix2(+, b), a; kwds...)
+@inline apply(a::GeometricObjectLike{T}, ::typeof(-), b::Point{T}; kwds...) where {T} =
+    apply(Fix2(-, b), a; kwds...)
+@inline apply(a::Point{T}, ::typeof(-), b::GeometricObjectLike{T}; kwds...) where {T} =
+    apply(Fix1(-, a), b; kwds...)
 
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
