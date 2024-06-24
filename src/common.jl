@@ -136,41 +136,25 @@ coord_type(A::Tuple{Vararg{GeometricObjectLike{T}}}) where {T} = T
 coord_type(A::AbstractVector{<:GeometricObjectLike{T}}) where {T} = T
 coord_type(A::List{<:GeometricObjectLike}) = mapreduce(coord_type, promote_type, A; init=Union{})
 
-"""
-    promote_coord_type(types::Type{<:GeometricObject}...) -> T
-
-yields the promoted coordinate type of geometric object types in `types...`
+coord_type(A::DataType...) = coord_type(A)
+coord_type(A::Tuple{Vararg{DataType}}) = mapreduce(coord_type, promote_type, A; init=Union{})
 
 """
-promote_coord_type(::Type{<:GeometricObject{T}}) where {T} = T
-@inline function promote_coord_type(::Type{<:GeometricObject{T}},
-                                    types::Type{<:GeometricObject}...) where {T}
-    return _promote_coord_type(T, types...)
-end
+    promote_coord_type(objs...)
 
-@inline function _promote_coord_type(::Type{R}, ::Type{<:GeometricObject{T}},
-                                     types::Type{<:GeometricObject}...) where {R,T}
-    return _promote_coord_type(promote_type(R, T), types...)
-end
-_promote_coord_type(::Type{R}) where {R} = R # end the recursion
+converts all arguments `objs...` to a common coordinate type and return them as a tuple.
 
 """
-    promote_coord_type(objs::GeometricObject...) -> objs′
-
-yields the tuple of geometric objects `objs...` converted to the same
-coordinate type.
-
-"""
-promote_coord_type(obj::GeometricObject) = obj
-@inline promote_coord_type(objs::GeometricObject...) =
+promote_coord_type(obj::GeometricObjectLike) = obj
+@inline promote_coord_type(objs::GeometricObjectLike...) =
     convert_coord_type(coord_type(objs), objs...)
 
 """
     convert_coord_type(T::Type, obj::GeometricObject)
     GeometricObject{T}(obj)
 
-convert the coordinate type of a geometrical object `obj` to `T`. If the
-coordinate type of `obj` is already `T`, `obj` itself is returned.
+convert the coordinate type of a geometrical object `obj` to `T`. If the coordinate type
+of `obj` is already `T`, `obj` itself is returned.
 
 """
 convert_coord_type(::Type{T}, obj::GeometricObject{T}) where {T} = obj

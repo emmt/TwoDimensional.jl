@@ -531,13 +531,9 @@ end
             @test Float32 === @inferred coord_type(typeof(box_f32))
             @test Float64 === @inferred coord_type(pnt_f64)
             @test Float64 === @inferred coord_type(typeof(pnt_f64))
-            @test Int16   === @inferred promote_coord_type(typeof(pnt_i16))
-            @test Int32   === @inferred promote_coord_type(typeof(rec_i32))
-            @test Float32 === @inferred promote_coord_type(typeof(box_f32))
-            @test Float64 === @inferred promote_coord_type(typeof(pnt_f64))
-            @test Int32   === @inferred promote_coord_type(typeof(pnt_i16), typeof(rec_i32))
-            @test Float32 === @inferred promote_coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32))
-            @test Float64 === @inferred promote_coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32), typeof(pnt_f64))
+            @test Int32   === @inferred coord_type(typeof(pnt_i16), typeof(rec_i32))
+            @test Float32 === @inferred coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32))
+            @test Float64 === @inferred coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32), typeof(pnt_f64))
             @test @inferred(promote_coord_type(pnt_i16)) === pnt_i16
             @test @inferred(promote_coord_type(rec_i32)) === rec_i32
             @test @inferred(promote_coord_type(box_f32)) === box_f32
