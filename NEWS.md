@@ -114,7 +114,9 @@ objects.
 
 It is now possible to define and apply arbitrary masks by combining elementary
 *obscurations* (opaque elementary geometric objects) and *apertures* (transparent
-elementary geometric objects).
+elementary geometric objects). The `Mask` constructor takes any number of elementary mask
+objects and combine them into a composite mask. Methods `forge_mask` and `forge_mask!`
+compute the transmission of a mask at each cell of an array using antialiasing rules.
 
 ### Things no longer supported
 

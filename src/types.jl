@@ -78,6 +78,11 @@ struct MaskElement{T,S} <: ShapeElement{T}
     MaskElement(obj::S; opaque::Bool) where {T,S<:ShapeElement{T}} = new{T,S}(obj, opaque)
 end
 
+struct Mask{T,E<:MaskElement{T},L<:List{E}} <: AbstractVector{E}
+    elements::L
+    Mask{T,E}(elems::L) where {T,E<:MaskElement{T},L<:List{E}} = new{T,E,L}(elems)
+end
+
 """
     AbstractPoint{T} <: TwoDimensional.GeometricElement{T}
 
@@ -140,8 +145,7 @@ const PolygonalObject{T} = Union{Polygon{T},PolygonalMask{T}}
 """
     TwoDimensional.VertexBasedObject{T}
 
-is the union of types of objects defined by their verices and with coordinate
-type `T`.
+is the union of types of objects defined by their vertices and with coordinate type `T`.
 
 See also [`TwoDimensional.apply`](@ref).
 
@@ -153,6 +157,14 @@ const VertexBasedObject{T} = Union{Point{T},
 
 const VERTEX_BASED_TYPES = (:Point, :Rectangle, :Polygon, :BoundingBox)
 
+"""
+    TwoDimensional.GeometricObjectLike{T}
+
+is the union of types of objects that behaves like a geometric object with coordinate type
+`T` and which can be scaled, rotated, moved, etc.
+
+"""
+const GeometricObjectLike{T} = Union{GeometricObject{T},Mask{T}}
 
 """
     TwoDimensional.PointLike

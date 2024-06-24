@@ -89,20 +89,20 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
                 ymin = max(A.ymin, B.ymin), ymax = min(A.ymax, B.ymax))
 
 # Just permute operands for some common operations on geometric objects.
-*(a::GeometricObject, b::Number) = b*a
-\(a::Number, b::GeometricObject) = b/a
-+(a::Point{T}, b::GeometricObject{T}) where {T} = b + a
+*(a::GeometricObjectLike, b::Number) = b*a
+\(a::Number, b::GeometricObjectLike) = b/a
++(a::Point{T}, b::GeometricObjectLike{T}) where {T} = b + a
 
 # Promote operands to a common coordinate type for some geometric operations.
-+(a::GeometricObject, b::Point) = +(promote_coord_type(a, b)...)
-+(a::Point, b::GeometricObject) = +(promote_coord_type(a, b)...)
++(a::GeometricObjectLike, b::Point) = +(promote_coord_type(a, b)...)
++(a::Point, b::GeometricObjectLike) = +(promote_coord_type(a, b)...)
 +(a::Point, b::Point) = +(promote_coord_type(a, b)...)
--(a::GeometricObject, b::Point) = -(promote_coord_type(a, b)...)
--(a::Point, b::GeometricObject) = -(promote_coord_type(a, b)...)
+-(a::GeometricObjectLike, b::Point) = -(promote_coord_type(a, b)...)
+-(a::Point, b::GeometricObjectLike) = -(promote_coord_type(a, b)...)
 -(a::Point, b::Point) = -(promote_coord_type(a, b)...)
 
 # Unary plus does nothing.
-+(a::GeometricObject) = a
++(a::GeometricObjectLike) = a
 
 # Unary minus negates coordinates and should as multiplying by -1.
 -(pnt::Point) = apply(-, pnt)
@@ -111,33 +111,37 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
 -(poly::Polygon) = apply(-, poly)
 -(box::BoundingBox) = apply(-, box; swap = true)
 -(msk::MaskElement) = MaskElement(-shape(msk); opaque = is_opaque(msk))
+-(msk::Mask) = apply(-, msk)
 
 # Scaling of geometric objects and corresponding multiplicative identity.
-Base.one(obj::GeometricObject) = one(typeof(obj))
-Base.one(::Type{<:GeometricObject{T}}) where {T} = one(T)
+Base.one(obj::GeometricObjectLike) = one(typeof(obj))
+Base.one(::Type{<:GeometricObjectLike{T}}) where {T} = one(T)
 
 *(α::Number, pnt::Point) = apply(Fix1(*, α), pnt)
 /(pnt::Point, α::Number) = apply(Fix2(/, α), pnt)
 
-*(α::Number, rect::Rectangle) =  apply(Fix1(*, α), rect)
-/(rect::Rectangle, α::Number) =  apply(Fix2(/, α), rect)
+*(α::Number, rect::Rectangle) = apply(Fix1(*, α), rect)
+/(rect::Rectangle, α::Number) = apply(Fix2(/, α), rect)
 
 *(α::Number, circ::Circle) = Circle(α*center(circ), abs(α)*radius(circ))
 /(circ::Circle, α::Number) = Circle(center(circ)/α, radius(circ)/abs(α))
 
-*(α::Number, poly::Polygon) =  apply(Fix1(*, α), poly)
-/(poly::Polygon, α::Number) =  apply(Fix2(/, α), poly)
+*(α::Number, poly::Polygon) = apply(Fix1(*, α), poly)
+/(poly::Polygon, α::Number) = apply(Fix2(/, α), poly)
 
 *(α::Number, box::BoundingBox) = apply(Fix1(*, α), box; swap = α < zero(α))
 /(box::BoundingBox, α::Number) = apply(Fix2(/, α), box; swap = α < zero(α))
 
 *(α::Number, msk::MaskElement) = MaskElement(α*shape(msk); opaque = is_opaque(msk))
-/(msk::MaskElement,  α::Number) = MaskElement(shape(msk)/α; opaque = is_opaque(msk))
+/(msk::MaskElement, α::Number) = MaskElement(shape(msk)/α; opaque = is_opaque(msk))
 
-# Translate a geometric object by adding or subtracting a point and
-# corresponding addtive identity.
-Base.zero(obj::GeometricObject) = zero(typeof(obj))
-Base.zero(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
+*(α::Number, msk::Mask) = apply(Fix1(*, α), msk)
+/(msk::Mask, α::Number) = apply(Fix2(/, α), msk)
+
+# Move a geometric object by adding or subtracting a point and corresponding addtive
+# identity.
+Base.zero(obj::GeometricObjectLike) = zero(typeof(obj))
+Base.zero(::Type{<:GeometricObjectLike{T}}) where {T} = Point(zero(T), zero(T))
 
 +(A::Point{T}, B::Point{T}) where {T} = Point(A.x + B.x, A.y + B.y)
 -(A::Point{T}, B::Point{T}) where {T} = Point(A.x - B.x, A.y - B.y)
@@ -155,16 +159,21 @@ Base.zero(::Type{<:GeometricObject{T}}) where {T} = Point(zero(T), zero(T))
 -(pnt::Point{T}, poly::Polygon{T}) where {T} = apply(Fix1(-, pnt), poly)
 
 +(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(+, pnt), box; swap = false)
--(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), box)
+-(box::BoundingBox{T}, pnt::Point{T}) where {T} = apply(Fix2(-, pnt), box; swap = false)
 -(pnt::Point{T}, box::BoundingBox{T}) where {T} = apply(Fix1(-, pnt), box; swap = true)
 
 +(msk::MaskElement, pnt::Point) = MaskElement(shape(msk) + pnt; opaque = is_opaque(msk))
 -(msk::MaskElement, pnt::Point) = MaskElement(shape(msk) - pnt; opaque = is_opaque(msk))
 -(pnt::Point, msk::MaskElement) = MaskElement(pnt - shape(msk); opaque = is_opaque(msk))
 
++(msk::Mask, pnt::Point) = apply(Fix2(+, pnt), msk)
+-(msk::Mask, pnt::Point) = apply(Fix2(-, pnt), msk)
+-(pnt::Point, msk::Mask) = apply(Fix1(-, pnt), msk)
+
 # Performing a geometric operation on a mask amounts to performing the
 # operation on the embedded shape. Inverting a mask toggles its opacity.
 Base.inv(msk::MaskElement) = MaskElement(shape(msk); opaque = !is_opaque(msk))
+Base.inv(msk::Mask) = apply(inv, msk)
 
 # Addition and subtraction of bounding-boxes (following the rules of the
 # addition and subtraction of sets) and corresponding addtive identity.

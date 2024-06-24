@@ -21,6 +21,7 @@ parts(poly::Polygon) = vec(poly)
 parts(circ::Circle) = (center(circ), radius(circ))
 parts(box::BoundingBox) = getfield(box, 1)
 parts(msk::MaskElement) = parts(shape(msk))
+parts(msk::Mask) = getfield(msk, 1)
 
 # Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
 Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = parts(obj)
@@ -48,6 +49,7 @@ See also [`TwoDimensional.parts`](@ref) and [`TwoDimensional.VertexBasedObject`]
     MaskElement(apply(f, shape(msk)); opaque = is_opaque(msk))
 @inline apply(f, g, msk::CircularMask) =
     MaskElement(apply(f, g, shape(msk)); opaque = is_opaque(msk))
+@inline apply(f, msk::Mask) = Mask(map(f, values(msk)))
 
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
@@ -118,8 +120,9 @@ Base.show(io::IO, ::MIME"text/plain", obj::GeometricObject) = show(io, obj)
 yields the coordinate type of a geometrical object or of its type.
 
 """
-coord_type(::GeometricObject{T}) where {T} = T
-coord_type(::Type{<:GeometricObject{T}}) where {T} = T
+coord_type(::GeometricObjectLike{T}) where {T} = T
+coord_type(::Type{<:GeometricObjectLike{T}}) where {T} = T
+
 """
     coord_type(objs...) -> T
 
@@ -128,14 +131,14 @@ a tuple or a vector of geometrical objects. Calling this method is equivalent to
 `promote_type(map(coord_type, objs)...)` but may be more efficient.
 
 """
-coord_type(A::GeometricObject...) = coord_type(A)
+coord_type(A::GeometricObjectLike...) = coord_type(A)
 coord_type(A::Tuple{}) = Union{}
-coord_type(A::Tuple{Vararg{GeometricObject}}) = _coord_type(Union{}, A)
-coord_type(A::AbstractVector{<:GeometricObject}) = _coord_type(Union{}, A, firstindex(A))
-coord_type(A::AbstractVector{<:GeometricObject{T}}) where {T} = T
+coord_type(A::Tuple{Vararg{GeometricObjectLike}}) = _coord_type(Union{}, A)
+coord_type(A::AbstractVector{<:GeometricObjectLike}) = _coord_type(Union{}, A, firstindex(A))
+coord_type(A::AbstractVector{<:GeometricObjectLike{T}}) where {T} = T
 
 # Walker called by `coord_type` for a vector of objects.
-_coord_type(::Type{A}, B::AbstractVector{<:GeometricObject}, i::Int) where {A} =
+_coord_type(::Type{A}, B::AbstractVector{<:GeometricObjectLike}, i::Int) where {A} =
     if i > lastindex(B)
         return A
     else
@@ -144,7 +147,7 @@ _coord_type(::Type{A}, B::AbstractVector{<:GeometricObject}, i::Int) where {A} =
 
 # Walker called by `coord_type` for a tuple of objects.
 _coord_type(::Type{A}, B::Tuple{}) where {A} = A
-@inline _coord_type(::Type{A}, B::Tuple{Vararg{GeometricObject}}) where {A} =
+@inline _coord_type(::Type{A}, B::Tuple{Vararg{GeometricObjectLike}}) where {A} =
     _coord_type(promote_type(A, coord_type(first(B))), tail(B))
 
 """
@@ -192,13 +195,16 @@ for type in (:Point, :Rectangle, :Circle, :Polygon, :BoundingBox, :MaskElement)
     end
 end
 for type in (:GeometricObject, :GeometricElement, :ShapeElement, :MaskElement,
-             :AbstractPoint, :Point, :Rectangle, :Circle, :BoundingBox,)
+             :AbstractPoint, :Point, :Rectangle, :Circle, :BoundingBox, :Mask)
     @eval begin
         convert_coord_type(::Type{T}, ::Type{<:$type}) where {T} = $type{T}
     end
 end
 convert_coord_type(::Type{T}, ::Type{<:Polygon}) where {T} = Polygon{T,Vector{Point{T}}}
 convert_coord_type(::Type{T}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
+
+convert_coord_type(::Type{T}, msk::Mask{T}) where {T} = msk
+convert_coord_type(::Type{T}, msk::Mask) where {T} = Mask{T}(parts(msk))
 
 GeometricObject(obj::GeometricObject) = obj
 GeometricObject{T}(obj::GeometricObject{T}) where {T} = obj

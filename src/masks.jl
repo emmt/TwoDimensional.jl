@@ -1,19 +1,57 @@
 """
-    msk = MaskElement{T}(shape::ShapeElement; opaque=true/false)
+    TwoDimensional.Mask(elems...)
+    TwoDimensional.Mask{T}(elems...)
 
-builds an elementary mask whose shape is given by the elementary geometric
-object `shape` and with keyword `opaque` set to `true` for an opaque mask and
-to `false` for a transparent mask. `T` is the coordinate type which may be
+build a composite mask consisting in the ordered list of mask elements `elems...`. Optional
+type parameter `T` is the coordinate type of the masks elements. All arguments are
+converted as needed to have this coordinate type. If `T` is not specified, it is inferred
+by promoting the coordinate types of the mask elements.
+
+A mask can be moved, scaled, rotated, etc., the coordinate type of its elements may be
+converted to another type.
+
+!!! warning
+    Masks with a large number of elements should be created with a vector of mask elements.
+
+"""
+Mask(elems::MaskElement...) = Mask(elems)
+Mask{T}(elems::MaskElement...) where {T} = Mask{T}(elems)
+Mask(elems::List{<:MaskElement}) = Mask{coord_type(elems)}(elems)
+Mask{T}(elems::List{<:MaskElement}) where {T} =
+    Mask{T}(map(Fix1(convert_coord_type, T), elems))
+Mask{T}(elems::List{<:MaskElement{T}}) where {T} = Mask{T,eltype(elems)}(elems)
+
+# Extend abstract array API for masks.
+Base.values(msk::Mask) = parts(msk)
+Base.length(msk::Mask) = length(parts(msk))
+Base.size(msk::Mask) = (length(msk),)
+Base.axes(msk::Mask) = (Base.OneTo(length(msk)),)
+Base.IndexStyle(::Type{<:Mask}) = IndexLinear()
+@inline function Base.getindex(A::Mask, i::Int)
+    @boundscheck checkbounds(A, i)
+    return @inbounds getindex(parts(A), i)
+end
+@inline function Base.setindex!(A::Mask, x, i::Int)
+    @boundscheck checkbounds(A, i)
+    @inbounds setindex!(parts(A), x, i)
+    return A
+end
+
+"""
+    msk = MaskElement{T}(shape::ShapeElement; opaque)
+
+builds an elementary mask whose shape is given by the elementary geometric object `shape`
+and with keyword `opaque` set to `true` for an opaque mask (an *obscuration*) and to
+`false` for a transparent mask (an *aperture*). `T` is the coordinate type which may be
 omitted.
 
-To change the opacity (by default the same opacity is kept) and/or the
-coordinate type:
+To change the opacity (by default the same opacity is kept) and/or the coordinate type:
 
     other_msk = MaskElement{T′}(msk; opaque=...)
 
-All arithmetic operations on elementary geometric objects also apply for a
-mask: the operation is applied to the shape of the mask leaving the opacity
-unchanged. To toggle the opacity:
+All arithmetic operations on elementary geometric objects also apply for a mask: the
+operation is applied to the shape of the mask leaving the opacity unchanged. To toggle the
+opacity:
 
     other_msk = inv(msk)
 
@@ -39,9 +77,9 @@ A forged mask can serve multiple times. To apply a mask once, call
 [`TwoDimensional.apply_mask!`](@ref TwoDimensional.apply_mask!).
 
 """
-MaskElement(msk::MaskElement; opaque::Bool = is_opaque(msk)) =
+MaskElement(obj::MaskElement; opaque::Bool = is_opaque(obj)) =
     MaskElement(shape(obj); opaque = opaque)
-MaskElement{T}(msk::MaskElement; opaque::Bool = is_opaque(msk)) where {T} =
+MaskElement{T}(obj::MaskElement; opaque::Bool = is_opaque(obj)) where {T} =
     MaskElement(convert_coord_type(T, shape(obj)); opaque = opaque)
 MaskElement{T}(obj::ShapeElement; opaque::Bool) where {T} =
     MaskElement(convert_coord_type(T, obj), opaque)
@@ -201,37 +239,39 @@ function subrange(n::Int, s::Number)
 end
 
 """
-    TwoDimensional.forge_mask(A::AbstractMatrix, objs...; kwds...) -> msk
+    TwoDimensional.forge_mask(A::AbstractMatrix, msk; kwds...)
+    TwoDimensional.forge_mask(A::AbstractMatrix, objs...; kwds...)
 
-yields a 2-dimensional transmission mask for the 2-dimensional array `A` and
-combining elementary mask objects `objs...`.
-
-"""
-forge_mask(A::AbstractMatrix, args...; kwds...) =
-    forge_mask!(Matrix{floating_point_type(A)}(undef, size(A)), A, args...; kwds...)
-
-function forge_mask!(dst::AbstractMatrix, A::AbstractMatrix, args...; kwds...)
-    X = grid_step(A)*RolledCoordinates(grid_size(A))
-    Y = X
-    return forge_mask!(dst, X, Y, args...; kwds...)
-end
+yield a 2-dimensional array whose entries given the transmission by the mask `msk` for the
+corresponding entry in `A`. The mask may also be specified by the list `objs...` of
+elementary mask objects. The coordinates of the mask are assumed to be given in fractional
+Cartesian indices for `A`.
 
 """
-    TwoDimensional.forge_mask(X, Y, objs...; kwds...) -> msk
+forge_mask(A::AbstractMatrix, objs::MaskElement...; kwds...) = forge_mask(A, Mask(objs); kwds...)
+forge_mask(A::AbstractMatrix, msk::Mask; kwds...) =
+    forge_mask!(similar(A, floating_point_type(A)), msk; kwds...)
 
-yields a 2-dimensional transmission mask with coordinates given by `X` and `Y` along the
-1st and 2nd dimensions and combining aperture/obscuration objects `objs...`. The following
-*painting* algorithm is used:
+"""
+    TwoDimensional.forge_mask([T,] X, Y, msk; kwds...) -> arr
+    TwoDimensional.forge_mask([T,] X, Y, elems...; kwds...) -> arr
 
-- The mask is initially filled with the transparent or opaque value depending on whether
-  the first component is opaque or transparent.
+yield a 2-dimensional array filled with transmission values computed for the mask `msk` at
+coordinates given by `X` and `Y` along the 1st and 2nd dimensions. The mask may also be
+specified by combining elementary mask objects `elems...`. Optional argument `T` is to specify
+the element type of the result.
 
-- Then, for each component in turn, the cells of the mask that are inside the component
-  are painted with the opaque or transparent value depending on whether the component is
-  opaque or transparent.
+The following *painting* algorithm is used:
 
-- The parts of the mask overlapping the boundaries of the topmost components are set to an
-  intermediate value between the opaque and transparent ones and (approximately)
+- The mask array is initially filled with the transparent or opaque value depending on
+  whether the first component is opaque or transparent.
+
+- Then, for each component in turn, the cells of the mask array that are inside the
+  component are painted with the opaque or transparent value depending on whether the
+  component is opaque or transparent.
+
+- The cells of the mask array overlapping the boundaries of the topmost components are set
+  to an intermediate value between the opaque and transparent ones and (approximately)
   proportionally to the transparent fraction of the cell area.
 
 Note that the order of the components of the mask is relevant: an aperture component
@@ -277,39 +317,61 @@ arms:
         rectangular_obscuration(center - hoff/2, center + hoff/2))
 
 """
-function forge_mask(X::AbstractVector,
-                    Y::AbstractVector,
-                    args...; kwds...)
-    T = floating_point_type(promote_type(eltype(X), eltype(Y)))
-    return forge_mask!(Matrix{T}(undef, length(X), length(Y)), X, Y, args...; kwds...)
-end
+forge_mask(X::AbstractVector, Y::AbstractVector, elems::MaskElement...; kwds...) =
+    forge_mask(X, Y, Mask(elems); kwds...)
+forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, elems::MaskElement...; kwds...) where {T} =
+    forge_mask(T, X, Y, Mask(elems); kwds...)
 
+forge_mask(X::AbstractVector, Y::AbstractVector, elems::List{<:MaskElement}; kwds...) =
+    forge_mask(X, Y, Mask(elems); kwds...)
+forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, elems::List{<:MaskElement}; kwds...) where {T} =
+    forge_mask(T, X, Y, Mask(elems); kwds...)
+
+forge_mask(X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) =
+    forge_mask(floating_point_type(promote_type(eltype(X), eltype(Y), coord_type(msk))),
+               X, Y, msk; kwds...)
+forge_mask(X::AbstractVector{T}, Y::AbstractVector{T}, msk::Mask{T}; kwds...) where {T} =
+    forge_mask(floating_point_type(T), X, Y, msk; kwds...)
+
+# NOTE: For offset-arrays, the in-place version `forge_mask!` must be used.
+forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) where {T} =
+    forge_mask!(Matrix{T}(undef, length(X), length(Y)), X, Y, msk; kwds...)
 
 """
-    TwoDimensional.forge_mask!(dst, X, Y, objs...; kwds...) -> dst
+    TwoDimensional.forge_mask!(dst, [X, Y,] msk; kwds...) -> dst
+    TwoDimensional.forge_mask!(dst, [X, Y,] elems...; kwds...) -> dst
 
 In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the destination
-array `dst` with the mask and returns it.
+array `dst` with the mask and returns it. If coordinates `X` and `Y` along the axes of
+`dst` are not specified, `(X, Y) = axes(dst)` is assumed.
 
 """
-function forge_mask!(dst::AbstractMatrix,
-                     X::AbstractVector,
-                     Y::AbstractVector,
-                     args::Tuple{Vararg{MaskElement}};
-                     kwds...)
-    return forge_mask!(dst, X, Y, args...; kwds...)
+forge_mask!(A::AbstractMatrix, msk::Mask; kwds...) = forge_mask!(A, axes(A)..., msk; kwds...)
+
+forge_mask!(A::AbstractMatrix, elems::MaskElement...; kwds...) =
+    forge_mask!(A, Mask(elems); kwds...)
+
+forge_mask!(A::AbstractMatrix, elems::List{<:MaskElement}; kwds...) =
+    forge_mask!(A, Mask(elems); kwds...)
+
+function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
+                     elems::MaskElement...; kwds...)
+    return forge_mask!(dst, X, Y, Mask(elems); kwds...)
 end
 
-function forge_mask!(dst::AbstractMatrix,
-                     X::AbstractVector,
-                     Y::AbstractVector,
-                     args::MaskElement...;
+function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
+                     elems::List{<:MaskElement}; kwds...)
+    return forge_mask!(dst, X, Y, Mask(elems); kwds...)
+end
+
+function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
+                     msk::Mask;
                      antialiasing::Integer = default_antialiasing,
                      opaque = zero(eltype(dst)),
                      transparent = oneunit(eltype(dst)))
-    # Check that coordinate units are compatible and determine a suitable unit
-    # for all coordinates.
-    T = float(promote_type(eltype(X), eltype(Y), map(coord_type, args)...))
+    # Check that coordinate units are compatible and determine a suitable unit for all
+    # coordinates.
+    T = float(promote_type(eltype(X), eltype(Y), coord_type(msk)))
 
     # Check arguments.
     I, J = axes(dst)
@@ -321,25 +383,25 @@ function forge_mask!(dst::AbstractMatrix,
 
     # Call the real method.
     return unsafe_forge_mask!(dst, convert_eltype(T, X), convert_eltype(T, Y),
-                              map(Fix1(convert_coord_type, T), args)...;
+                              convert_coord_type(T, msk);
                               antialiasing = antialiasing, opaque = opaque,
                               transparent = transparent)
 end
 
-function unsafe_forge_mask!(dst::AbstractMatrix{T},
-                            X::AbstractVector{C},
-                            Y::AbstractVector{C},
-                            objs::MaskElement{C}...;
+function unsafe_forge_mask!(dst::AbstractMatrix{V},
+                            X::AbstractVector{T},
+                            Y::AbstractVector{T},
+                            msk::Mask{T};
                             antialiasing::Int,
-                            opaque::T,
-                            transparent::T) where {T,C}
+                            opaque::V,
+                            transparent::V) where {T,V}
     partial = interpolate(opaque, transparent, 1//2)
     δx = grid_step(X)
     δy = grid_step(Y)
 
     # Determine whether a cell of the mask is fully or partially opaque or transparent.
     initial = true
-    for obj in objs
+    for obj in msk
         unsafe_forge_mask!(dst, X, δx, Y, δy, obj, opaque, partial, transparent, initial)
         initial = false
     end
@@ -361,7 +423,7 @@ function unsafe_forge_mask!(dst::AbstractMatrix{T},
                     # Cell is partially opaque/transparent.
                     x = X[i]
                     count = -1 # to trigger resetting of state array
-                    for obj in objs
+                    for obj in msk
                         count = unsafe_forge_mask!(state, x, DX, y, DY, obj, count)
                     end
                     #@assert max(count, 0) == Base.count(state)
@@ -378,16 +440,16 @@ end
 function unsafe_forge_mask!(dst::AbstractMatrix{V},
                             X::AbstractVector{T}, δx::T,
                             Y::AbstractVector{T}, δy::T,
-                            mask::MaskElement{T},
+                            obj::MaskElement{T},
                             opaque::V,
                             partial::V,
                             transparent::V,
                             initial::Bool) where {T,V}
     if initial
-        fill!(dst, is_opaque(mask) ? transparent : opaque)
+        fill!(dst, is_opaque(obj) ? transparent : opaque)
     end
-    return unsafe_forge_mask!(dst, X, δx, Y, δy, shape(mask),
-                              is_opaque(mask) ? opaque : transparent,
+    return unsafe_forge_mask!(dst, X, δx, Y, δy, shape(obj),
+                              is_opaque(obj) ? opaque : transparent,
                               partial)
 end
 
