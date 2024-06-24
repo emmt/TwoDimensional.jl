@@ -120,6 +120,32 @@ yields the coordinate type of a geometrical object or of its type.
 """
 coord_type(::GeometricObject{T}) where {T} = T
 coord_type(::Type{<:GeometricObject{T}}) where {T} = T
+"""
+    coord_type(objs...) -> T
+
+yields the promoted coordinate type of geometrical objects `objs...`. Argument may also be
+a tuple or a vector of geometrical objects. Calling this method is equivalent to calling
+`promote_type(map(coord_type, objs)...)` but may be more efficient.
+
+"""
+coord_type(A::GeometricObject...) = coord_type(A)
+coord_type(A::Tuple{}) = Union{}
+coord_type(A::Tuple{Vararg{GeometricObject}}) = _coord_type(Union{}, A)
+coord_type(A::AbstractVector{<:GeometricObject}) = _coord_type(Union{}, A, firstindex(A))
+coord_type(A::AbstractVector{<:GeometricObject{T}}) where {T} = T
+
+# Walker called by `coord_type` for a vector of objects.
+_coord_type(::Type{A}, B::AbstractVector{<:GeometricObject}, i::Int) where {A} =
+    if i > lastindex(B)
+        return A
+    else
+        return _coord_type(promote_type(A, coord_type(@inbounds B[i])), B, i + 1)
+    end
+
+# Walker called by `coord_type` for a tuple of objects.
+_coord_type(::Type{A}, B::Tuple{}) where {A} = A
+@inline _coord_type(::Type{A}, B::Tuple{Vararg{GeometricObject}}) where {A} =
+    _coord_type(promote_type(A, coord_type(first(B))), tail(B))
 
 """
     promote_coord_type(types::Type{<:GeometricObject}...) -> T
@@ -148,7 +174,7 @@ coordinate type.
 """
 promote_coord_type(obj::GeometricObject) = obj
 @inline promote_coord_type(objs::GeometricObject...) =
-    convert_coord_type(promote_coord_type(map(typeof, objs)...), objs...)
+    convert_coord_type(coord_type(objs), objs...)
 
 """
     convert_coord_type(T::Type, obj::GeometricObject)

@@ -54,10 +54,7 @@ Base.convert(::Type{T}, obj) where {T<:GeometricObject} = T(obj)
 Base.collect(obj::MaskElement, objs::MaskElement...) = collect_mask_elements(obj, objs...)
 collect_mask_elements() = error("expecting at least one mask element")
 collect_mask_elements(objs::MaskElement{T}...) where {T} = MaskElement{T}[objs...]
-function collect_mask_elements(objs::MaskElement...)
-    T = promote_type(map(coord_type, objs))
-    return MaskElement{T}[obj, objs...]
-end
+collect_mask_elements(objs::MaskElement...) = MaskElement{coord_type(objs)}[objs...]
 
 Base.first(obj::RectangularMask) = first(shape(obj))
 Base.last(obj::RectangularMask) = last(shape(obj))
