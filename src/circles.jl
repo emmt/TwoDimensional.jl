@@ -41,7 +41,7 @@ Circle{T}((center, radius)::Tuple{PointLike,Number}) where {T} = Circle{T}(cente
 # Convert/copy constructors.
 Circle(circ::Circle) = circ
 Circle{T}(circ::Circle{T}) where {T} = circ
-Circle{T}(circ::Circle) where {T} = Circle{T}(parts(circ)...)
+Circle{T}(circ::Circle) where {T} = Circle{T}(elements(circ)...)
 Base.convert(::Type{T}, circ::T) where {T<:Circle} = circ
 Base.convert(::Type{T}, obj::CircleLike) where {T<:Circle} = T(obj)
 

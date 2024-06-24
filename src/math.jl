@@ -284,7 +284,7 @@ end
 # `min()`, `max()`, and `minmax()` for points work as for Cartesian indices.
 Base.min(a::Point{T}, b::Point{T}) where {T} = Point{T}(min(a.x, b.x), min(a.y, b.y))
 Base.max(a::Point{T}, b::Point{T}) where {T} = Point{T}(max(a.x, b.x), max(a.y, b.y))
-Base.minmax(a::Point{T}, b::Point{T}) where {T} = parts(Rectangle(a, b))
+Base.minmax(a::Point{T}, b::Point{T}) where {T} = elements(Rectangle(a, b))
 for func in (:min, :max, :minmax)
     @eval begin
         Base.$func(a::Point, b::Point) = $func(promote_coord_type(a, b)...)

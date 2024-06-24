@@ -1,32 +1,32 @@
 """
-    TwoDimensional.parts(obj::GeometricElement)
+    TwoDimensional.elements(obj::GeometricElement)
 
 yields the individual elements of elementary geometric `obj` from which it can be re-built
 without ambiguities. For example, for a point `pnt`:
 
-    Point(parts(pnt)...) === pnt
-    Point(parts(pnt)) === pnt
+    Point(elements(pnt)...) === pnt
+    Point(elements(pnt)) === pnt
 
 both hold.
 
-Geometrical objects that have homogeneous parts (see
+Geometrical objects that have homogeneous elements (see
 [`TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.Tuple` method to return these
-parts, the `Base.getindex` method to directly index among these parts, and the
+elements, the `Base.getindex` method to directly index among these elements, and the
 [`TwoDimensional.apply`](@ref) method.
 
 """
-parts(pnt::Point) = getfield(pnt, 1)
-parts(rect::Rectangle) = getfield(rect, 1)
-parts(poly::Polygon) = vec(poly)
-parts(circ::Circle) = (center(circ), radius(circ))
-parts(box::BoundingBox) = getfield(box, 1)
-parts(msk::MaskElement) = parts(shape(msk))
-parts(msk::Mask) = getfield(msk, 1)
+elements(pnt::Point) = getfield(pnt, 1)
+elements(rect::Rectangle) = getfield(rect, 1)
+elements(poly::Polygon) = vec(poly)
+elements(circ::Circle) = (center(circ), radius(circ))
+elements(box::BoundingBox) = getfield(box, 1)
+elements(msk::MaskElement) = elements(shape(msk))
+elements(msk::Mask) = getfield(msk, 1)
 
 # Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
-Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = parts(obj)
+Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = elements(obj)
 @inline @propagate_inbounds Base.getindex(obj::Union{Point,Rectangle,BoundingBox}, i::Integer) =
-    getindex(parts(obj), as(Int, i))
+    getindex(elements(obj), as(Int, i))
 
 """
     TwoDimensional.apply(f, obj)
@@ -37,7 +37,7 @@ same kind with the result.
 If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether to swap
 the first and last end-points of the box.
 
-See also [`TwoDimensional.parts`](@ref) and [`TwoDimensional.VertexBasedObject`](@ref).
+See also [`TwoDimensional.elements`](@ref) and [`TwoDimensional.VertexBasedObject`](@ref).
 
 """
 @inline apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
@@ -174,7 +174,7 @@ convert_coord_type(::Type{T}, ::Type{<:Polygon}) where {T} = Polygon{T,Vector{Po
 convert_coord_type(::Type{T}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
 
 convert_coord_type(::Type{T}, msk::Mask{T}) where {T} = msk
-convert_coord_type(::Type{T}, msk::Mask) where {T} = Mask{T}(parts(msk))
+convert_coord_type(::Type{T}, msk::Mask) where {T} = Mask{T}(elements(msk))
 
 GeometricObject(obj::GeometricObject) = obj
 GeometricObject{T}(obj::GeometricObject{T}) where {T} = obj

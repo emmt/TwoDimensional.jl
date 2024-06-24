@@ -87,23 +87,26 @@ TwoDimensional.rdiv
 ## Masks
 
 ```@docs
+TwoDimensional.Mask
 TwoDimensional.MaskElement
 TwoDimensional.MaskElement2D
 TwoDimensional.Overlap
 TwoDimensional.apply_mask
 TwoDimensional.apply_mask!
-TwoDimensional.circular_aperture
-TwoDimensional.circular_obscuration
 TwoDimensional.forge_mask
 TwoDimensional.forge_mask!
 TwoDimensional.grid_step
 TwoDimensional.interpolate
 TwoDimensional.is_opaque
 TwoDimensional.is_transparent
-TwoDimensional.polygonal_aperture
-TwoDimensional.polygonal_obscuration
+TwoDimensional.aperture
+TwoDimensional.obscuration
 TwoDimensional.rectangular_aperture
 TwoDimensional.rectangular_obscuration
+TwoDimensional.circular_aperture
+TwoDimensional.circular_obscuration
+TwoDimensional.polygonal_aperture
+TwoDimensional.polygonal_obscuration
 ```
 
 ## Other Public Methods
@@ -128,6 +131,6 @@ TwoDimensional.geometric_properties
 TwoDimensional.is_convex
 TwoDimensional.is_nothing
 TwoDimensional.is_something
-TwoDimensional.parts
+TwoDimensional.elements
 TwoDimensional.shape
 ```

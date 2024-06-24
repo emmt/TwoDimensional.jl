@@ -362,7 +362,7 @@ end
         @test coord_type(poly) === coord_type(typeof(poly)) === T
         @test eltype(poly) === eltype(typeof(poly)) === Point{T}
         @test vec(poly) == collect(map(Point{T}, pnts))
-        @test vec(poly) === TwoDimensional.parts(poly)
+        @test vec(poly) === TwoDimensional.elements(poly)
         @test vec(poly) === TwoDimensional.vertices(poly)
         @test poly === Polygon(vec(poly))
         @test length(poly) === length(pnts)
