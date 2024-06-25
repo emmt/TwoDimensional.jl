@@ -389,8 +389,8 @@ end
             # Same values but not same object.
             @test arr !== vec(poly)
             @test arr == vec(poly)
-            @test poly === @inferred Polygon(vec(poly))
-            @test poly === @inferred Polygon{T}(vec(poly))
+            @test poly === @inferred Polygon(values(poly))
+            @test poly === @inferred Polygon{T}(values(poly))
             @test poly ==  @inferred Polygon(arr)
             @test poly ==  @inferred Polygon(arr...)
             @test poly ==  @inferred Polygon((arr...,))
@@ -419,8 +419,8 @@ end
         end
         # Bounding-box of a polygon and conversely.
         box  = @inferred BoundingBox(poly)
-        @test (box.xmin, box.xmax) === extrema(map(p -> p.x, vec(poly)))
-        @test (box.ymin, box.ymax) === extrema(map(p -> p.y, vec(poly)))
+        @test (box.xmin, box.xmax) === extrema(map(p -> p.x, values(poly)))
+        @test (box.ymin, box.ymax) === extrema(map(p -> p.y, values(poly)))
         p = @inferred Polygon(box)
         @test p isa Polygon{T}
         @test length(p) == 4
@@ -641,7 +641,7 @@ end
             @test -obj === @inferred Rectangle(-first(obj), -last(obj))
             @test -obj === @inferred Rectangle((-obj.x0, -obj.y0), (-obj.x1, -obj.y1))
         elseif obj isa Polygon
-            @test -obj == @inferred Polygon(map(-, vec(obj)))
+            @test -obj == @inferred Polygon(map(-, values(obj)))
         elseif obj isa BoundingBox
             @test !isempty(obj)
             @test -obj === @inferred BoundingBox(-last(obj), -first(obj))
@@ -684,8 +684,8 @@ end
             @test α\obj === @inferred Rectangle(α\first(obj), α\last(obj))
             @test α\obj === @inferred Rectangle((α\obj.x0, α\obj.y0), (α\obj.x1, α\obj.y1))
         elseif obj isa Polygon
-            @test α*obj == @inferred Polygon(map(vertex -> α*vertex, vec(obj)))
-            @test α\obj == @inferred Polygon(map(vertex -> α\vertex, vec(obj)))
+            @test α*obj == @inferred Polygon(map(vertex -> α*vertex, values(obj)))
+            @test α\obj == @inferred Polygon(map(vertex -> α\vertex, values(obj)))
         elseif obj isa BoundingBox
             @test α*obj === @inferred BoundingBox(α*first(obj), α*last(obj))
             @test α*obj === @inferred BoundingBox((α*obj.xmin, α*obj.ymin), (α*obj.xmax, α*obj.ymax), )

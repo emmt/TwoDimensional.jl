@@ -155,7 +155,7 @@ function Base.vec(poly::Polygon)
     @inbounds for (i, x) in enumerate(src)
         dst[i] = x
     end
-    return x
+    return dst
 end
 
 Base.Vector(poly::Polygon{<:Any,<:Union{Tuple,Vector}}) = vec(poly)
