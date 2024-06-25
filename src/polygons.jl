@@ -34,7 +34,6 @@ Polygon(vertices::List{Point{T}}) where {T} = Polygon{T}(vertices)
 Polygon{T}(vertices::List{<:Point}) where {T} =
     Polygon{T}(map(Fix1(convert_coord_type, T), vertices))
 
-
 # Build a polygon from an homogeneous tuple/vector of point-like objects.
 for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
     @eval begin
@@ -109,6 +108,17 @@ end
     @boundscheck checkbounds(elements(A), i)
     @inbounds setindex!(elements(A), x, i)
     return A
+end
+
+# Equality of polygons.
+function ==(A::Polygon, B::Polygon)
+    A === B && return true
+    I = eachindex(A)
+    eachindex(B) == I || return false
+    @inbounds for i in I
+        A[i] == B[i] || return false
+    end
+    return true
 end
 
 # Properties of polygons.

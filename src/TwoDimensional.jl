@@ -55,7 +55,7 @@ using Base: IteratorEltype, EltypeUnknown, HasEltype
 using LinearAlgebra
 
 # Imports for extension.
-import Base: +, -, *, ∘, /, \, inv
+import Base: ==, +, -, *, ∘, /, \, inv
 import LinearAlgebra: ⋅, det
 
 include("types.jl")
