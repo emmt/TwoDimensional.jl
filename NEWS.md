@@ -76,6 +76,8 @@ objects.
 - Addition and subtraction of bounding-boxes, say `C = A ± B`, yields the bounding-box `C`
   for all points `c = a ± b` whatever `a ∈ A` and `b ∈ B`.
 
+- `BoundingBox{T}()` yields an empty bounding-box for coordinate type `T`.
+
 - Taking the center of an empty bounding-box throws an error.
 
 ### Affine transforms

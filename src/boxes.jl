@@ -105,6 +105,14 @@ BoundingBox{T}(inds::CartesianIndices{2}) where {T} = BoundingBox{T}(first(inds)
     end
 end
 
+"""
+    BoundingBox{T}()
+
+yields an empty bounding-box for coordinate type `T`.
+
+"""
+BoundingBox{T}() where {T} = BoundingBox((zero(T), zero(T)), (-oneunit(T), -oneunit(T)))
+
 # Convert/copy constructors.
 BoundingBox(box::BoundingBox) = box
 BoundingBox{T}(box::BoundingBox{T}) where {T} = box

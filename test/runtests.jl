@@ -434,7 +434,8 @@ end
 
     @testset "BoundingBoxes ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests
-        @test TwoDimensional.BoundingBox2D{Float32} === BoundingBox{Float32}
+        @test TwoDimensional.BoundingBox2D{T} === BoundingBox{T}
+        @test isempty(@inferred(BoundingBox{T}()))
         start, stop = (-1, 2), (3, 4)
         @assert start[1] < stop[1] && start[2] < stop[2] # this is assumed by the tests
         box = @inferred BoundingBox(T.(start), T.(stop))
