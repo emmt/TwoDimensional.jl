@@ -362,9 +362,9 @@ end
         @test coord_type(poly) === coord_type(typeof(poly)) === T
         @test eltype(poly) === eltype(typeof(poly)) === Point{T}
         @test vec(poly) == collect(map(Point{T}, pnts))
-        @test vec(poly) === TwoDimensional.elements(poly)
-        @test vec(poly) === TwoDimensional.vertices(poly)
-        @test poly === Polygon(vec(poly))
+        @test values(poly) === TwoDimensional.elements(poly)
+        @test values(poly) === TwoDimensional.vertices(poly)
+        @test poly === Polygon(values(poly))
         @test length(poly) === length(pnts)
         @test firstindex(poly) === 1
         @test lastindex(poly) === length(pnts)
@@ -372,17 +372,18 @@ end
         @test size(poly) === (length(poly),)
         @test axes(poly) == (firstindex(poly):lastindex(poly),)
         @test keys(poly) === eachindex(poly)
-        @test values(poly) === vec(poly)
+        @test (values(poly) === vec(poly)) == isa(values(poly), AbstractVector)
+        @test (values(poly) === Tuple(poly)) == isa(values(poly), Tuple)
         @test Base.IteratorSize(poly) === Base.IteratorSize(typeof(poly)) === Base.HasLength()
         @test Base.IteratorEltype(poly) === Base.IteratorEltype(typeof(poly)) === Base.HasEltype()
         @test_throws BoundsError poly[firstindex(poly) - 1]
         @test_throws BoundsError poly[lastindex(poly) + 1]
         @test Set(Base.propertynames(poly)) == Set((:vertices,))
-        @test poly.vertices === vec(poly)
+        @test poly.vertices === values(poly)
         @test_throws KeyError poly.non_existing_property
         @test occursin(r"^Polygon\b", string(poly))
         let arr = @inferred(collect(poly)),
-            tup = (vec(poly)...,),
+            tup = (values(poly)...,),
             arr_xy = map(p -> (p.x, p.y), vec(poly)),
             arr_xy_mix = map(p -> (p.x, Float64(p.y)), vec(poly))
             # Same values but not same object.
@@ -744,10 +745,10 @@ end
             @test pnt - obj === @inferred Rectangle(pnt - first(obj), pnt - last(obj))
             @test pnt - obj === @inferred Rectangle((pnt.x - obj.x0, pnt.y - obj.y0), (pnt.x - obj.x1, pnt.y - obj.y1))
         elseif obj isa Polygon
-            @test obj + pnt == @inferred Polygon(map(vertex -> vertex + pnt, vec(obj)))
-            @test pnt + obj == @inferred Polygon(map(vertex -> pnt + vertex, vec(obj)))
-            @test obj - pnt == @inferred Polygon(map(vertex -> vertex - pnt, vec(obj)))
-            @test pnt - obj == @inferred Polygon(map(vertex -> pnt - vertex, vec(obj)))
+            @test obj + pnt == @inferred Polygon(map(vertex -> vertex + pnt, values(obj)))
+            @test pnt + obj == @inferred Polygon(map(vertex -> pnt + vertex, values(obj)))
+            @test obj - pnt == @inferred Polygon(map(vertex -> vertex - pnt, values(obj)))
+            @test pnt - obj == @inferred Polygon(map(vertex -> pnt - vertex, values(obj)))
         elseif obj isa BoundingBox
             @test obj + pnt === @inferred BoundingBox(first(obj) + pnt, last(obj) + pnt)
             @test obj + pnt === @inferred BoundingBox((obj.xmin + pnt.x, obj.ymin + pnt.y), (obj.xmax + pnt.x, obj.ymax + pnt.y))

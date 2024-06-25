@@ -17,16 +17,19 @@ elements, the `Base.getindex` method to directly index among these elements, and
 """
 elements(pnt::Point) = getfield(pnt, 1)
 elements(rect::Rectangle) = getfield(rect, 1)
-elements(poly::Polygon) = vec(poly)
+elements(poly::Polygon) = getfield(poly, 1)
 elements(circ::Circle) = (center(circ), radius(circ))
 elements(box::BoundingBox) = getfield(box, 1)
-elements(msk::MaskElement) = elements(shape(msk))
+elements(elem::MaskElement) = elements(shape(elem))
 elements(msk::Mask) = getfield(msk, 1)
 
 # Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
 Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = elements(obj)
 @inline @propagate_inbounds Base.getindex(obj::Union{Point,Rectangle,BoundingBox}, i::Integer) =
     getindex(elements(obj), as(Int, i))
+
+Base.Tuple(obj::Polygon) = Tuple(elements(obj))
+Base.Tuple(obj::Mask) = Tuple(elements(obj))
 
 """
     TwoDimensional.apply(f, obj)
@@ -42,7 +45,7 @@ See also [`TwoDimensional.elements`](@ref) and [`TwoDimensional.VertexBasedObjec
 """
 @inline apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
 @inline apply(f, rect::Rectangle) = Rectangle(f(rect[1]), f(rect[2]))
-@inline apply(f, poly::Polygon) = Polygon(map(f, vec(poly)))
+@inline apply(f, poly::Polygon) = Polygon(map(f, elements(poly)))
 @inline apply(f, box::BoundingBox; swap::Bool = false) =
     BoundingBox(f(box[swap ? 2 : 1]), f(box[swap ? 1 : 2]))
 @inline apply(f, elem::MaskElement) =
@@ -74,8 +77,8 @@ half(x) = x/twice(one(x))
 """
     TwoDimensional.shape(obj)
 
-yields the elementary geometric object defining the shape of `obj`.
-The result is `obj` itself if it is an elementary geometric object.
+yields the elementary geometric object defining the shape of `obj`. The result is `obj`
+itself if it is an elementary geometric object.
 
 """
 shape(obj::MaskElement) = obj.shape
@@ -84,12 +87,12 @@ shape(obj::ShapeElement) = obj
 """
     TwoDimensional.vertices(obj)
 
-yields the vertices defining the vertex-based graphical object `obj`. The
-result is a tuple or a vector of points.
+yields the vertices defining the vertex-based graphical object `obj`. The result is a
+tuple or a vector of points.
 
 """
 vertices(msk::Union{RectangularMask,PolygonalMask}) = vertices(shape(msk))
-vertices(poly::Polygon) = vec(poly)
+vertices(poly::Polygon) = elements(poly)
 vertices(pnt::Point) = (pnt,)
 function vertices(rect::Rectangle)
     (x0, y0), (x1, y1) = rect

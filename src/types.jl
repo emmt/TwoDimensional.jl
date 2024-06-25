@@ -28,9 +28,9 @@ const List{T} = Union{Tuple{Vararg{T}},AbstractVector{T}}
     TwoDimensional.GeometricObject{T}
 
 is the super-type of geometric objects whose coordinates are of type `T`. Most
-computations assume that `T` is floating-point (possibly with units).
-Coordinate type `T` of a geometric object `obj` can be retrieved with
-[`TwoDimensional.coord_type(obj)`](@ref `TwoDimensional.coord_type).
+computations assume that `T` is floating-point (possibly with units). Coordinate type `T`
+of a geometric object `obj` can be retrieved with [`TwoDimensional.coord_type(obj)`](@ref
+`TwoDimensional.coord_type).
 
 """
 abstract type GeometricObject{T} end
@@ -110,7 +110,7 @@ struct Circle{T} <: ShapeElement{T}
 end
 
 struct Rectangle{T} <: ShapeElement{T}
-    vec::NTuple{2,Point{T}} # Point(x0, y0), Point(x1, y1)
+    corners::NTuple{2,Point{T}} # Point(x0, y0), Point(x1, y1)
     function Rectangle{T}(start::Point{T}, stop::Point{T}) where {T}
         # The coordinates are ordered.
         x0, x1 = minmax(start.x, stop.x)
@@ -119,9 +119,9 @@ struct Rectangle{T} <: ShapeElement{T}
     end
 end
 
-struct Polygon{T,V<:AbstractVector{Point{T}}} <: ShapeElement{T}
+struct Polygon{T,V<:List{Point{T}}} <: ShapeElement{T}
     vertices::V
-    function Polygon{T}(vertices::V) where {T,V<:AbstractVector{<:Point{T}}}
+    function Polygon{T}(vertices::V) where {T,V<:List{Point{T}}}
         len = length(vertices)
         len ≥ 3 || throw_insufficent_number_of_polygon_vertices(len)
         isconcretetype(T) || throw(ArgumentError("coordinate type must be concrete"))

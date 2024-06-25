@@ -6,7 +6,7 @@ Base.:(==)(a::Rectangle, b::Rectangle) =
 Base.:(==)(a::Circle, b::Circle) =
     radius(a) == radius(b) && center(a) == center(b)
 Base.:(==)(a::Polygon, b::Polygon) =
-    vec(a) === vec(b) || vec(a) == vec(b)
+    elements(a) === elements(b) || elements(a) == elements(b)
 Base.:(==)(a::BoundingBox, b::BoundingBox) =
     isempty(a) ? isempty(b) : ((first(a) == first(b)) & (last(a) == last(b)))
 
@@ -18,7 +18,7 @@ Base.isapprox(a::Rectangle, b::Rectangle; kwds...) =
 Base.isapprox(a::Circle, b::Circle; kwds...) =
     isapprox(radius(a), radius(b); kwds...) && isapprox(center(a), center(b); kwds...)
 Base.isapprox(a::Polygon, b::Polygon; kwds...) =
-    vec(a) === vec(b) || isapprox(vec(a), vec(b); kwds...)
+    elements(a) === elements(b) || isapprox(elements(a), elements(b); kwds...)
 Base.isapprox(a::BoundingBox, b::BoundingBox; kwds...) =
     isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
 
@@ -38,7 +38,7 @@ Base.in(pnt::Point, poly::Polygon) =
     # FIXME: Converting to the same coordinate type has some cost...
     in(promote_coord_type(pnt, poly)...)
 Base.in(pnt::Point{T}, poly::Polygon{T}) where {T} =
-    winding_number_test(pnt, vec(poly))
+    winding_number_test(pnt, elements(poly))
 
 # Extend ⊆ operator.
 Base.issubset(obj::GeometricObject, msk::MaskElement) = obj ⊆ shape(msk)

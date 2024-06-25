@@ -2,14 +2,15 @@
     poly = Polygon{T}(pnts...)
     poly = Polygon{T}(pnts)
 
-construct a polygon with vertices given by point-like objects `pnts...` or
-vector or tuple of point-like objects `pnts`. Parameter `T` is the type used to
-store coordinates, if omitted, a common coordinate type is automatically
-inferred.
+construct a polygon with vertices given by point-like objects `pnts...` or vector or tuple
+of point-like objects `pnts`. Parameter `T` is the type used to store coordinates, if
+omitted, a common coordinate type is automatically inferred.
 
-The method `vec(poly)` yields the vector backing the storage of the vertices of
-the polygon. Call `collect(poly)` or `copy(vec(poly))` to make an independent
-copy of the vector of vertices.
+The vertices of a polygon may be stored as a tuple or as a vector. Call `values(poly)` to
+get the object backing the storage of the vertices of the polygon `poly`. The method
+`Tuple(poly)` yields a tuple of the vertices of `poly`. The method `vec(poly)` yields a
+vector of the vertices of the polygon which may be shared with `poly`. Call
+`collect(poly)` to make an independent copy of the vector of vertices.
 
 Vertices are directly accessible by indexing the polygon object:
 
@@ -19,15 +20,20 @@ Vertices are directly accessible by indexing the polygon object:
     poly[i]          # i-th vertex (a point)
     first(poly)      # first vertex
     last(poly)       # last vertex
+    values(poly)     # vertices stored by `poly`
     vec(poly)        # vector of vertices
+    Vector(poly)     # vector of vertices
+    Tuple(poly)      # tuple of vertices
 
 See also [`Point`](@ref TwoDimensional.Point), [`TwoDimensional.vertices`](@ref
 TwoDimensional.vertices), and [`BoundingBox`](@ref TwoDimensional.BoundingBox).
 
 """
-Polygon(vertices::AbstractVector{<:Point{T}}) where {T} = Polygon{T}(vertices)
-Polygon{T}(vertices::AbstractVector{<:Point}) where {T} =
-    Polygon{T}(convert(AbstractVector{Point{T}}, vertices))
+Polygon(vertices::List{Point{T}}) where {T} = Polygon{T}(vertices)
+
+Polygon{T}(vertices::List{<:Point}) where {T} =
+    Polygon{T}(map(Fix1(convert_coord_type, T), vertices))
+
 
 # Build a polygon from an homogeneous tuple/vector of point-like objects.
 for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
@@ -38,15 +44,19 @@ for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
             T = coord_type(point_type(pnts))
             return Polygon{T}(pnts)
         end
-        function Polygon{T}(pnts::List{<:$type}) where {T}
+        function Polygon{T}(pnts::AbstractVector{<:$type}) where {T}
             # Check length before conversion.
-            len = length(pnts)
-            len ≥ 3 || throw_insufficent_number_of_polygon_vertices(len)
-            v = Vector{Point{T}}(undef, len)
+            length(pnts) ≥ 3 || throw_insufficent_number_of_polygon_vertices(length(pnts))
+            v = similar(pnts, Point{T})
             for (i, xy) in enumerate(pnts)
                 v[i] = xy
             end
             return Polygon{T}(v)
+        end
+        function Polygon{T}(pnts::NTuple{N,$type}) where {T,N}
+            # Check length before conversion.
+            N ≥ 3 || throw_insufficent_number_of_polygon_vertices(N)
+            return Polygon{T}(map(Point{T}, pnts))
         end
     end
 end
@@ -65,19 +75,21 @@ Polygon(box::BoundingBox) =
 # Convert/copy constructors.
 Polygon(poly::Polygon) = poly
 Polygon{T}(poly::Polygon{T}) where {T} = poly
-Polygon{T}(poly::Polygon) where {T} = Polygon{T}(map(Fix1(convert_coord_type, T), vec(poly)))
+Polygon{T}(poly::Polygon) where {T} = Polygon{T}(map(Fix1(convert_coord_type, T), elements(poly)))
 Base.convert(::Type{T}, poly::T) where {T<:Polygon} = poly
 Base.convert(::Type{T}, obj::PolygonLike) where {T<:Polygon} = T(obj)
 
 # Make rectangles indexable iterators.
-Base.length(        poly::Polygon) = length(vec(poly))
-Base.size(          poly::Polygon) = size(vec(poly))
-Base.axes(          poly::Polygon) = axes(vec(poly))
-Base.firstindex(    poly::Polygon) = firstindex(vec(poly))
-Base.lastindex(     poly::Polygon) = lastindex(vec(poly))
+Base.length(        poly::Polygon) = length(elements(poly))
+Base.size(          poly::Polygon{<:Any,<:AbstractVector}) = size(elements(poly))
+Base.axes(          poly::Polygon{<:Any,<:AbstractVector}) = axes(elements(poly))
+Base.size(          poly::Polygon{<:Any,<:Tuple}) = (length(poly),)
+Base.axes(          poly::Polygon{<:Any,<:Tuple}) = (Base.OneTo(length(poly)),)
+Base.firstindex(    poly::Polygon) = firstindex(elements(poly))
+Base.lastindex(     poly::Polygon) = lastindex(elements(poly))
 Base.eachindex(     poly::Polygon) = keys(poly)
-Base.keys(          poly::Polygon) = eachindex(vec(poly))
-Base.values(        poly::Polygon) = vec(poly)
+Base.keys(          poly::Polygon) = eachindex(elements(poly))
+Base.values(        poly::Polygon) = elements(poly)
 Base.first(         poly::Polygon) = poly[firstindex(poly)]
 Base.last(          poly::Polygon) = poly[lastindex(poly)]
 Base.eltype(        poly::Polygon) = eltype(typeof(poly))
@@ -86,25 +98,23 @@ Base.IteratorEltype(poly::Polygon) = IteratorEltype(typeof(poly))
 Base.eltype(        ::Type{<:Polygon{T}}) where {T} = Point{T}
 Base.IteratorSize(  ::Type{<:Polygon}) = HasLength()
 Base.IteratorEltype(::Type{<:Polygon}) = HasEltype()
-@inline function Base.getindex(poly::Polygon, i::Integer)
+@inline Base.getindex(A::Polygon{<:Any,<:Tuple}, i::Integer) = getindex(elements(A), i)
+@inline function Base.getindex(A::Polygon{<:Any,<:AbstractVector}, i::Integer)
     i = as(Int, i)
-    v = vec(poly)
-    @boundscheck checkbounds(v, i)
-    r = @inbounds getindex(v, i)
-    return r
+    @boundscheck checkbounds(elements(A), i)
+    return @inbounds getindex(elements(A), i)
 end
-@inline function Base.setindex!(poly::Polygon, x::PointLike, i::Integer)
+@inline function Base.setindex!(A::Polygon{<:Any,<:AbstractVector}, x, i::Integer)
     i = as(Int, i)
-    v = vec(poly)
-    @boundscheck checkbounds(v, i)
-    @inbounds setindex!(v, x, i)
-    return poly
+    @boundscheck checkbounds(elements(A), i)
+    @inbounds setindex!(elements(A), x, i)
+    return A
 end
 
 # Properties of polygons.
 Base.propertynames(::Polygon) = (:vertices,)
 Base.getproperty(poly::Polygon, key::Symbol) =
-    key === :vertices ? vec(poly) : throw(KeyError(key))
+    key === :vertices ? elements(poly) : throw(KeyError(key))
 
 function Base.show(io::IO, poly::Polygon{T,V}) where {T,V}
     print(io, "Polygon{", T, ",", V, "}((")
@@ -123,14 +133,25 @@ end
 """
     vec(poly::TwoDimensional.Polygon)
 
-yields the vector backing the storage of the vertices of the polygon `poly`.
+yields a vector of the vertices of the polygon `poly`.
 
-Call `collect(poly)` or `copy(vec(poly))` to make an independent copy of the
-vector of vertices.
+Call `collect(poly)` to make an independent copy of the vector of vertices.
 
 """
-Base.vec(poly::Polygon) = getfield(poly, 1)
-Base.collect(poly::Polygon) = copy(vec(poly))
+Base.vec(poly::Polygon{<:Any,<:AbstractVector}) = elements(poly)
+function Base.vec(poly::Polygon)
+    src = elements(poly)
+    dst = Vector{eltype(src)}(undef, length(src))
+    @inbounds for (i, x) in enumerate(src)
+        dst[i] = x
+    end
+    return x
+end
+
+Base.Vector(poly::Polygon{<:Any,<:Union{Tuple,Vector}}) = vec(poly)
+
+Base.collect(poly::Polygon{<:Any,<:AbstractVector}) = copy(elements(poly))
+Base.collect(poly::Polygon) = Vector(poly)
 
 """
     TwoDimensional.geometric_properties(poly) -> prop
