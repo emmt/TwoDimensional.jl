@@ -167,17 +167,17 @@ of objects:
     mapreduce(BoundingBox, ∩, [obj1, obj2, obj3, ...])
 
 """
-BoundingBox(obj::GeometricObject{T}) where {T} = BoundingBox{T}(obj)
-BoundingBox{T}(obj::MaskElement) where {T} = BoundingBox{T}(shape(obj))
-BoundingBox{T}(pnt::Point) where {T} = BoundingBox{T}(pnt, pnt)
-BoundingBox{T}(rect::Rectangle) where {T} = BoundingBox{T}(first(rect), last(rect))
-function BoundingBox{T}(circ::Circle) where {T}
+BoundingBox{T}(obj::GeometricObjectLike) where {T} = convert(BoundingBox{T}, BoundingBox(obj))
+BoundingBox(obj::MaskElement) = BoundingBox(shape(obj))
+BoundingBox(pnt::Point) = BoundingBox(pnt, pnt)
+BoundingBox(rect::Rectangle) = BoundingBox(first(rect), last(rect))
+function BoundingBox(circ::Circle)
     c = center(circ)
     r = radius(circ)
     s = Point(r, r)
-    return BoundingBox{T}(c - s, c + s)
+    return BoundingBox(c - s, c + s)
 end
-function BoundingBox{T}(poly::Polygon) where {T}
+function BoundingBox(poly::Polygon)
     xmin = ymin = typemax(coord_type(poly))
     xmax = ymax = typemin(coord_type(poly))
     @inbounds for i in eachindex(poly)
@@ -187,8 +187,10 @@ function BoundingBox{T}(poly::Polygon) where {T}
         ymin = min(ymin, y)
         ymax = max(ymax, y)
     end
-    return BoundingBox{T}((xmin, ymin), (xmax, ymax))
+    return BoundingBox((xmin, ymin), (xmax, ymax))
 end
+BoundingBox(msk::Mask{T}) where {T} =
+    mapreduce(BoundingBox, ∪, elements(msk); init=BoundingBox{T}())
 
 """
     BoundingBox(f, A::AbstractMatrix)
