@@ -289,6 +289,8 @@ Keywords `opaque` and `transparent` can be used to specify the values of the the
 respectively opaque and transparent parts of the mask. Values of partially
 opaque/transparent parts will be interpolated between these.
 
+Keyword `multithreading` specifies whether to use multiple threads for the computations.
+
 Example to forge a mask representing the primary mirror of a telescope with its spider
 arms:
 
@@ -368,7 +370,8 @@ function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
                      msk::Mask;
                      antialiasing::Integer = default_antialiasing,
                      opaque = zero(eltype(dst)),
-                     transparent = oneunit(eltype(dst)))
+                     transparent = oneunit(eltype(dst)),
+                     multithreading::Bool = false #= FIXME Threads.nthreads() > 1 =#)
     # Check that coordinate units are compatible and determine a suitable unit for all
     # coordinates.
     T = float(promote_type(eltype(X), eltype(Y), coord_type(msk)))
@@ -385,7 +388,8 @@ function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
     return unsafe_forge_mask!(dst, convert_eltype(T, X), convert_eltype(T, Y),
                               convert_coord_type(T, msk);
                               antialiasing = antialiasing, opaque = opaque,
-                              transparent = transparent)
+                              transparent = transparent,
+                              multithreading = multithreading)
 end
 
 function unsafe_forge_mask!(dst::AbstractMatrix{V},
@@ -394,7 +398,8 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
                             msk::Mask{T};
                             antialiasing::Int,
                             opaque::V,
-                            transparent::V) where {T,V}
+                            transparent::V,
+                            multithreading::Bool) where {T,V}
     partial = interpolate(opaque, transparent, 1//2)
     δx = grid_step(X)
     δy = grid_step(Y)
@@ -415,20 +420,45 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
         I, J = axes(dst)
         DX = subrange(antialiasing, δx)
         DY = subrange(antialiasing, δy)
-        state = Array{Bool}(undef, antialiasing, antialiasing)
-        @inbounds for j in J
-            y = Y[j]
-            for i in I
-                if dst[i,j] == partial
+        if multithreading && Threads.nthreads() > 1
+            states = [Array{Bool}(undef, antialiasing, antialiasing) for k in 1:Threads.nthreads()]
+            values = [Array{Tuple{Int,V}}(undef, 0) for k in 1:Threads.nthreads()]
+            R = CartesianIndices(dst)
+            # In the multi-threaded phase, only read `dst`.
+            Threads.@threads for i in eachindex(dst)
+                if dst[i] == partial
                     # Cell is partially opaque/transparent.
-                    x = X[i]
+                    k = Threads.threadid()
+                    state = states[k]
+                    value = values[k]
+                    I = R[i]
+                    x, y = X[I[1]], Y[I[2]]
                     count = -1 # to trigger resetting of state array
                     for obj in msk
                         count = unsafe_forge_mask!(state, x, DX, y, DY, obj, count)
                     end
-                    #@assert max(count, 0) == Base.count(state)
-                    fraction = max(count, 0)//antialiasing^2
-                    dst[i,j] = interpolate(opaque, transparent, fraction)
+                    v = interpolate(opaque, transparent, max(count, 0)//antialiasing^2)
+                    push!(value, (i, v))
+                end
+            end
+            # Override, coarse partial opaque values in `dst` by refined values computed
+            # by the threads.
+            for k in eachindex(values)
+                for (i, v) in values[k]
+                    dst[i] = v
+                end
+            end
+        else
+            state = Array{Bool}(undef, antialiasing, antialiasing)
+            @inbounds for i in CartesianIndices(dst)
+                if dst[i] == partial
+                    # Cell is partially opaque/transparent.
+                    x, y = X[i[1]], Y[i[2]]
+                    count = -1 # to trigger resetting of state array
+                    for obj in msk
+                        count = unsafe_forge_mask!(state, x, DX, y, DY, obj, count)
+                    end
+                    dst[i] = interpolate(opaque, transparent, max(count, 0)//antialiasing^2)
                 end
             end
         end
