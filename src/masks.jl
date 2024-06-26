@@ -521,48 +521,68 @@ function unsafe_forge_mask!(state::AbstractMatrix{Bool},
                             y0::T, dy::AbstractVector{T},
                             obj::MaskElement{T},
                             count::Int) where {T}
-    # FIXME: Skip all this if pixel is outside boundaries.
-    I, J = axes(state)
-    if count < 0
-        # This is the first mask applied to this cell.
-        count = 0
-        @inbounds for j in J
-            y = y0 + dy[j]
-            for i in I
-                x = x0 + dx[i]
-                inside = Overlap(Point(x,y), obj) != OUTSIDE
-                transp = xor(inside, is_opaque(obj))
-                state[i,j] = transp
-                count += transp
+    # Operation can be much faster if cell is fully outside object boundaries. For complex
+    # shaped object, it is cheaper to check whether the cell is outside the bounding-box
+    # of the object.
+    box = BoundingBox(obj)
+    if (box.xmax < x0 + first(dx) || box.xmin > x0 + last(dx) ||
+        box.ymax < y0 + first(dy) || box.ymin > y0 + last(dy))
+        # The cell is outside the bounding-box of the mask element. The mask element has
+        # thus no indicence unless it is the first of the stack.
+        if count < 0
+            # This is the first mask element applied to this cell.
+            if is_opaque(obj)
+                fill!(state, true)
+                count = length(state)
+            else
+                fill!(state, false)
+                count = 0
             end
         end
-    elseif is_opaque(obj)
-        @inbounds for j in J
-            y = y0 + dy[j]
-            for i in I
-                x = x0 + dx[i]
-                if Overlap(Point(x,y), obj) != OUTSIDE
-                    # Point is considered as being inside boundaries of opaque
-                    # mask.
-                    if state[i,j]
-                        # Sub-cell previously counted as transparent.
-                        state[i,j] = false
-                        count -= 1
+    else
+        # The cell may overlap the boundaries of the object.
+        I, J = axes(state)
+        if count < 0
+            # This is the first mask element applied to this cell.
+            count = 0
+            @inbounds for j in J
+                y = y0 + dy[j]
+                for i in I
+                    x = x0 + dx[i]
+                    inside = Overlap(Point(x,y), obj) != OUTSIDE
+                    transp = xor(inside, is_opaque(obj))
+                    state[i,j] = transp
+                    count += transp
+                end
+            end
+        elseif is_opaque(obj)
+            @inbounds for j in J
+                y = y0 + dy[j]
+                for i in I
+                    x = x0 + dx[i]
+                    if Overlap(Point(x,y), obj) != OUTSIDE
+                        # Point is considered as being inside boundaries of opaque
+                        # mask.
+                        if state[i,j]
+                            # Sub-cell previously counted as transparent.
+                            state[i,j] = false
+                            count -= 1
+                        end
                     end
                 end
             end
-        end
-    else # element is transparent
-        @inbounds for j in J
-            y = y0 + dy[j]
-            for i in I
-                x = x0 + dx[i]
-                if Overlap(Point(x,y), obj) != OUTSIDE
-                    # Point is considered as being inside boundaries of transparent mask.
-                    if !state[i,j]
-                        # Sub-cell previously considered as opaque.
-                        state[i,j] = true
-                        count += 1
+        else # element is transparent
+            @inbounds for j in J
+                y = y0 + dy[j]
+                for i in I
+                    x = x0 + dx[i]
+                    if Overlap(Point(x,y), obj) != OUTSIDE
+                        # Point is considered as being inside boundaries of transparent mask.
+                        if !state[i,j]
+                            # Sub-cell previously considered as opaque.
+                            state[i,j] = true
+                            count += 1
+                        end
                     end
                 end
             end
