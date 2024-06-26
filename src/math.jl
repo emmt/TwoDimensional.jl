@@ -1,14 +1,20 @@
 # Check for equality.
-Base.:(==)(a::Point, b::Point) =
+==(a::Point, b::Point) =
     (a.x == b.x) & (a.y == b.y)
-Base.:(==)(a::Rectangle, b::Rectangle) =
+==(a::Rectangle, b::Rectangle) =
     (first(a) == first(b)) & (last(a) == last(b))
-Base.:(==)(a::Circle, b::Circle) =
+==(a::Circle, b::Circle) =
     radius(a) == radius(b) && center(a) == center(b)
-Base.:(==)(a::Polygon, b::Polygon) =
-    elements(a) === elements(b) || elements(a) == elements(b)
-Base.:(==)(a::BoundingBox, b::BoundingBox) =
+==(a::BoundingBox, b::BoundingBox) =
     isempty(a) ? isempty(b) : ((first(a) == first(b)) & (last(a) == last(b)))
+==(a::Polygon, b::Polygon) = begin
+    a === b && return true
+    eachindex(b) == eachindex(a) || return false
+    @inbounds for i in eachindex(a)
+        a[i] == b[i] || return false
+    end
+    return true
+end
 
 # Check for approximate equality.
 Base.isapprox(a::Point, b::Point; kwds...) =

@@ -110,17 +110,6 @@ end
     return A
 end
 
-# Equality of polygons.
-function ==(A::Polygon, B::Polygon)
-    A === B && return true
-    I = eachindex(A)
-    eachindex(B) == I || return false
-    @inbounds for i in I
-        A[i] == B[i] || return false
-    end
-    return true
-end
-
 # Properties of polygons.
 Base.propertynames(::Polygon) = (:vertices,)
 Base.getproperty(poly::Polygon, key::Symbol) =
