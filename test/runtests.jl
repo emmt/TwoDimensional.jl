@@ -110,6 +110,14 @@ function naive_bounding_box(f::Function, A::AbstractMatrix)
 end
 
 @testset "TwoDimensional" begin
+    @testset "Miscellaneaous" begin
+        @test coord_type(Point) === Any
+        @test coord_type(BoundingBox) === Any
+        @test coord_type(Rectangle) === Any
+        @test coord_type(Circle) === Any
+        @test coord_type(Polygon) === Any
+        @test coord_type(Mask) === Any
+    end
     # Constructors.
     @testset "Points ($T)" for T in (Int16, Int, Float32)
         @assert !(T === Float64) # this is assumed by the tests

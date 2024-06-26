@@ -138,6 +138,7 @@ yields the coordinate type of a geometrical object or of its type.
 """
 coord_type(::GeometricObjectLike{T}) where {T} = T
 coord_type(::Type{<:GeometricObjectLike{T}}) where {T} = T
+coord_type(::Type{<:GeometricObjectLike}) = Any
 
 """
     coord_type(objs...) -> T
