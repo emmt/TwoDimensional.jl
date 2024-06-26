@@ -444,6 +444,7 @@ end
         @assert !(T === Float64) # this is assumed by the tests
         @test TwoDimensional.BoundingBox2D{T} === BoundingBox{T}
         @test isempty(@inferred(BoundingBox{T}()))
+        @test_throws ArgumentError BoundingBox()
         start, stop = (-1, 2), (3, 4)
         @assert start[1] < stop[1] && start[2] < stop[2] # this is assumed by the tests
         box = @inferred BoundingBox(T.(start), T.(stop))

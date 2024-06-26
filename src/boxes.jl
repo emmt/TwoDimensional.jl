@@ -10,6 +10,12 @@ coordinates, `(xmin,ymin)` and `(xmax,ymax)`, may be specified as points, as
 2-tuples, as 2-dimensional Cartesian indices, or by keywords. Parameter `T` is
 the type used to store coordinates, it may be omitted.
 
+Another possibility is:
+
+    BoundingBox{T}()
+
+to build an empty bounding-box for coordinate type `T`.
+
 Bounding-boxes have the following properties reflecting the keywords
 accepted by their constructor:
 
@@ -99,19 +105,15 @@ BoundingBox{T}(inds::CartesianIndices{2}) where {T} = BoundingBox{T}(first(inds)
         return T(start, stop)
     elseif is_nothing(start, stop) && is_something(xmin, ymin, xmax, ymax)
         return T((xmin, ymin), (xmax, ymax))
+    elseif coord_type(T) !== Any && is_nothing(start, stop, xmin, ymin, xmax, ymax)
+        a = zero(coord_type(T))
+        b = -oneunit(coord_type(T))
+        return T((a, a), (b, b))
     else
         throw(ArgumentError(
             "exclusively keywords `start` and `stop` or keywords `xmin`, `ymin`, `xmax`, and `ymax` must be specified"))
     end
 end
-
-"""
-    BoundingBox{T}()
-
-yields an empty bounding-box for coordinate type `T`.
-
-"""
-BoundingBox{T}() where {T} = BoundingBox((zero(T), zero(T)), (-oneunit(T), -oneunit(T)))
 
 # Convert/copy constructors.
 BoundingBox(box::BoundingBox) = box
