@@ -99,22 +99,26 @@ Base.intersect(A::BoundingBox, B::BoundingBox) =
 
 # Unary minus negates coordinates and should behave as multiplying by -1.
 -(a::GeometricObjectLike) = apply(-, a)
--(box::BoundingBox) = apply(-, box; swap = true)
--(circ::Circle) = Circle(-center(circ), radius(circ))
+-(a::BoundingBox) = apply(-, a; swap = true)
+-(a::Circle) = Circle(-center(a), radius(a))
 
 # Scaling of geometric objects and corresponding multiplicative identity.
 Base.one(obj::GeometricObjectLike) = one(typeof(obj))
 Base.one(::Type{<:GeometricObjectLike{T}}) where {T} = one(T)
 
+# NOTE Even though `T` seems to be unnecessary, do not remove `{T}... where {T}` for
+#      correct dispatching on Julia ≤ 1.4
 *(a::GeometricObjectLike, b::Number) = b*a
-*(a::Number, b::GeometricObjectLike) = apply(a, *, b)
-*(a::Number, b::BoundingBox) = apply(a, *, b; swap = a < zero(a))
-*(a::Number, b::Circle) = Circle(a*center(b), abs(a)*radius(b))
+*(a::Number, b::GeometricObject{T}    ) where {T} = apply(Fix1(*, a), b)
+*(a::Number, b::BoundingBox{T}        ) where {T} = apply(Fix1(*, a), b; swap = a < zero(a))
+*(a::Number, b::Circle{T}             ) where {T} = Circle(a*center(b), abs(a)*radius(b))
 
-\(a::Number, b::GeometricObjectLike) = b/a
-/(a::GeometricObjectLike, b::Number) = apply(a, /, b)
-/(a::BoundingBox, b::Number) = apply(a, /, b; swap = b < zero(b))
-/(a::Circle, b::Number) = Circle(center(a)/b, radius(a)/abs(b))
+# NOTE Even though `T` seems to be unnecessary, do not remove `{T}... where {T}` for
+#      correct dispatching on Julia ≤ 1.4
+/(a::GeometricObjectLike, b::Number) = b\a
+\(a::Number, b::GeometricObjectLike{T}) where {T} = apply(Fix1(\, a), b)
+\(a::Number, b::BoundingBox{T}        ) where {T} = apply(Fix1(\, a), b; swap = a < zero(a))
+\(a::Number, b::Circle{T}             ) where {T} = Circle(a\center(b), abs(a)\radius(b))
 
 # Move a geometric object by adding or subtracting a point and corresponding addtive
 # identity.
@@ -130,19 +134,19 @@ Base.zero(::Type{<:GeometricObjectLike{T}}) where {T} = Point(zero(T), zero(T))
 +(a::Point, b::GeometricObjectLike) = b + a
 
 +(a::GeometricObjectLike,    b::Point) = +(promote_coord_type(a, b)...)
-+(a::GeometricObjectLike{T}, b::Point{T}) where {T} = apply(a, +, b)
-+(a::BoundingBox{T},         b::Point{T}) where {T} = apply(a, +, b; swap = false)
++(a::GeometricObjectLike{T}, b::Point{T}) where {T} = apply(Fix2(+, b), a)
++(a::BoundingBox{T},         b::Point{T}) where {T} = apply(Fix2(+, b), a; swap = false)
 +(a::Circle{T},              b::Point{T}) where {T} = Circle(center(a) + b, radius(a))
 
 -(a::GeometricObjectLike,    b::Point) = -(promote_coord_type(a, b)...)
--(a::GeometricObjectLike{T}, b::Point{T}) where {T} = apply(a, -, b)
--(a::BoundingBox{T},         b::Point{T}) where {T} = apply(a, -, b; swap = false)
+-(a::GeometricObjectLike{T}, b::Point{T}) where {T} = apply(Fix2(-, b), a)
+-(a::BoundingBox{T},         b::Point{T}) where {T} = apply(Fix2(-, b), a; swap = false)
 -(a::Circle{T},              b::Point{T}) where {T} = Circle(center(a) - b, radius(a))
 
 -(a::Point,    b::GeometricObjectLike) = -(promote_coord_type(a, b)...)
--(a::Point{T}, b::GeometricObjectLike{T}) where {T} = apply(a, -, b)
--(a::Point{T}, b::BoundingBox{T}) where {T} = apply(a, -, b; swap = true)
--(a::Point{T}, b::Circle{T}) where {T} = Circle(a - center(b), radius(b))
+-(a::Point{T}, b::GeometricObjectLike{T}) where {T} = apply(Fix1(-, a), b)
+-(a::Point{T}, b::BoundingBox{T}        ) where {T} = apply(Fix1(-, a), b; swap = true)
+-(a::Point{T}, b::Circle{T}             ) where {T} = Circle(a - center(b), radius(b))
 
 # Performing a geometric operation on a mask amounts to performing the
 # operation on the embedded shape. Inverting a mask toggles its opacity.
