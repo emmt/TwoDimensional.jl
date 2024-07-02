@@ -116,30 +116,37 @@ end
 Base.show(io::IO, ::MIME"text/plain", obj::GeometricObject) = show(io, obj)
 
 """
-    coord_type(obj) -> T
+    coord_type(A) -> T
 
-yields the coordinate type of a geometrical object or of its type.
+yields the coordinate type of a geometrical object or of its type. With several arguments:
+
+    coord_type(A...) -> T
+
+or if single argument a tuple or a vector of geometrical objects, the promoted coordinate
+type is returned.
 
 """
 coord_type(::GeometricObjectLike{T}) where {T} = T
 coord_type(::Type{<:GeometricObjectLike{T}}) where {T} = T
 coord_type(::Type{<:GeometricObjectLike}) = Any
 
-"""
-    coord_type(objs...) -> T
+# Methods for zero or more than one argument.
+coord_type() = Union{}
+@inline coord_type(A, B...) = promote_type(coord_type(A), coord_type(B...))
 
-yields the promoted coordinate type of geometrical objects `objs...`. Argument may also be
-a tuple or a vector of geometrical objects.
+# Method for tuples or vectors of geometric objects.
+coord_type(A::Tuple) = coord_type(A...)
+coord_type(A::AbstractVector) = mapreduce(coord_type, promote_type, A; init=coord_type())
 
-"""
-coord_type(A::GeometricObjectLike...) = coord_type(A)
-coord_type(A::Tuple{}) = Union{}
+# Optimizations for multiple objects/types.
+coord_type(A::Vararg{GeometricObjectLike{T}}) where {T} = T
 coord_type(A::Tuple{Vararg{GeometricObjectLike{T}}}) where {T} = T
 coord_type(A::AbstractVector{<:GeometricObjectLike{T}}) where {T} = T
-coord_type(A::List{<:GeometricObjectLike}) = mapreduce(coord_type, promote_type, A; init=Union{})
 
-coord_type(A::DataType...) = coord_type(A)
-coord_type(A::Tuple{Vararg{DataType}}) = mapreduce(coord_type, promote_type, A; init=Union{})
+# Fallbacks for any objects and for errors.
+coord_type(A::Any) = coord_type(typeof(A))
+@noinline coord_type(T::DataType) =
+    throw(ArgumentError("objects of type `$T` have no definite coordinate type"))
 
 """
     promote_coord_type(objs...)
