@@ -1,4 +1,5 @@
 SOURCES = \
+    Project.toml \
     make.jl \
     src/xforms.md \
     src/boxes.md \
