@@ -371,7 +371,7 @@ function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
                      antialiasing::Integer = default_antialiasing,
                      opaque = zero(eltype(dst)),
                      transparent = oneunit(eltype(dst)),
-                     multithreading::Bool = false #= FIXME Threads.nthreads() > 1 =#)
+                     multithreading::Bool = Threads.nthreads() > 1)
     # Check that coordinate units are compatible and determine a suitable unit for all
     # coordinates.
     T = float(promote_type(eltype(X), eltype(Y), coord_type(msk)))
@@ -405,19 +405,20 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
     δy = grid_step(Y)
 
     # Determine whether a cell of the mask is fully or partially opaque or transparent.
-    initial = true
-    for obj in msk
-        unsafe_forge_mask!(dst, X, δx, Y, δy, obj, opaque, partial, transparent, initial)
-        initial = false
-    end
-    if initial
+    if isempty(msk)
         # No objects, assume mask is transparent.
         fill!(mask, transparent)
+    else
+        initial = true
+        for elem in msk
+            unsafe_coarse_transmission!(dst, X, δx, Y, δy, elem,
+                                        opaque, partial, transparent, initial)
+            initial = false
+        end
     end
 
     if antialiasing > 1
         # Refine mask at partially opaque cells.
-        I, J = axes(dst)
         DX = subrange(antialiasing, δx)
         DY = subrange(antialiasing, δy)
         if multithreading && Threads.nthreads() > 1
@@ -425,20 +426,14 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
             values = [Array{Tuple{Int,V}}(undef, 0) for k in 1:Threads.nthreads()]
             R = CartesianIndices(dst)
             # In the multi-threaded phase, only read `dst`.
-            Threads.@threads for i in eachindex(dst)
+            Threads.@threads for i in eachindex(IndexLinear(), dst)
                 if dst[i] == partial
                     # Cell is partially opaque/transparent.
-                    k = Threads.threadid()
-                    state = states[k]
-                    value = values[k]
-                    I = R[i]
-                    x, y = X[I[1]], Y[I[2]]
-                    count = -1 # to trigger resetting of state array
-                    for obj in msk
-                        count = unsafe_forge_mask!(state, x, DX, y, DY, obj, count)
+                    let k = Threads.threadid(), I = R[i], x = X[I[1]], y = Y[I[2]],
+                        v = unsafe_sampled_transmission!(states[k], x, DX, y, DY,
+                                                         msk, opaque, transparent)
+                        push!(values[k], (i, v))
                     end
-                    v = interpolate(opaque, transparent, max(count, 0)//antialiasing^2)
-                    push!(value, (i, v))
                 end
             end
             # Override, coarse partial opaque values in `dst` by refined values computed
@@ -454,11 +449,8 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
                 if dst[i] == partial
                     # Cell is partially opaque/transparent.
                     x, y = X[i[1]], Y[i[2]]
-                    count = -1 # to trigger resetting of state array
-                    for obj in msk
-                        count = unsafe_forge_mask!(state, x, DX, y, DY, obj, count)
-                    end
-                    dst[i] = interpolate(opaque, transparent, max(count, 0)//antialiasing^2)
+                    dst[i] = unsafe_sampled_transmission!(state, x, DX, y, DY,
+                                                          msk, opaque, transparent)
                 end
             end
         end
@@ -467,28 +459,55 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
     return dst
 end
 
-function unsafe_forge_mask!(dst::AbstractMatrix{V},
-                            X::AbstractVector{T}, δx::T,
-                            Y::AbstractVector{T}, δy::T,
-                            obj::MaskElement{T},
-                            opaque::V,
-                            partial::V,
-                            transparent::V,
-                            initial::Bool) where {T,V}
+"""
+    TwoDimensional.unsafe_coarse_transmission!(dst, X, δx, Y, δy, elem,
+                                               opaque, partial, transparent, initial)
+
+updates 2-dimensional array `dst` with a coarse estimation of the transmission due to mask
+element `elem`. `X` and `Y` give the coordinates of `dst` along its dimensions with
+respective steps `δx` and `δy`. `opaque`, `partial`, and `transparent` are the three
+possible values to store in `dst`. `initial` indicates whether `elem` is the first of the
+mask elements.
+
+The function is *unsafe* because it assumes without checking that `dst` is indexed as `X`
+and `Y` along its first and second dimensions respectively.
+
+"""
+function unsafe_coarse_transmission!(dst::AbstractMatrix{V},
+                                     X::AbstractVector{T}, δx::T,
+                                     Y::AbstractVector{T}, δy::T,
+                                     elem::MaskElement{T},
+                                     opaque::V,
+                                     partial::V,
+                                     transparent::V,
+                                     initial::Bool) where {T,V}
     if initial
-        fill!(dst, is_opaque(obj) ? transparent : opaque)
+        fill!(dst, is_opaque(elem) ? transparent : opaque)
     end
-    return unsafe_forge_mask!(dst, X, δx, Y, δy, shape(obj),
-                              is_opaque(obj) ? opaque : transparent,
-                              partial)
+    return unsafe_coarse_transmission!(dst, X, δx, Y, δy, shape(elem),
+                                       is_opaque(elem) ? opaque : transparent,
+                                       partial)
 end
 
-function unsafe_forge_mask!(dst::AbstractMatrix{V},
-                            X::AbstractVector{T}, δx::T,
-                            Y::AbstractVector{T}, δy::T,
-                            obj::ShapeElement{T},
-                            value::V,
-                            partial::V) where {T,V}
+"""
+    TwoDimensional.unsafe_coarse_transmission!(dst, X, δx, Y, δy, obj, inside, partial)
+
+updates 2-dimensional array `dst` with a coarse estimation of the transmission due to
+geometrical shape object `obj`. `X` and `Y` give the coordinates of the cells of `dst`
+along its dimensions with respective steps `δx` and `δy`. `inside` is the transmission for
+cells fully inside the boundaries of `obj`, while `partial` is the transmission for cells
+overlapping the boundaries of `obj`. Cells fully outside `obj` are left unchanged.
+
+The function is *unsafe* because it assumes without checking that `dst` is indexed as `X`
+and `Y` along its first and second dimensions respectively.
+
+"""
+function unsafe_coarse_transmission!(dst::AbstractMatrix{V},
+                                     X::AbstractVector{T}, δx::T,
+                                     Y::AbstractVector{T}, δy::T,
+                                     obj::ShapeElement{T},
+                                     inside::V,
+                                     partial::V) where {T,V}
     box = grow(BoundingBox(obj), δx, δy)
     I, J = axes(dst)
     @inbounds for j in J
@@ -503,11 +522,11 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
                 # Cell is outside the bounding-box of the mask.
                 continue
             end
-            # FIXME We know that coordinates are in order...
+            # FIXME We know that coordinates are in order so constructor could be faster...
             cell = Rectangle((x - δx/2, y - δy/2), (x + δx/2, y + δy/2))
             overlap = Overlap(cell, obj)
             if overlap == INSIDE
-                dst[i,j] = value
+                dst[i,j] = inside
             elseif overlap == PARTIAL
                 dst[i,j] = partial
             end
@@ -516,72 +535,102 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
     return dst
 end
 
-function unsafe_forge_mask!(state::AbstractMatrix{Bool},
-                            x0::T, dx::AbstractVector{T},
-                            y0::T, dy::AbstractVector{T},
-                            obj::MaskElement{T},
-                            count::Int) where {T}
+"""
+    TwoDimensional.unsafe_sampled_transmission!(state, x, sx, y, sy,
+                                                msk, opaque, transparent) -> v
+
+yields the transmission due to the elements in mask `msk` for a rectangular cell centered
+at `(x,y)` by sampling the cell at offsets `sx` and `sy` along its dimensions. The
+returned value `v` is interpolated in the range `[opaque,transparent]` of transmissions
+from the fully opaque to the fully transparent parts of the mask.
+
+Argument `state` is a workspace array used to sample the transmission. The function
+is *unsafe* because it assumes without checking that `state` is indexed as `sx` and `sy`
+along its first and second dimensions respectively.
+
+"""
+function unsafe_sampled_transmission!(state::AbstractMatrix{Bool},
+                                      x::T, sx::AbstractVector{T},
+                                      y::T, sy::AbstractVector{T},
+                                      msk::Mask{T},
+                                      opaque::V, transparent::V) where {T,V}
+    X = x .+ sx
+    Y = y .+ sy
+    count = -1 # to trigger resetting of state array
+    for elem in msk
+        count = unsafe_sampled_transmission!(state, X, Y, elem, count)
+    end
+    return interpolate(opaque, transparent, max(count, 0)//length(state))
+end
+
+# Helper function to dispatch on the type of the mask element. Return the number of
+# transparent samples. `count` is initially set to a negative value.
+#@noinline
+function unsafe_sampled_transmission!(state::AbstractMatrix{Bool},
+                                      X::AbstractVector{T},
+                                      Y::AbstractVector{T},
+                                      obj::MaskElement{T},
+                                      count::Int) where {T}
     # Operation can be much faster if cell is fully outside object boundaries. For complex
     # shaped object, it is cheaper to check whether the cell is outside the bounding-box
     # of the object.
     box = BoundingBox(obj)
-    if (box.xmax < x0 + first(dx) || box.xmin > x0 + last(dx) ||
-        box.ymax < y0 + first(dy) || box.ymin > y0 + last(dy))
+    if box.xmax < first(X) || box.xmin > last(X) || box.ymax < first(Y) || box.ymin > last(Y)
         # The cell is outside the bounding-box of the mask element. The mask element has
         # thus no indicence unless it is the first of the stack.
-        if count < 0
+        if count < zero(count)
             # This is the first mask element applied to this cell.
             if is_opaque(obj)
                 fill!(state, true)
-                count = length(state)
+                count = oftype(count, length(state))
             else
                 fill!(state, false)
-                count = 0
+                count = zero(count)
             end
         end
     else
         # The cell may overlap the boundaries of the object.
         I, J = axes(state)
-        if count < 0
+        if count < zero(count)
             # This is the first mask element applied to this cell.
-            count = 0
+            count = zero(count)
             @inbounds for j in J
-                y = y0 + dy[j]
+                y = Y[j]
                 for i in I
-                    x = x0 + dx[i]
-                    inside = Overlap(Point(x,y), obj) != OUTSIDE
+                    x = X[i]
+                    inside = Overlap(Point(x, y), obj) != OUTSIDE
                     transp = xor(inside, is_opaque(obj))
                     state[i,j] = transp
-                    count += transp
+                    count += oftype(count, transp)
                 end
             end
         elseif is_opaque(obj)
             @inbounds for j in J
-                y = y0 + dy[j]
+                y = Y[j]
                 for i in I
-                    x = x0 + dx[i]
-                    if Overlap(Point(x,y), obj) != OUTSIDE
+                    x = X[i]
+                    if Overlap(Point(x, y), obj) != OUTSIDE
                         # Point is considered as being inside boundaries of opaque
                         # mask.
                         if state[i,j]
                             # Sub-cell previously counted as transparent.
                             state[i,j] = false
-                            count -= 1
+                            count -= oneunit(count)
                         end
                     end
                 end
             end
         else # element is transparent
             @inbounds for j in J
-                y = y0 + dy[j]
+                y = Y[j]
                 for i in I
-                    x = x0 + dx[i]
-                    if Overlap(Point(x,y), obj) != OUTSIDE
+                    x = X[i]
+                    if Overlap(Point(x, y), obj) != OUTSIDE
                         # Point is considered as being inside boundaries of transparent mask.
                         if !state[i,j]
                             # Sub-cell previously considered as opaque.
                             state[i,j] = true
-                            count += 1
+                            count += oneunit(count)
                         end
                     end
                 end
@@ -733,7 +782,7 @@ function Overlap(cell::Rectangle{T}, circle::Circle{T}) where {T}
     return OUTSIDE
 end
 
-# FIXME: A point can only inside or outside.
+# FIXME: A point can only be inside or outside.
 Overlap(point::Point, polygon::Polygon) = point ∈ polygon ? INSIDE : OUTSIDE
 
 # FIXME: Check that the following algorithm is correct for a cell having zero width or
