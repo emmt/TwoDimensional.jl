@@ -109,7 +109,7 @@ Base.one(::Type{<:GeometricObjectLike{T}}) where {T} = one(T)
 # NOTE Even though `T` seems to be unnecessary, do not remove `{T}... where {T}` for
 #      correct dispatching on Julia ≤ 1.4
 *(a::GeometricObjectLike, b::Number) = b*a
-*(a::Number, b::GeometricObject{T}    ) where {T} = apply(Fix1(*, a), b)
+*(a::Number, b::GeometricObjectLike{T}) where {T} = apply(Fix1(*, a), b)
 *(a::Number, b::BoundingBox{T}        ) where {T} = apply(Fix1(*, a), b; swap = a < zero(a))
 *(a::Number, b::Circle{T}             ) where {T} = Circle(a*center(b), abs(a)*radius(b))
 
