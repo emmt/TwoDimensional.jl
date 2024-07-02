@@ -565,7 +565,6 @@ end
 
 # Helper function to dispatch on the type of the mask element. Return the number of
 # transparent samples. `count` is initially set to a negative value.
-#@noinline
 function unsafe_sampled_transmission!(state::AbstractMatrix{Bool},
                                       X::AbstractVector{T},
                                       Y::AbstractVector{T},
