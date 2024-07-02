@@ -119,7 +119,7 @@ TwoDimensional.vertices
 Base.floor(::TwoDimensional.Point)
 Base.ceil(::TwoDimensional.Point)
 Base.round(::TwoDimensional.Point)
-Base.vec(::TwoDimensional.Polygon)
+Base.vec(::TwoDimensional.Polygon{<:Any,<:AbstractVector})
 ```
 
 ## Internal Methods and Types
