@@ -2,16 +2,17 @@
     TwoDimensional.Mask(elems...)
     TwoDimensional.Mask{T}(elems...)
 
-build a composite mask consisting in the ordered list of mask elements `elems...`. Optional
-type parameter `T` is the coordinate type of the masks elements. All arguments are
-converted as needed to have this coordinate type. If `T` is not specified, it is inferred
-by promoting the coordinate types of the mask elements.
+build a composite mask consisting in the ordered list of mask elements `elems...`.
+Optional type parameter `T` is the coordinate type of the masks elements. All mask
+elements are converted as needed to have this coordinate type. If `T` is not specified, it
+is inferred by promoting the coordinate types of the mask elements.
 
 A mask can be moved, scaled, rotated, etc., the coordinate type of its elements may be
 converted to another type.
 
 !!! warning
-    Masks with a large number of elements should be created with a vector of mask elements.
+    Masks with a large number of elements should preferably be created with a vector, not
+    a tuple, of mask elements.
 
 """
 Mask(elems::MaskElement...) = Mask(elems)
@@ -242,10 +243,10 @@ end
     TwoDimensional.forge_mask(A::AbstractMatrix, msk; kwds...)
     TwoDimensional.forge_mask(A::AbstractMatrix, objs...; kwds...)
 
-yield a 2-dimensional array whose entries given the transmission by the mask `msk` for the
-corresponding entry in `A`. The mask may also be specified by the list `objs...` of
-elementary mask objects. The coordinates of the mask are assumed to be given in fractional
-Cartesian indices for `A`.
+yield a 2-dimensional array with entries set to the transmission by the mask `msk` for an
+array-like `A`. The mask may also be specified by the list `objs...` of elementary mask
+objects. The coordinates of the mask are assumed to be given in fractional Cartesian
+indices for `A`.
 
 """
 forge_mask(A::AbstractMatrix, objs::MaskElement...; kwds...) = forge_mask(A, Mask(objs); kwds...)

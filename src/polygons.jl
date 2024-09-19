@@ -3,8 +3,8 @@
     poly = Polygon{T}(pnts)
 
 construct a polygon with vertices given by point-like objects `pnts...` or vector or tuple
-of point-like objects `pnts`. Parameter `T` is the type used to store coordinates, if
-omitted, a common coordinate type is automatically inferred.
+of point-like objects `pnts`. Parameter `T` is the type of coordinates, if omitted, a
+common coordinate type is automatically inferred.
 
 The vertices of a polygon may be stored as a tuple or as a vector. Call `values(poly)` to
 get the object backing the storage of the vertices of the polygon `poly`. The method
@@ -27,6 +27,10 @@ Vertices are directly accessible by indexing the polygon object:
 
 See also [`Point`](@ref TwoDimensional.Point), [`TwoDimensional.vertices`](@ref
 TwoDimensional.vertices), and [`BoundingBox`](@ref TwoDimensional.BoundingBox).
+
+!!! warning
+    Polygons with a large number of vertices should preferably be created using a vector,
+    not a tuple, of vertices.
 
 """
 Polygon(vertices::List{Point{T}}) where {T} = Polygon{T}(vertices)

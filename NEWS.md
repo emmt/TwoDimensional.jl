@@ -12,21 +12,26 @@ objects.
 - **Coordinate type:** Coordinates of geometric objects may be of any type implementing
   basic arithmetic operations and may thus have units.
 
-  - Method `coord_type` yields the type of the coordinates of a geometric object/type.
-    Method `convert_coord_type` converts the coordinate type of a geometric object/type.
-    Finally, method `promote_coord_type`, with a list of geometric types, yields the
-    promoted coordinates type and, with a list of geometric objects, yields the objects
-    promoted to the same coordinate type. Methods `convert_bare_type`,
-    `convert_real_type`, and `convert_floating_point_type` of the `TypeUtils` package have
-    been extended to convert the numerical type of the coordinates of graphical objects.
+  - Method `coord_type` yields the type of the coordinates of a geometric object/type or,
+    with a list of geometric objects/types, yields the promoted coordinates type of these
+    objects/types.
+
+  - Method `convert_coord_type` converts the coordinate type of a geometric object/type.
+
+  - Method `promote_coord_type` converts all its arguments to a common coordinate type and
+    return them as a tuple.
+
+  - Methods `convert_bare_type`, `convert_real_type`, and `convert_floating_point_type` of
+    the `TypeUtils` package have been extended to convert the numerical type of the
+    coordinates of graphical objects.
 
   - Method `float` may be called to convert the coordinate type of a geometric object/type
     to a floating-point type.
 
-  - For an object `obj` having homogeneous components (points are like 2-tuple of
-    coordinates, rectangles and boxes are like 2-tuple of points, polygons are like
-    vectors of points), `length(obj)` and `eltype(obj)` yield the number and the type of
-    these components.
+- For an object `obj` having homogeneous components (points are like 2-tuple of
+  coordinates, rectangles and boxes are like 2-tuple of points, polygons are like vectors
+  of points), `length(obj)` and `eltype(obj)` yield the number and the type of these
+  components.
 
 - New geometric object types `Rectangle`, `Circle`, and `Polygon`. Rectangles are similar
   to bounding-boxes except that they can never be empty (a rectangle contains at least a
