@@ -4,6 +4,10 @@
 
 - `forge_mask` can create output array given its element type and dimensions.
 
+- Array with offsets can be automatically built by `forge_mask` when the `OffsetArrays`
+  package is loaded.
+
+
 ## Version 0.5.0
 
 This version of `TwoDimensional` introduces new geometric object types (`Rectangle`,

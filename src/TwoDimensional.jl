@@ -71,4 +71,12 @@ include("winding.jl")
 include("math.jl")
 include("masks.jl")
 
+function __init__()
+    @static if !isdefined(Base, :get_extension)
+        # Extend methods when `OffsetArrays` package is loaded.
+        @require OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881" include(
+            "../ext/TwoDimensionalOffsetArraysExt.jl")
+    end
+end
+
 end # module TwoDimensional

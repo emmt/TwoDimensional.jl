@@ -254,19 +254,24 @@ forge_mask(A::AbstractMatrix, msk::Mask; kwds...) =
     forge_mask!(similar(A, floating_point_type(eltype(A))), msk; kwds...)
 
 """
-    TwoDimensional.forge_mask(T, dims, msk; kwds...)
-    TwoDimensional.forge_mask(T, dims, objs...; kwds...)
+    TwoDimensional.forge_mask(T, inds, msk; kwds...)
+    TwoDimensional.forge_mask(T, inds, objs...; kwds...)
 
-yield a 2-dimensional array with element type `T`, dimensions `dims`, and with entries set
-to the transmission by the mask `msk`. The mask may also be specified by the list
-`objs...` of elementary mask objects. The coordinates of the mask are assumed to be given
-in fractional Cartesian indices for an array of size `dims`.
+yield a 2-dimensional array with element type `T`, dimensions or indices `inds`, and with
+entries set to the transmission by the mask `msk`. The mask may also be specified by the
+list `objs...` of elementary mask objects. The coordinates of the mask are assumed to be
+given in fractional Cartesian indices for an array of size `dims`.
+
+!!! warning
+    The `OffsetArrays` package is required if `inds` contains index ranges other than
+    `Base.OneTo` instances.
 
 """
-forge_mask(::Type{T}, dims::Dims{2}, objs::MaskElement...; kwds...) where {T} =
-    forge_mask(T, dims, Mask(objs); kwds...)
-forge_mask(::Type{T}, dims::Dims{2}, msk::Mask; kwds...) where {T} =
-    forge_mask!(Array{T}(undef, dims), msk; kwds...)
+forge_mask(::Type{T}, inds::ArrayShape{2}, objs::MaskElement...; kwds...) where {T} =
+    forge_mask(T, inds, Mask(objs); kwds...)
+
+forge_mask(::Type{T}, inds::ArrayShape{2}, msk::Mask; kwds...) where {T} =
+    forge_mask(new_array(T, inds), msk; kwds...)
 
 """
     TwoDimensional.forge_mask([T,] X, Y, msk; kwds...) -> arr
@@ -351,9 +356,8 @@ forge_mask(X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) =
 forge_mask(X::AbstractVector{T}, Y::AbstractVector{T}, msk::Mask{T}; kwds...) where {T} =
     forge_mask(floating_point_type(T), X, Y, msk; kwds...)
 
-# NOTE: For offset-arrays, the in-place version `forge_mask!` must be used.
 forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) where {T} =
-    forge_mask!(Matrix{T}(undef, length(X), length(Y)), X, Y, msk; kwds...)
+    forge_mask!(new_array(T, Base.axes1(X), Base.axes1(Y)), X, Y, msk; kwds...)
 
 """
     TwoDimensional.forge_mask!(dst, [X, Y,] msk; kwds...) -> dst
