@@ -1,6 +1,7 @@
 # User visible changes in the `TwoDimensional` package
 
-- `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`.
+- `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`, to ensure that
+  the result is a common concrete type.
 
 - `forge_mask` can create output array given its element type and dimensions.
 
