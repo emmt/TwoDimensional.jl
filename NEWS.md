@@ -1,5 +1,7 @@
 # User visible changes in the `TwoDimensional` package
 
+## Version 0.5.1
+
 - `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`, to ensure that
   the result is a common concrete type.
 
