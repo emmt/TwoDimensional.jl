@@ -554,12 +554,16 @@ end
             @test Float64 === @inferred coord_type(typeof(pnt_f64))
             @test Int32   === @inferred coord_type(typeof(pnt_i16), typeof(rec_i32))
             @test Float32 === @inferred coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32))
-            @test Float64 === @inferred coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32), typeof(pnt_f64))
+            if VERSION < v"1.1" # inference does not work here for Julia versions older than 1.1
+                @test Float64 === coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32), typeof(pnt_f64))
+            else
+                @test Float64 === @inferred coord_type(typeof(pnt_i16), typeof(rec_i32), typeof(box_f32), typeof(pnt_f64))
+            end
             @test @inferred(promote_coord_type(pnt_i16)) === pnt_i16
             @test @inferred(promote_coord_type(rec_i32)) === rec_i32
             @test @inferred(promote_coord_type(box_f32)) === box_f32
             @test @inferred(promote_coord_type(pnt_f64)) === pnt_f64
-            if VERSION < v"1.8" # inference does not wokr here for Julia versions older than 1,8
+                if VERSION < v"1.8" # inference does not work here for Julia versions older than 1.8
                 @test promote_coord_type(pnt_i16, rec_i32) === (Point{Int32}(pnt_i16), rec_i32)
                 @test promote_coord_type(pnt_i16, rec_i32, box_f32) === (Point{Float32}(pnt_i16), Rectangle{Float32}(rec_i32), box_f32)
                 @test promote_coord_type(pnt_i16, rec_i32, box_f32, pnt_f64) === (Point{Float64}(pnt_i16), Rectangle{Float64}(rec_i32), BoundingBox{Float64}(box_f32), pnt_f64)
