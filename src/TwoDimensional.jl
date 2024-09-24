@@ -54,6 +54,10 @@ using Base: IteratorSize, SizeUnknown, HasLength, HasShape, IsInfinite
 using Base: IteratorEltype, EltypeUnknown, HasEltype
 using LinearAlgebra
 
+if !isdefined(Base, :get_extension)
+    using Requires
+end
+
 # Imports for extension.
 import Base: ==, +, -, *, ∘, /, \, inv
 import LinearAlgebra: ⋅, det
