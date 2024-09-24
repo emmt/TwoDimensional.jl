@@ -2,6 +2,8 @@
 
 - `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`.
 
+- `forge_mask` can create output array given its element type and dimensions.
+
 ## Version 0.5.0
 
 This version of `TwoDimensional` introduces new geometric object types (`Rectangle`,
