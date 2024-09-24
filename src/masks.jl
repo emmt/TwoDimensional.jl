@@ -401,7 +401,7 @@ function unsafe_forge_mask!(dst::AbstractMatrix{V},
                             opaque::V,
                             transparent::V,
                             multithreading::Bool) where {T,V}
-    partial = interpolate(opaque, transparent, 1//2)
+    partial = interpolate(V, opaque, transparent, 1//2)
     δx = grid_step(X)
     δy = grid_step(Y)
 
@@ -561,7 +561,7 @@ function unsafe_sampled_transmission!(state::AbstractMatrix{Bool},
     for elem in msk
         count = unsafe_sampled_transmission!(state, X, Y, elem, count)
     end
-    return interpolate(opaque, transparent, max(count, 0)//length(state))
+    return interpolate(V, opaque, transparent, max(count, 0)//length(state))
 end
 
 # Helper function to dispatch on the type of the mask element. Return the number of
@@ -691,6 +691,14 @@ Hence, if `f` is a real, then `f = 0` yields `a` while `f = 1` yields `b`.
 interpolate(a, b, f::Number) = interpolate(promote(a, b)..., f)
 interpolate(a::T, b::T, f::Real) where {T} = a + f*(b - a)
 interpolate(a::T, b::T, f::Number) where {T} = (oneunit(f) - f)*a + f*b
+
+"""
+    TwoDimensional.interpolate(T::Type, a, b, f) -> x::T
+
+yields the nearest value of type `T` to `interpolate(a,b,f)`.
+
+"""
+interpolate(::Type{T}, a, b, f) where {T<:Number} = nearest(T, interpolate(a, b, f))
 
 """
     TwoDimensional.Overlap(pxl, obj)

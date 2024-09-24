@@ -60,6 +60,16 @@ twice(x) = x + x
 half(x) = x/twice(one(x))
 
 """
+    TwoDimensional.nearest(T, x) -> y::T
+
+yields the nearest value of type `T` to `x`.
+
+"""
+nearest(::Type{T}, x::T) where {T<:Number} = x
+nearest(::Type{T}, x::Number) where {T<:Number} =
+    ((real_type(T) <: Integer) & !(real_type(x) <: Integer)) ? round(T, x) : as(T, x)
+
+"""
     TwoDimensional.shape(obj)
 
 yields the elementary geometric object defining the shape of `obj`. The result is `obj`
