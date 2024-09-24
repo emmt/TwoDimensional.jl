@@ -1,5 +1,7 @@
 # User visible changes in the `TwoDimensional` package
 
+- `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`.
+
 ## Version 0.5.0
 
 This version of `TwoDimensional` introduces new geometric object types (`Rectangle`,
