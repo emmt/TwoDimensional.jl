@@ -6,6 +6,8 @@ using TwoDimensional: get_axis_bounds
 using Test, LinearAlgebra, TypeUtils
 import Base.MathConstants: φ
 
+using Unitful
+
 struct NamedPoint{T} <: AbstractPoint{T}
     name::String
     x::T
