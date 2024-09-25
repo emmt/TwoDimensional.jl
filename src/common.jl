@@ -251,38 +251,3 @@ See also [`TwoDimensional.is_nothing`](@ref).
 """
 is_something(x) = !is_nothing(x)
 @inline is_something(x, y...) = is_something(x) && is_something(y...)
-
-"""
-    Unsupported(T::DataType...)
-
-yields an union of types `T...` and of type `Unsupported`. Such an union can be used to
-mark unsupported argument type(s) and yet define a method applicable with that type(s)
-(presumably a method that throws an instructive error) and which can be extended later
-with the same signature except that with `Unsupported(T...)` replaced by `T...`. This
-trick avoids conflicts that prevent pre-compilation with package extensions.
-
-For example, in the main package:
-
-```julia
-some_method(some_arg::Unsupported{SomeType}) =
-    error("package `SomeOtherPackage` has not yet been loaded")
-```
-
-and in the extension (e.g. automatically loaded when using `SomeOtherPackage`):
-
-```julia
-some_method(some_arg::SomeType) = do_something_with(some_arg)
-```
-
-"""
-struct Unsupported
-    Unsupported() = error("it is not possible to instanciate this type")
-end
-Unsupported(T::DataType...) = Union{T...,Unsupported}
-
-new_array(::Type{T}, inds::eltype(ArrayShape)...) where {T} = new_array(T, inds)
-new_array(::Type{T}, inds::ArrayShape{N}) where {T,N} = new_array(T, as_array_shape(inds))
-new_array(::Type{T}, rngs::NTuple{N,Base.OneTo}) where {T,N} = new_array(T, as_array_size(rngs))
-new_array(::Type{T}, dims::Dims{N}) where {T,N} = Array{T,N}(undef, dims)
-new_array(::Type{T}, rngs::Unsupported(ArrayAxes{N})) where {T,N} =
-    error("package `OffsetArrays` must be loaded for such array index ranges")
