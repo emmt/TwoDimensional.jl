@@ -160,7 +160,7 @@ end
         @test_throws BoundsError pnt[0]
         @test_throws BoundsError pnt[3]
         @test_throws KeyError pnt.vec
-        @test occursin(r"^Point\b", string(pnt))
+        @test occursin(r"\bPoint(2D)?\b", string(pnt))
         @test pnt === @inferred Point(map(T, xy))
         @test pnt === @inferred Point(pnt...)
         @test pnt === @inferred Point(Tuple(pnt)...)
@@ -246,7 +246,7 @@ end
         @test_throws BoundsError rec[0]
         @test_throws BoundsError rec[3]
         @test_throws KeyError rec.vec
-        @test occursin(r"^Rectangle\b", string(rec))
+        @test occursin(r"\bRectangle(2D)?\b", string(rec))
         @test rec === @inferred Rectangle(rec...)
         @test rec === @inferred Rectangle(Tuple(rec)...)
         @test rec === @inferred Rectangle(Tuple(rec))
@@ -335,7 +335,7 @@ end
         @test circ.diameter === diameter(circ) ≈ 2*circ.radius
         @test_throws MethodError circ[1]
         @test_throws KeyError circ.vec
-        @test occursin(r"^Circle\b", string(circ))
+        @test occursin(r"\bCircle(2D)?\b", string(circ))
         @test circ === @inferred Circle(circ...)
         @test circ === @inferred Circle(Tuple(circ)...)
         @test circ === @inferred Circle(Tuple(circ))
@@ -399,7 +399,7 @@ end
         @test Set(Base.propertynames(poly)) == Set((:vertices,))
         @test poly.vertices === values(poly)
         @test_throws KeyError poly.non_existing_property
-        @test occursin(r"^Polygon\b", string(poly))
+        @test occursin(r"\bPolygon(2D)?\b", string(poly))
         let arr = @inferred(collect(poly)),
             tup = (values(poly)...,),
             arr_xy = map(p -> (p.x, p.y), vec(poly)),
@@ -483,7 +483,7 @@ end
         @test_throws BoundsError box[0]
         @test_throws BoundsError box[3]
         @test_throws KeyError box.vec
-        @test occursin(r"^BoundingBox\b", string(box))
+        @test occursin(r"\bBoundingBox(2D)?\b", string(box))
         @test box === @inferred BoundingBox(box...)
         @test box === @inferred BoundingBox(Tuple(box)...)
         @test box === @inferred BoundingBox(Tuple(box))
@@ -1036,7 +1036,7 @@ end
 
         @testset "show" begin
             for M in (I, A, B, C)
-                @test occursin(r"\bAffineTransform\b", string(M))
+                @test occursin(r"\bAffineTransform(2D)?\b", string(M))
             end
         end
     end
