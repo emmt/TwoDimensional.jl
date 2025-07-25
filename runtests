@@ -1,12 +1,32 @@
 #! /usr/bin/bash
-exe=`realpath "$0"`
-dir=`dirname "$exe"`
+
+dir=`dirname "$0"`
 cd "$dir"
-for ver in 1.{0..11}; do
-    echo "############## julia-$ver"
+args=""
+while [ $# -gt 0 ]; do
+    if [ "$1" = "-h" -o "$1" = "--help" ]; then
+        prog=$(basename "$0")
+        echo "usage: $prog [-h|--help] [version ...]"
+        exit 0
+    fi
+    if [ -z "$args" ]; then
+        args="$1"
+    else
+        args="$arg $1"
+    fi
+    shift
+done
+if [ -z "$args" ]; then
+    args=$(echo 1.{0..11})
+fi
+
+for ver in $args; do
+    echo "########################################### Julia version $ver"
     rm -f Manifest.toml
     test -r ".Manifest-$ver.toml" && cp -pf ".Manifest-$ver.toml" Manifest.toml
-    julia +$ver --project --check-bounds=yes --depwarn=yes --color=yes \
-        -e 'import Pkg; Pkg.instantiate(); include("test/runtests.jl")'
-    mv -f Manifest.toml ".Manifest-$ver.toml"
+    julia +$ver --color=yes --check-bounds=yes --depwarn=yes --project -e "
+        using Pkg;
+        Pkg.instantiate();
+        Pkg.test();"
+    test -r Manifest.toml && mv -f Manifest.toml ".Manifest-$ver.toml"
 done
