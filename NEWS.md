@@ -25,6 +25,8 @@
 - `convert_coord_type(T)` yields a callable object that can be used to convert the
   coordinate type of its arguments.
 
+- Polygons can have any number of vertices including none provided type parameter
+  `T` is specified.
 
 ### Fixed
 

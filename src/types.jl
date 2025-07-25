@@ -124,12 +124,14 @@ struct Rectangle{T} <: ShapeElement{T}
     end
 end
 
-struct Polygon{T,V<:List{Point{T}}} <: ShapeElement{T}
+struct Polygon{T,V} <: ShapeElement{T}
     vertices::V
-    function Polygon{T}(vertices::V) where {T,V<:List{Point{T}}}
-        len = length(vertices)
-        len ≥ 3 || throw_insufficent_number_of_polygon_vertices(len)
-        isconcretetype(T) || throw(ArgumentError("coordinate type must be concrete"))
+    # The following inner constructors are provided to restrict the possible types for
+    # storing the vertices.
+    function Polygon{T}(vertices::V) where {T,V<:AbstractVector{Point{T}}}
+        return new{T,V}(vertices)
+    end
+    function Polygon{T}(vertices::V) where {T,V<:Tuple{Vararg{Point{T}}}}
         return new{T,V}(vertices)
     end
 end

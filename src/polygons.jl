@@ -32,43 +32,32 @@ TwoDimensional.vertices), and [`BoundingBox`](@ref TwoDimensional.BoundingBox).
     Polygons with a large number of vertices should preferably be created using a vector,
     not a tuple, of vertices.
 
-"""
-Polygon(vertices::List{Point{T}}) where {T} = Polygon{T}(vertices)
-
-Polygon{T}(vertices::List{<:Point}) where {T} =
-    Polygon{T}(map(Fix1(convert_coord_type, T), vertices))
+""" Polygon
 
 # Build a polygon from an homogeneous tuple/vector of point-like objects.
 for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
     @eval begin
         Polygon(pnts::$type...) = Polygon(pnts)
         Polygon{T}(pnts::$type...) where {T} = Polygon{T}(pnts)
-        function Polygon(pnts::List{<:$type})
+        function Polygon(pnts::Union{Tuple{$type,Vararg{$type}},AbstractVector{<:$type}})
             T = coord_type(point_type(pnts))
             return Polygon{T}(pnts)
         end
         function Polygon{T}(pnts::AbstractVector{<:$type}) where {T}
-            # Check length before conversion.
-            length(pnts) ≥ 3 || throw_insufficent_number_of_polygon_vertices(length(pnts))
-            v = similar(pnts, Point{T})
-            for (i, xy) in enumerate(pnts)
-                v[i] = xy
-            end
-            return Polygon{T}(v)
+            return Polygon{T}(map(Point{T}, pnts)::AbstractVector{Point{T}})
         end
-        function Polygon{T}(pnts::NTuple{N,$type}) where {T,N}
-            # Check length before conversion.
-            N ≥ 3 || throw_insufficent_number_of_polygon_vertices(N)
-            return Polygon{T}(map(Point{T}, pnts))
+        function Polygon{T}(pnts::Tuple{$type,Vararg{$type}}) where {T}
+            return Polygon{T}(map(Point{T}, pnts)::Tuple{Vararg{Point{T}}})
         end
     end
 end
 
 # Tuples with zero item.
-Polygon() = throw_insufficent_number_of_polygon_vertices(0)
-Polygon{T}() where {T} = throw_insufficent_number_of_polygon_vertices(0)
-Polygon(::Tuple{}) = throw_insufficent_number_of_polygon_vertices(0)
-Polygon{T}(::Tuple{}) where {T} = throw_insufficent_number_of_polygon_vertices(0)
+const empty_polygon_without_coordinate_type = ArgumentError(
+    "coordinate type `T` must be specified to build a polygon with an empty tuple of vertices")
+Polygon() = throw(empty_polygon_without_coordinate_type)
+Polygon(::Tuple{}) = throw(empty_polygon_without_coordinate_type)
+Polygon{T}() where {T} = Polygon{T}(())
 
 # Build a polygon from other geometric objects.
 Polygon{T}(obj::Union{Rectangle,BoundingBox}) where {T} = Polygon(convert_coord_type(T, obj))
@@ -80,7 +69,7 @@ Polygon(box::BoundingBox) =
 # Convert/copy constructors.
 Polygon(poly::Polygon) = poly
 Polygon{T}(poly::Polygon{T}) where {T} = poly
-Polygon{T}(poly::Polygon) where {T} = Polygon{T}(map(Fix1(convert_coord_type, T), elements(poly)))
+Polygon{T}(poly::Polygon) where {T} = Polygon(map(convert_coord_type(T), elements(poly)))
 Base.convert(::Type{T}, poly::T) where {T<:Polygon} = poly
 Base.convert(::Type{T}, obj::PolygonLike) where {T<:Polygon} = T(obj)
 
@@ -131,9 +120,6 @@ function Base.show(io::IO, poly::Polygon{T,V}) where {T,V}
     print(io, "))")
     nothing
 end
-
-@noinline throw_insufficent_number_of_polygon_vertices(len::Integer) =
-    throw(ArgumentError("polygons have at least 3 vertices, got $(len)"))
 
 """
     vec(poly::TwoDimensional.Polygon)
