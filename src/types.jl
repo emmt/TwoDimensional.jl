@@ -83,9 +83,16 @@ struct MaskElement{T,S} <: ShapeElement{T}
     MaskElement(obj::S; opaque::Bool) where {T,S<:ShapeElement{T}} = new{T,S}(obj, opaque)
 end
 
-struct Mask{T,E<:MaskElement{T},L<:List{E}} <: AbstractVector{E}
+struct Mask{T,E<:MaskElement{T},L} <: AbstractVector{E}
     elements::L
-    Mask{T,E}(elems::L) where {T,E<:MaskElement{T},L<:List{E}} = new{T,E,L}(elems)
+    # The following inner constructors are provided to restrict the possible types for the
+    # mask elements. An empty tuple is acceptable as type parameter `E` is given.
+    function Mask{T,E}(elems::L) where {T,E<:MaskElement{T},L<:Tuple{Vararg{E}}}
+        return new{T,E,L}(elems)
+    end
+    function Mask{T,E}(elems::L) where {T,E<:MaskElement{T},L<:AbstractVector{E}}
+        return new{T,E,L}(elems)
+    end
 end
 
 """
