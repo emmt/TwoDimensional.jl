@@ -305,8 +305,9 @@ Base.axes(box::BoundingBox, d::Integer) = throw_axes_restricted_box_with_integer
 
 # Use bounding-boxes to extract a sub-array or a view.
 Base.view(arr::AbstractMatrix, box::BoundingBox) = view(arr, axes(box)...)
-@inline @propagate_inbounds Base.getindex(arr::AbstractMatrix, box::BoundingBox) =
-    arr[axes(box)...]
+@inline Base.to_indices(A, inds, box::BoundingBox) =
+    A isa AbstractMatrix ? Base.to_indices(A, inds, axes(box)) :
+    throw(DimensionMismatch("`A` must be a matrix"))
 
 """
     TwoDimensional.grow(box, dx, dy=dx)
