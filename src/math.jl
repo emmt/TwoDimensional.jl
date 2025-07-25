@@ -307,7 +307,7 @@ the two points `a` and `b` which is given by:
 
 """
 LinearAlgebra.cross(a::Point, b::Point) = a.x*b.y - a.y*b.x
-*(a::Point, b::Point) = cross(a, b)
+@deprecate *(a::Point, b::Point) cross(a, b)
 
 """
     distance(A, B)

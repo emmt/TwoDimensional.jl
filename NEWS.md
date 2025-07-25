@@ -7,6 +7,11 @@
 - Use `@public` macro from [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package for
   all documented non-exported symbols.
 
+### Deprecated
+
+- Computing the cross-product of the coordinates of points `a` and `b` by `a*b` is
+  deprecated in favor of `cross(a,b)`.
+
 ## Version 0.5.1
 
 - `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`, to ensure that

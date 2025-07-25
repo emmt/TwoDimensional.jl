@@ -208,9 +208,9 @@ end
             @test a ⋅ b ≈ a.x*b.x + a.y*b.y
             @test a ⋅ b === dot(a, b)
             @test a ⋅ b === b ⋅ a
-            @test a * b ≈ a.x*b.y - a.y*b.x
-            @test a * b === cross(a, b)
-            @test a * b === -(b * a)
+            @test @inferred(cross(a, b)) ≈ a.x*b.y - a.y*b.x
+            @test @inferred(cross(a, b)) == -cross(b, a)
+            @test @inferred(cross(a, b)) == @test_deprecated(a*b)
         end
     end
 
