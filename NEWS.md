@@ -10,20 +10,20 @@
 - Extend and export `TypeUtils.get_precision` and `TypeUtils.adapt_precision` for geometric
   objects.
 
+- Array with offsets can be automatically built by `forge_mask` when the `OffsetArrays`
+  package is loaded.
+
+- `forge_mask` can create output array given its element type and dimensions.
+
 ### Deprecated
 
 - Computing the cross-product of the coordinates of points `a` and `b` by `a*b` is
   deprecated in favor of `cross(a,b)`.
 
-## Version 0.5.1
+### Fixed
 
 - `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`, to ensure that
   the result is a common concrete type.
-
-- `forge_mask` can create output array given its element type and dimensions.
-
-- Array with offsets can be automatically built by `forge_mask` when the `OffsetArrays`
-  package is loaded.
 
 
 ## Version 0.5.0
