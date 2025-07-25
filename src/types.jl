@@ -18,7 +18,8 @@ is a type alias for indexable ordered lists of object of type `T`. This includes
 and vectors. If `T` is an abstract type, specify `TwoDimensional.List{<:T}` to match
 vectors whose elements have concrete type inherited from `T`.
 
-"""
+""" List
+@public List
 const List{T} = Union{Tuple{Vararg{T}},AbstractVector{T}}
 
 # NOTE: `const List{T} = Union{Tuple{Vararg{T}},AbstractVector{<:T}}` cannot be used to
@@ -32,7 +33,8 @@ computations assume that `T` is floating-point (possibly with units). Coordinate
 of a geometric object `obj` can be retrieved with [`TwoDimensional.coord_type(obj)`](@ref
 `TwoDimensional.coord_type).
 
-"""
+""" GeometricObject
+@public GeometricObject
 abstract type GeometricObject{T} end
 
 """
@@ -42,7 +44,8 @@ is the super-type of elementary geometric objects whose coordinates are of type
 `T`. Concrete objects of this type are the building blocks or more complex
 geometric objects.
 
-"""
+""" GeometricElement
+@public GeometricElement
 abstract type GeometricElement{T} <: GeometricObject{T} end
 
 """
@@ -51,7 +54,8 @@ abstract type GeometricElement{T} <: GeometricObject{T} end
 is the super-type of elementary geometric objects whose coordinates are of type
 `T` and which can be used to specify boundaries.
 
-"""
+""" ShapeElement
+@public ShapeElement
 abstract type ShapeElement{T} <: GeometricElement{T} end
 
 # Overlapping of a grid cell with a shape.
@@ -71,7 +75,8 @@ builds a simple mask whose boundaries are defined by `shape` and which is
 opaque (i.e., an obscuration) if `opaque` is true and transparent (i.e., an
 aperture) otherwise.
 
-"""
+""" MaskElement
+@public MaskElement
 struct MaskElement{T,S} <: ShapeElement{T}
     shape::S
     opaque::Bool
@@ -149,7 +154,8 @@ is the union of types of objects defined by their vertices and with coordinate t
 
 See also [`TwoDimensional.apply`](@ref).
 
-"""
+""" VertexBasedObject
+@public VertexBasedObject
 const VertexBasedObject{T} = Union{Point{T},
                                    Rectangle{T},
                                    Polygon{T},
@@ -163,7 +169,8 @@ const VERTEX_BASED_TYPES = (:Point, :Rectangle, :Polygon, :BoundingBox)
 is the union of types of objects that behaves like a geometric object with coordinate type
 `T` and which can be scaled, rotated, moved, etc.
 
-"""
+""" GeometricObjectLike
+@public GeometricObjectLike
 const GeometricObjectLike{T} = Union{GeometricObject{T},Mask{T}}
 
 """
@@ -176,7 +183,8 @@ The [`Point`](@ref) constructor can build an instance from any argument of these
 Accessors [`TwoDimensional.get_x`](@ref) and [`TwoDimensional.get_y`](@ref) may be used on
 objects of such type to retrieve their abscissa and ordinate.
 
-"""
+""" PointLike
+@public PointLike
 const PointLike = Union{AbstractPoint,
                         NTuple{2,Number}, # NOTE: Purposely more restrictive
                                           #       than when calling explicitly
@@ -193,7 +201,8 @@ is the union of types of objects that may be used to specify a rectangle in
 The [`Rectangle`](@ref) constructor can build an instance from any argument of these
 types.
 
-"""
+""" RectangleLike
+@public RectangleLike
 const RectangleLike = Union{Rectangle,
                             NTuple{2,AbstractPoint},
                             NTuple{2,NTuple{2,Number}},
@@ -207,7 +216,8 @@ package.
 
 The [`Circle`](@ref) constructor can build an instance from any argument of these types.
 
-"""
+""" CircleLike
+@public CircleLike
 const CircleLike = Union{Circle,
                          Tuple{PointLike,Number}}
 
@@ -221,7 +231,8 @@ The [`Polygon`](@ref) constructor can build an instance from any argument of the
 Accessors [`TwoDimensional.get_x`](@ref) and [`TwoDimensional.get_y`](@ref) may be used on
 objects of such type to retrieve their abscissa and ordinate.
 
-"""
+""" PolygonLike
+@public PolygonLike
 const PolygonLike = Union{List{<:AbstractPoint},
                           List{<:NTuple{2,Number}},
                           List{<:CartesianIndex{2}}}
@@ -235,7 +246,8 @@ is the union of types of objects that may be used to specify a bounding-box in
 The [`BoundingBox`](@ref) constructor can build an instance from any argument of these
 types.
 
-"""
+""" BoundingBoxLike
+@public BoundingBoxLike
 const BoundingBoxLike = Union{BoundingBox,
                               NTuple{2,AbstractPoint},
                               NTuple{2,NTuple{2,Number}},

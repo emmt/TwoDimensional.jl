@@ -272,7 +272,8 @@ such that `i0:i1` represents the same indices as `I` (although not in the same
 order if `step(I) < 0`). If `step(I)` is not equal to ±1, an `ArgumentError`
 exception is thrown.
 
-"""
+""" get_axis_bounds
+@public get_axis_bounds
 @inline function get_axis_bounds(I::AbstractRange{<:Integer})
     i0, i1, s = Int(first(I)), Int(last(I)), step(I)
     s == +one(s) && return (i0, i1)
@@ -326,7 +327,8 @@ shrunk by `abs(dx)` and `abs(dy)`.
 
 See also [`TwoDimensional.shrink`](@ref).
 
-"""
+""" grow
+@public grow
 grow(box::BoundingBox{T}, delta::Point{T}) where {T} = BoundingBox(first(box) - delta,
                                                                    last( box) + delta)
 
@@ -342,7 +344,8 @@ Note that the algebraic (not absolute) values are applied. Hence, if `dx` and
 
 See also [`TwoDimensional.grow`](@ref).
 
-"""
+""" shrink
+@public shrink
 shrink(box::BoundingBox{T}, delta::Point{T}) where {T} = BoundingBox(first(box) + delta,
                                                                      last( box) - delta)
 

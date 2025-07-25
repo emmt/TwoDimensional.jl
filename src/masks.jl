@@ -14,7 +14,8 @@ converted to another type.
     Masks with a large number of elements should preferably be created with a vector, not
     a tuple, of mask elements.
 
-"""
+""" Mask
+@public Mask
 Mask(elems::MaskElement...) = Mask(elems)
 Mask{T}(elems::MaskElement...) where {T} = Mask{T}(elems)
 Mask(elems::List{<:MaskElement}) = Mask{coord_type(elems)}(elems)
@@ -103,7 +104,8 @@ Base.last(obj::RectangularMask) = last(shape(obj))
 
 yields whether mask element `msk` is opaque.
 
-"""
+""" is_opaque
+@public is_opaque
 is_opaque(msk::MaskElement) = msk.opaque
 
 """
@@ -111,7 +113,8 @@ is_opaque(msk::MaskElement) = msk.opaque
 
 yields whether mask element `msk` is transparent.
 
-"""
+""" is_transparent
+@public is_transparent
 is_transparent(msk::MaskElement) = !is_opaque(msk)
 
 """
@@ -119,7 +122,8 @@ is_transparent(msk::MaskElement) = !is_opaque(msk)
 
 yields a transparent mask element of same shape as `obj`.
 
-"""
+""" aperture
+@public aperture
 aperture(obj::ShapeElement) = MaskElement(obj; opaque=false)
 aperture(obj::MaskElement) = aperture(shape(obj))
 
@@ -128,7 +132,8 @@ aperture(obj::MaskElement) = aperture(shape(obj))
 
 yields an opaque mask element of same shape as `obj`.
 
-"""
+""" obscuration
+@public obscuration
 obscuration(obj::ShapeElement) = MaskElement(obj; opaque=true)
 obscuration(obj::MaskElement) = obscuration(shape(obj))
 
@@ -141,6 +146,7 @@ axes. See [`TwoDimensional.Rectangle`](@ref) constructor for possible arguments 
 keywords. A rectangular aperture is a transparent rectangular mask.
 
 """ rectangular_aperture
+@public rectangular_aperture
 
 """
     TwoDimensional.rectangular_obscuration(args...; kwds...)
@@ -151,6 +157,7 @@ axes. See [`TwoDimensional.Rectangle`](@ref) constructor for possible arguments 
 keywords. A rectangular obscuration is an opaque rectangular mask.
 
 """ rectangular_obscuration
+@public rectangular_obscuration
 
 """
     TwoDimensional.circular_aperture(args...; kwds...)
@@ -161,6 +168,7 @@ constructor for possible arguments and keywords. A circular aperture is a transp
 circular mask.
 
 """ circular_aperture
+@public circular_aperture
 
 """
     TwoDimensional.circular_obscuration(args...; kwds...)
@@ -171,6 +179,7 @@ constructor for possible arguments and keywords. A circular obscuration is an op
 circular mask.
 
 """ circular_obscuration
+@public circular_obscuration
 
 """
     TwoDimensional.polygonal_aperture(args...; kwds...)
@@ -181,6 +190,7 @@ constructor for possible arguments and keywords. A polygonal aperture is a trans
 polygonal mask.
 
 """ polygonal_aperture
+@public polygonal_aperture
 
 """
     TwoDimensional.polygonal_obscuration(args...; kwds...)
@@ -191,6 +201,7 @@ constructor for possible arguments and keywords. A polygonal obscuration is an o
 polygonal mask.
 
 """ polygonal_obscuration
+@public polygonal_obscuration
 
 for (type, adj) in ((:Rectangle, :rectangular),
                     (:Circle,    :circular),
@@ -212,7 +223,8 @@ The input array `Aᵢₙ` is left unmodified, method [`TwoDimensional.apply_mask
 be used for in-place operation. See [`TwoDimensional.forge_mask`](@ref) for how to define
 a mask.
 
-"""
+""" apply_mask
+@public apply_mask
 apply_mask(A::AbstractMatrix, args...; kwds...) = apply_mask!(copy(A), args...; kwds...)
 
 """
@@ -222,7 +234,8 @@ multiplies in-place the 2-dimensional array `A` by a mask defined by arguments `
 and keywords `kwds...` and returns `A`. See [`TwoDimensional.apply_mask`](@ref) for an
 out-of-place version and for details.
 
-"""
+""" apply_mask!
+@public apply_mask!
 apply_mask!(A::AbstractMatrix, args...; kwds...) = multiply!(A, forge_mask(A, args...; kwds...))
 
 # Element-wise multiplication.
@@ -248,7 +261,8 @@ array-like `A`. The mask may also be specified by the list `objs...` of elementa
 objects. The coordinates of the mask are assumed to be given in fractional Cartesian
 indices for `A`.
 
-"""
+""" forge_mask
+@public forge_mask
 forge_mask(A::AbstractMatrix, objs::MaskElement...; kwds...) = forge_mask(A, Mask(objs); kwds...)
 forge_mask(A::AbstractMatrix, msk::Mask; kwds...) =
     forge_mask!(similar(A, floating_point_type(eltype(A))), msk; kwds...)
@@ -367,7 +381,8 @@ In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the desti
 array `dst` with the mask and returns it. If coordinates `X` and `Y` along the axes of
 `dst` are not specified, `(X, Y) = axes(dst)` is assumed.
 
-"""
+""" forge_mask!
+@public forge_mask!
 forge_mask!(A::AbstractMatrix, msk::Mask; kwds...) = forge_mask!(A, axes(A)..., msk; kwds...)
 
 forge_mask!(A::AbstractMatrix, elems::MaskElement...; kwds...) =
@@ -665,7 +680,8 @@ end
 yields the step along a vector of coordinates, throwing an error if the increment between
 successive values of `x` is not positive or not uniform.
 
-"""
+""" grid_step
+@public grid_step
 function grid_step(rng::Union{AbstractRange#= FIXME ,AbstractCoordinates =#})
     stp = step(rng)
     stp > zero(stp) || throw(ArgumentError("grid step must be positive"))
@@ -706,7 +722,8 @@ In any case, `a` and `b` are promoted to the same type.
 
 Hence, if `f` is a real, then `f = 0` yields `a` while `f = 1` yields `b`.
 
-"""
+""" interpolate
+@public interpolate
 interpolate(a, b, f::Number) = interpolate(promote(a, b)..., f)
 interpolate(a::T, b::T, f::Real) where {T} = a + f*(b - a)
 interpolate(a::T, b::T, f::Number) where {T} = (oneunit(f) - f)*a + f*b
@@ -731,7 +748,8 @@ bounding-box, or a rectangle. Returned value is:
 
 - `PARTIAL` if `pxl` straddles some boundaries of `obj`.
 
-"""
+""" Overlap
+@public Overlap
 Overlap(pxl::Union{Point,Rectangle}, obj::MaskElement) = Overlap(pxl, shape(obj))
 
 Overlap(pxl::BoundingBox, obj::GeometricObject) =

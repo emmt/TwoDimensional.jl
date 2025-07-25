@@ -14,7 +14,8 @@ Geometrical objects that have homogeneous elements (see
 elements, the `Base.getindex` method to directly index among these elements, and the
 [`TwoDimensional.apply`](@ref) method.
 
-"""
+""" elements
+@public elements
 elements(pnt::Point) = getfield(pnt, 1)
 elements(rect::Rectangle) = getfield(rect, 1)
 elements(poly::Polygon) = getfield(poly, 1)
@@ -43,7 +44,8 @@ the first and last end-points of the box.
 
 See also [`TwoDimensional.elements`](@ref) and [`TwoDimensional.VertexBasedObject`](@ref).
 
-"""
+""" apply
+@public apply
 apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
 apply(f, rect::Rectangle) = Rectangle(f(rect[1]), f(rect[2]))
 apply(f, poly::Polygon) = Polygon(map(f, elements(poly)))
@@ -75,7 +77,8 @@ nearest(::Type{T}, x::Number) where {T<:Number} =
 yields the elementary geometric object defining the shape of `obj`. The result is `obj`
 itself if it is an elementary geometric object.
 
-"""
+""" shape
+@public shape
 shape(obj::MaskElement) = obj.shape
 shape(obj::ShapeElement) = obj
 
@@ -85,7 +88,8 @@ shape(obj::ShapeElement) = obj
 yields the vertices defining the vertex-based graphical object `obj`. The result is a
 tuple or a vector of points.
 
-"""
+""" vertices
+@public vertices
 vertices(msk::Union{RectangularMask,PolygonalMask}) = vertices(shape(msk))
 vertices(poly::Polygon) = elements(poly)
 vertices(pnt::Point) = (pnt,)
@@ -234,7 +238,8 @@ that all other `y...` are `nothing`.
 
 See also [`TwoDimensional.is_nothing`](@ref).
 
-"""
+""" is_nothing
+@public is_nothing
 is_nothing(x::Nothing) = true
 is_nothing(x::Any) = false
 @inline is_nothing(x, y...) = is_nothing(x) && is_nothing(y...)
@@ -248,6 +253,7 @@ specified, that none of the other `y...` is `nothing`.
 
 See also [`TwoDimensional.is_nothing`](@ref).
 
-"""
+""" is_something
+@public is_something
 is_something(x) = !is_nothing(x)
 @inline is_something(x, y...) = is_something(x) && is_something(y...)

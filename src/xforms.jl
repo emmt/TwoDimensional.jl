@@ -150,7 +150,8 @@ Argument may also be the type of an affine transform.
 
 See also: [`offsets_type`](@ref TwoDimensional.offsets_type).
 
-"""
+""" factors_type
+@public factors_type
 factors_type(A::AffineTransform) = factors_type(typeof(A))
 factors_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = R
 
@@ -163,7 +164,8 @@ type of an affine transform.
 
 See also: [`factors_type`](@ref TwoDimensional.factors_type).
 
-"""
+""" offsets_type
+@public offsets_type
 offsets_type(A::AffineTransform) = offsets_type(typeof(A))
 offsets_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = S
 
@@ -386,7 +388,8 @@ It is possible to compose more than two affine transforms. For instance,
 `compose(A,B,C)` yields the affine transform which applies `C` then `B`, then
 `A`.
 
-"""
+""" compose
+@public compose
 compose(A::AffineTransform) = A
 
 compose(A::AffineTransform, B::AffineTransform) =
@@ -416,6 +419,7 @@ function is motivated by the fact that it takes only 29 flops whereas `inv(A) âˆ
 B` takes 37 flops (17 flops for `inv` and 20 flops for `âˆ˜`).
 
 """ rdiv
+@public rdiv
 
 /(A::AffineTransform, B::AffineTransform) = rdiv(A, B)
 
@@ -443,6 +447,7 @@ function is motivated by the fact that it takes only 29 flops whereas `inv(A) âˆ
 B` takes 37 flops (17 flops for `inv` and 20 flops for `âˆ˜`).
 
 """ ldiv
+@public ldiv
 
 \(A::AffineTransform, B::AffineTransform) = ldiv(A, B)
 

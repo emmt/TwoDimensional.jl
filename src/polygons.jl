@@ -166,7 +166,8 @@ yields a named tuple with the geometric properties of the polygon `poly`:
     prop.direct   # `true` if vertices are ordered with direct trigonometric
                   # orientation (anti-clockwise)
 
-"""
+""" geometric_properties
+@public geometric_properties
 function geometric_properties(poly::Polygon)
     i_first = firstindex(poly)
     i_last = lastindex(poly)

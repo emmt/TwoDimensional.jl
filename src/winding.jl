@@ -17,7 +17,8 @@
 yields whether point `P` is inside the polygon defined by vertices `V` according to the
 *crossing number* method by Franklin (2000).
 
-"""
+""" crossing_number_test
+@public crossing_number_test
 crossing_number_test(P::Point, V::List{<:Point}) = isodd(crossing_number(P, V))
 
 function crossing_number(P::Point, V::List{<:Point})
@@ -44,7 +45,8 @@ end
 yields whether point `P` is inside the polygon defined by vertices `V` according to the
 *winding number* method by Dan Sunday ("Inclusion of a Point in a Polygon", 2001).
 
-"""
+""" winding_number_test
+@public winding_number_test
 winding_number_test(P::Point, V::List{<:Point}) = !iszero(winding_number(P, V))
 
 function winding_number(P::Point, V::List{<:Point})
@@ -85,6 +87,7 @@ infinite line defined by `(A,B)`:
 
 See: Algorithm 1 "Area of Triangles and Polygons"
 
-"""
+""" cross3
+@public cross3
 cross3(A::Point, B::Point, C::Point) =
     (B.x - A.x)*(C.y - A.y) - (C.x - A.x)*(B.y - A.y)

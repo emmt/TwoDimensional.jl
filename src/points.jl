@@ -122,7 +122,8 @@ the point type of `arg` when converted to a `Point`.
 If `arg` is a tuple of point-like objects, the result is the promoted type of
 the conversion of each `arg` to a `Point`.
 
-"""
+""" point_type
+@public point_type
 point_type(::Type{<:AbstractPoint{T}}) where {T} = Point{T}
 point_type(::Type{CartesianIndex{2}}) = Point{Int}
 point_type(::Type{Tuple{X,Y}}) where {X<:Number,Y<:Number} = Point{promote_type(X, Y)}
@@ -148,6 +149,7 @@ See also [`TwoDimensional.get_y`](@ref), [`TwoDimensional.get_xy`](@ref), and
 [`TwoDimensional.PointLike`](@ref).
 
 """ get_x
+@public get_x
 
 """
     TwoDimensional.get_y(pnt::PointLike) -> y
@@ -158,6 +160,7 @@ See also [`TwoDimensional.get_x`](@ref), [`TwoDimensional.get_xy`](@ref), and
 [`TwoDimensional.PointLike`](@ref).
 
 """ get_y
+@public get_y
 
 for (c, i) in ((:x, 1), (:y, 2))
     func = Symbol("get_",c)
@@ -182,7 +185,8 @@ yields a 2-tuple with the abscissa `x` and ordinate `y` of point-like object
 See also [`TwoDimensional.get_x`](@ref), [`TwoDimensional.get_y`](@ref) and
 [`TwoDimensional.PointLike`](@ref).
 
-"""
+""" get_xy
+@public get_xy
 get_xy(pnt::Point) = Tuple(pnt)
 get_xy(ind::CartesianIndex{2}) = Tuple(ind)
 get_xy(pnt::AbstractPoint) = promote(pnt.x, pnt.y) # convert to an homogeneous 2-tuple

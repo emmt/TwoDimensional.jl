@@ -322,7 +322,8 @@ distance(A::Point, B::Point) = hypot(A - B)
 
 yields the area of the geometric object `obj`.
 
-"""
+""" area
+@public area
 area(msk::MaskElement) = area(shape(msk))
 area(pnt::AbstractPoint) = (z = zero(coord_type(pnt)); return z*z) # NOTE coord. may have units
 area(rect::Rectangle) = (rect.x1 - rect.x0)*(rect.y1 - rect.y0)
@@ -363,7 +364,8 @@ object](https://en.wikipedia.org/wiki/Smallest-circle_problem).
 For circle-like and point-like objects with integer coordinate type, the radius
 is also integer. For all other geometric objects, the raius is floating-point.
 
-"""
+""" radius
+@public radius
 radius(msk::MaskElement) = radius(shape(msk))
 radius(pnt::AbstractPoint) = zero(coord_type(pnt))
 radius(rect::Rectangle) = half(diameter(rect))
@@ -382,7 +384,8 @@ For circle-like and point-like objects with integer coordinate type, the
 diameter is also integer. For all other geometric objects, the raius is
 floating-point.
 
-"""
+""" diameter
+@public diameter
 diameter(msk::MaskElement) = diameter(shape(msk))
 diameter(pnt::AbstractPoint) = zero(coord_type(pnt))
 diameter(rect::Rectangle) = distance(first(rect), last(rect))
@@ -396,7 +399,8 @@ diameter(poly::Polygon) = error("not yet implemented")
 
 yields whether the geometric object `obj` is convex.
 
-"""
+""" is_convex
+@public is_convex
 is_convex(msk::MaskElement) = is_convex(shape(msk))
 is_convex(pnt::Point) = true
 is_convex(circ::Circle) = true
