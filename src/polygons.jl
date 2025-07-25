@@ -130,18 +130,20 @@ Call `collect(poly)` to make an independent copy of the vector of vertices.
 
 """
 Base.vec(poly::Polygon{<:Any,<:AbstractVector}) = elements(poly)
-function Base.vec(poly::Polygon)
-    src = elements(poly)
-    dst = Vector{eltype(src)}(undef, length(src))
-    @inbounds for (i, x) in enumerate(src)
-        dst[i] = x
+Base.vec(poly::Polygon) = Vector(poly)
+
+Base.Vector(poly::Polygon{T,<:Vector}) where {T} = elements(poly)
+Base.Vector{Point{T}}(poly::Polygon{T,Vector{Point{T}}}) where {T} = elements(poly)
+Base.Vector(poly::Polygon{T,<:Any}) where {T} = Vector{Point{T}}(poly)
+function Base.Vector{Point{T}}(poly::Polygon) where {T}
+    v = Vector{Point{T}}(undef, length(poly))
+    @inbounds for (i, x) in enumerate(elements(poly))
+        v[i] = x
     end
-    return dst
+    return v
 end
 
-Base.Vector(poly::Polygon{<:Any,<:Union{Tuple,Vector}}) = vec(poly)
-
-Base.collect(poly::Polygon{<:Any,<:AbstractVector}) = copy(elements(poly))
+Base.collect(poly::Polygon{<:Any,<:Vector}) = copy(elements(poly))
 Base.collect(poly::Polygon) = Vector(poly)
 
 """

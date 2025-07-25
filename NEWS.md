@@ -33,6 +33,8 @@
 - `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`, to ensure that
   the result is a common concrete type.
 
+- `vec`, `collect`, and `Vector` behave correctly for polygons.
+
 
 ## Version 0.5.0
 
