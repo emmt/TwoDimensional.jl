@@ -112,13 +112,12 @@ function naive_bounding_box(f::Function, A::AbstractMatrix)
 end
 
 @testset "TwoDimensional" begin
-    @testset "Utilities" begin
-        let nearest = TwoDimensional.nearest
-            @test nearest(Int16, 1.2) === Int16(1)
-            @test nearest(Float64, 1.2) === 1.2
-            @test nearest(typeof(1u"m"), -2.3u"m") === -2u"m"
-            @test nearest(typeof(1.0u"m"), -2.3u"m") === -2.3u"m"
-        end
+    @testset "`nearest` (from `TypeUtils`)" begin
+        @test nearest(Int16, 1.2) === Int16(1)
+        @test nearest(Float64, 1.2) === 1.2
+        @test nearest(typeof(1.0u"m"), -2.3u"m") === -2.3u"m"
+        @test nearest(typeof(1u"m"), -2.3u"m") === -2u"m"
+        @test nearest(typeof(1u"mm"), -2.3u"m") === -2300u"mm"
     end
     @testset "Miscellaneaous" begin
         @test coord_type(Point) === Any

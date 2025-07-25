@@ -43,6 +43,10 @@ export
     rotate,
     scale,
     translate,
+
+    # Re-exports from TypeUtils
+    nearest,
+
     # Re-exports from LinearAlgebra
     cross,
     det,
