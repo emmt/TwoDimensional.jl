@@ -169,6 +169,11 @@ See also: [`factors_type`](@ref TwoDimensional.factors_type).
 offsets_type(A::AffineTransform) = offsets_type(typeof(A))
 offsets_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = S
 
+TypeUtils.get_precision(::Type{<:AffineTransform{T}}) where {T<:Precision} = T
+TypeUtils.adapt_precision(::Type{T}, A::AffineTransform{T}) where {T<:Precision} = A
+TypeUtils.adapt_precision(::Type{T}, A::AffineTransform) where {T<:Precision} =
+    AffineTransform{T}(A)
+
 Base.convert(::Type{T}, A::T) where {T<:AffineTransform} = A
 Base.convert(::Type{T}, A::AffineTransform) where {T<:AffineTransform} = T(A)
 

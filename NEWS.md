@@ -7,6 +7,9 @@
 - Use `@public` macro from [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) package for
   all documented non-exported symbols.
 
+- Extend and export `TypeUtils.get_precision` and `TypeUtils.adapt_precision` for geometric
+  objects.
+
 ### Deprecated
 
 - Computing the cross-product of the coordinates of points `a` and `b` by `a*b` is

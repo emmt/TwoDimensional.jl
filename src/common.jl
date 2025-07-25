@@ -208,6 +208,10 @@ for (func, type)  in ((:convert_bare_type,           Real),
     end
 end
 
+TypeUtils.get_precision(::Type{<:GeometricObject{T}}) where {T} = get_precision(T)
+TypeUtils.adapt_precision(::Type{T}, A::GeometricObject{C}) where {T<:Precision,C} =
+    convert_coord_type(adapt_precision(T, C), A)
+
 """
     convert_coord_type(T::Type, objs::GeometricObject...) -> objs′
 

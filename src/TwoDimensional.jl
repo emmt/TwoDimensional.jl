@@ -45,6 +45,8 @@ export
     translate,
 
     # Re-exports from TypeUtils
+    adapt_precision,
+    get_precision,
     nearest,
 
     # Re-exports from LinearAlgebra
@@ -53,7 +55,7 @@ export
     norm
 
 using TypeUtils
-using TypeUtils: @public
+using TypeUtils: @public, Precision
 using Base: @propagate_inbounds, Callable, Fix1, Fix2, tail
 using Base: IteratorSize, SizeUnknown, HasLength, HasShape, IsInfinite
 using Base: IteratorEltype, EltypeUnknown, HasEltype

@@ -195,6 +195,11 @@ end
             @test @inferred(float(pnt)) === @inferred(Point(float(pnt.x), float(pnt.y)))
             @test @inferred(float(typeof(pnt))) === Point{float(T)}
         end
+        # Precision.
+        @test @inferred(get_precision(Point(-1,2))) === AbstractFloat
+        @test @inferred(get_precision(Point(-1f0,2f0))) === Float32
+        @test @inferred(adapt_precision(Float32, Point(-1.0, 2.0))) === Point(-1f0,2f0)
+        @test @inferred(adapt_precision(Float64, Point(-1.0, 2.0))) === Point(-1.0,2.0)
         # Functions specific to points.
         @test hypot(pnt) ≈ r
         @test norm(pnt) ≈ r
@@ -299,6 +304,14 @@ end
             @test @inferred(float(rec)) === @inferred(Rectangle(float(rec.start), float(rec.stop)))
             @test @inferred(float(typeof(rec))) === Rectangle{float(T)}
         end
+        # Precision.
+        r_int = @inferred Rectangle{Int}(start,stop)
+        r_flt = @inferred Rectangle{Float32}(start,stop)
+        @test @inferred(get_precision(r_int)) === AbstractFloat
+        @test @inferred(get_precision(r_flt)) === Float32
+        @test @inferred(adapt_precision(Float32, r_int)) === r_flt
+        @test @inferred(adapt_precision(Float32, r_flt)) === r_flt
+        @test @inferred(adapt_precision(Float64, r_flt)) === Rectangle{Float64}(start,stop)
         # Functions specific to rectangles.
         @test area(rec) == (rec.x1 - rec.x0)*(rec.y1 - rec.y0)
     end
@@ -364,6 +377,14 @@ end
             @test @inferred(float(circ)) === @inferred(Circle(float(circ.center), float(circ.radius)))
             @test @inferred(float(typeof(circ))) === Circle{float(T)}
         end
+        # Precision.
+        c_int = @inferred Circle{Int}((-1,2), 3)
+        c_flt = @inferred Circle{Float32}(c_int.center, c_int.radius)
+        @test @inferred(get_precision(c_int)) === AbstractFloat
+        @test @inferred(get_precision(c_flt)) === Float32
+        @test @inferred(adapt_precision(Float32, c_int)) === c_flt
+        @test @inferred(adapt_precision(Float32, c_flt)) === c_flt
+        @test @inferred(adapt_precision(Float64, c_flt)) === Circle{Float64}(c_int.center, c_int.radius)
         # Functions specific to circles.
         @test area(circ) ≈ π*r*r
     end
@@ -447,6 +468,14 @@ end
         @test p[2] ∈ pnts
         @test p[3] ∈ pnts
         @test p[4] ∈ pnts
+        # Precision.
+        p_int = @inferred Polygon{Int}((-1,2), (3,7), (-2,4))
+        p_flt = @inferred Polygon{Float32}(p_int.vertices)
+        @test @inferred(get_precision(p_int)) === AbstractFloat
+        @test @inferred(get_precision(p_flt)) === Float32
+        @test @inferred(adapt_precision(Float32, p_int)) === p_flt
+        @test @inferred(adapt_precision(Float32, p_flt)) === p_flt
+        @test @inferred(adapt_precision(Float64, p_flt)) === Polygon{Float64}(p_int.vertices)
     end
 
     @testset "BoundingBoxes ($T)" for T in (Int16, Int, Float32)
@@ -535,6 +564,14 @@ end
             @test @inferred(float(box)) === @inferred(BoundingBox(float(box.start), float(box.stop)))
             @test @inferred(float(typeof(box))) === BoundingBox{float(T)}
         end
+        # Precision.
+        b_int = @inferred BoundingBox{Int}(-1:2, 3:7)
+        b_flt = @inferred BoundingBox{Float32}(b_int.start, b_int.stop)
+        @test @inferred(get_precision(b_int)) === AbstractFloat
+        @test @inferred(get_precision(b_flt)) === Float32
+        @test @inferred(adapt_precision(Float32, b_int)) === b_flt
+        @test @inferred(adapt_precision(Float32, b_flt)) === b_flt
+        @test @inferred(adapt_precision(Float64, b_flt)) === BoundingBox{Float64}(b_int.start, b_int.stop)
         # Functions specific to bounding-boxes.
     end
 
