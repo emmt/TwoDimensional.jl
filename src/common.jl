@@ -220,7 +220,15 @@ yields the tuple of geometric objects `objs...` converted to the coordinate type
 """
 convert_coord_type(::Type{T}, objs::GeometricObject{T}...) where {T} = objs
 convert_coord_type(::Type{T}, objs::GeometricObject...) where {T} =
-    map(Fix1(convert_coord_type, T), objs)
+    map(convert_coord_type(T), objs)
+
+"""
+    convert_coord_type(T::Type) -> f
+
+yields a callable object `f` such that `f(x)` is equivalent to `convert_coord_type(T, x)`.
+
+"""
+convert_coord_type(::Type{T}) where {T} = TypeUtils.Converter(convert_coord_type, T)
 
 """
     TwoDimensional.is_nothing(x)

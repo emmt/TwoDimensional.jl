@@ -20,6 +20,12 @@
 - Computing the cross-product of the coordinates of points `a` and `b` by `a*b` is
   deprecated in favor of `cross(a,b)`.
 
+### Changed
+
+- `convert_coord_type(T)` yields a callable object that can be used to convert the
+  coordinate type of its arguments.
+
+
 ### Fixed
 
 - `coord_type` calls `TypeUtils.to_same_concrete_type`, not `promote_type`, to ensure that
