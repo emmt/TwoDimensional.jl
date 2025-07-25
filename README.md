@@ -6,6 +6,7 @@
 [![Build Status][github-ci-img]][github-ci-url]
 [![Build Status][appveyor-img]][appveyor-url]
 [![codecov](https://codecov.io/gh/emmt/TwoDimensional.jl/graph/badge.svg?token=m7V2JI1HA6)](https://codecov.io/gh/emmt/TwoDimensional.jl)
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 `TwoDimensional` is a [Julia][julia-url] package which provides useful types
 and methods to define and manipulate 2-dimensional objects (points, rectangles,

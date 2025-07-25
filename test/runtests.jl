@@ -1129,4 +1129,8 @@ end
     end
 end
 
+@testset "Code quality" begin
+    include("aqua.jl")
+end
+
 end # module

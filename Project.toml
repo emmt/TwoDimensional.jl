@@ -8,6 +8,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 TypeUtils = "c3b1956e-8857-4d84-9b79-890df85b1e67"
 
 [compat]
+Aqua = "0.8"
 LinearAlgebra = "<0.0.1, 1"
 Test = "<0.0.1, 1"
 TypeUtils = "1.10"
@@ -15,8 +16,9 @@ Unitful = "1"
 julia = "1"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
-test = ["Test", "Unitful"]
+test = ["Test", "Aqua", "Unitful"]

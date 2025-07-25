@@ -15,6 +15,8 @@
 
 - `forge_mask` can create output array given its element type and dimensions.
 
+- Pass code quality tests with [`Aqua.jl`](https://github.com/JuliaTesting/Aqua.jl).
+
 ### Deprecated
 
 - Computing the cross-product of the coordinates of points `a` and `b` by `a*b` is
