@@ -201,8 +201,9 @@ ceil(::TwoDimensional.Point)).
 """
 Base.round(obj::VertexBasedObject) = apply(round, obj)
 Base.round(obj::VertexBasedObject, r::RoundingMode) = apply(Round{Nothing}(r), obj)
-Base.round(::Type{T}, obj::VertexBasedObject) where {T} = apply(Round{T}(), obj)
-Base.round(::Type{T}, obj::VertexBasedObject, r::RoundingMode) where {T} = apply(Round{T}(r), obj)
+Base.round(::Type{T}, obj::VertexBasedObject) where {T<:Number} = apply(Round{T}(), obj)
+Base.round(::Type{T}, obj::VertexBasedObject, r::RoundingMode) where {T<:Number} =
+    apply(Round{T}(r), obj)
 
 for type in VERTEX_BASED_TYPES
     @eval begin

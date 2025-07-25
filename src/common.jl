@@ -135,15 +135,16 @@ coord_type(::Type{<:GeometricObjectLike}) = Any
 
 # Methods for zero or more than one argument.
 coord_type() = Union{}
+coord_type(::Tuple{}) = Union{}
 @inline coord_type(A, B...) = coord_type((A, B...))
 
 # Method for tuples or vectors of geometric objects.
 coord_type(A::Tuple) = to_same_concrete_type(map(coord_type, A)...)
 coord_type(A::AbstractVector) = mapreduce(coord_type, to_same_concrete_type, A; init=coord_type())
 
-# Optimizations for multiple objects/types.
+# Optimizations for multiple homogeneous objects/types.
 coord_type(A::Vararg{GeometricObjectLike{T}}) where {T} = T
-coord_type(A::Tuple{Vararg{GeometricObjectLike{T}}}) where {T} = T
+coord_type(A::Tuple{GeometricObjectLike{T},Vararg{GeometricObjectLike{T}}}) where {T} = T
 coord_type(A::AbstractVector{<:GeometricObjectLike{T}}) where {T} = T
 
 # Fallbacks for any objects and for errors.

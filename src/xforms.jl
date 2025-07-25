@@ -128,13 +128,15 @@ AffineTransform{T}(A::AffineTransform) where {T<:AbstractFloat} =
 # Extend TypeUtils.bare_type, TypeUtils.real_type, TypeUtils.floating_point_type,
 # TypeUtils.convert_bare_type, TypeUtils.convert_real_type, and
 # TypeUtils.convert_floating_point_type,
-for func in (:bare_type, :real_type, :floating_point_type)
-    conv = Symbol("convert_",func)
+for (func, type) in (:bare_type => :Real, # NOTE not Union{Real,Complex}
+                     :real_type => :Real,
+                     :floating_point_type => :AbstractFloat)
+    conv = Symbol("convert_", func)
     @eval begin
         TypeUtils.$func(A::AffineTransform) = $func(typeof(A))
-        TypeUtils.$func(::Type{<:AffineTransform{T}}) where {T} = T
-        TypeUtils.$conv(::Type{T}, A::AffineTransform{T}) where {T} = A
-        TypeUtils.$conv(::Type{T}, A::AffineTransform) where {T<:AbstractFloat} =
+        TypeUtils.$func(::Type{<:AffineTransform{T}}) where {T} = $func(T)
+        TypeUtils.$conv(::Type{T}, A::AffineTransform{T}) where {T<:$type} = A
+        TypeUtils.$conv(::Type{T}, A::AffineTransform) where {T<:$type} =
             AffineTransform{T}(A)
     end
 end
@@ -267,15 +269,15 @@ See also: [`AffineTransform`](@ref), [`rotate`](@ref), [`scale`](@ref).
 +(pnt::PointLike, A::AffineTransform) = translate(pnt, A)
 -(pnt::PointLike, A::AffineTransform) = pnt + (-A)
 translate(pnt::PointLike, A::AffineTransform) = translate(get_x(pnt), get_y(pnt), A)
-translate(x, y, A::AffineTransform) = AffineTransform(A.xx, A.xy, A.x + x,
-                                                      A.yx, A.yy, A.y + y)
+translate(x::Number, y::Number, A::AffineTransform) = AffineTransform(A.xx, A.xy, A.x + x,
+                                                                      A.yx, A.yy, A.y + y)
 
 # Right-translating results in translating the input of the transform.
 +(A::AffineTransform, pnt::PointLike) = translate(A, pnt)
 -(A::AffineTransform, pnt::PointLike) = A + (-get_x(pnt), -get_y(pnt))
 translate(A::AffineTransform, pnt::PointLike) = translate(A, get_x(pnt), get_y(pnt))
-translate(A::AffineTransform, x, y) = AffineTransform(A.xx, A.xy, A.xx*x + A.xy*y + A.x,
-                                                      A.yx, A.yy, A.yx*x + A.yy*y + A.y)
+translate(A::AffineTransform, x::Number, y::Number) = AffineTransform(A.xx, A.xy, A.xx*x + A.xy*y + A.x,
+                                                                      A.yx, A.yy, A.yx*x + A.yy*y + A.y)
 
 """
     B = scale(ρ, A)
@@ -296,10 +298,10 @@ See also:
 """ scale
 
 *(ρ::Number, A::AffineTransform) = scale(ρ, A)
-scale(ρ, A::AffineTransform) = apply(Fix1(*, ρ), A)
+scale(ρ::Number, A::AffineTransform) = apply(Fix1(*, ρ), A)
 
 *(A::AffineTransform, ρ::Number) = scale(A, ρ)
-scale(A::AffineTransform, ρ) = apply(Fix1(*, ρ), identity, A)
+scale(A::AffineTransform, ρ::Number) = apply(Fix1(*, ρ), identity, A)
 
 # Negating (unary minus) of a transform amounts to negating its output or to left-multiply
 # the transform by -1. Hence, it is sufficient to negate all its coefficients.
@@ -335,7 +337,7 @@ See also:
 [`translate`](@ref TwoDimensional.translate).
 
 """
-function rotate(θ, A::AffineTransform)
+function rotate(θ::Number, A::AffineTransform)
     sinθ, cosθ = sincos(θ)
     return AffineTransform(cosθ*A.xx - sinθ*A.yx,
                            cosθ*A.xy - sinθ*A.yy,
@@ -345,7 +347,7 @@ function rotate(θ, A::AffineTransform)
                            cosθ*A.y  + sinθ*A.x)
 end
 
-function rotate(A::AffineTransform, θ)
+function rotate(A::AffineTransform, θ::Number)
     sinθ, cosθ = sincos(θ)
     return AffineTransform(A.xx*cosθ + A.xy*sinθ,
                            A.xy*cosθ - A.xx*sinθ,

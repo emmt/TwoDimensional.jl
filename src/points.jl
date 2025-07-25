@@ -130,7 +130,7 @@ for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
         point_type(pnt::$type) = point_type(typeof(pnt))
         point_type(arr::AbstractVector{<:$type}) = point_type(typeof(arr))
         point_type(::Type{<:AbstractVector{T}}) where {T<:$type} = point_type(T)
-        point_type(tup::Tuple{Vararg{$type}}) = _point_type(point_type(first(tup)), tail(tup))
+        point_type(tup::Tuple{$type,Vararg{$type}}) = _point_type(point_type(first(tup)), tail(tup))
     end
 end
 _point_type(::Type{T}, ::Tuple{}) where {T<:Point} = T

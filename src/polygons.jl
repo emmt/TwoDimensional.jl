@@ -43,7 +43,7 @@ for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
     @eval begin
         Polygon(pnts::$type...) = Polygon(pnts)
         Polygon{T}(pnts::$type...) where {T} = Polygon{T}(pnts)
-        function Polygon(pnts::List{<:$type})
+        function Polygon(pnts::Union{Tuple{$type,Vararg{<:$type}},AbstractVector{<:$type}})
             T = coord_type(point_type(pnts))
             return Polygon{T}(pnts)
         end
@@ -65,6 +65,8 @@ for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
 end
 
 # Tuples with zero item.
+Polygon() = throw_insufficent_number_of_polygon_vertices(0)
+Polygon{T}() where {T} = throw_insufficent_number_of_polygon_vertices(0)
 Polygon(::Tuple{}) = throw_insufficent_number_of_polygon_vertices(0)
 Polygon{T}(::Tuple{}) where {T} = throw_insufficent_number_of_polygon_vertices(0)
 
