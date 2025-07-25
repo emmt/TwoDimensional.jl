@@ -36,11 +36,11 @@ Base.Tuple(obj::Mask) = Tuple(elements(obj))
     TwoDimensional.apply(f, obj)
 
 applies function `f` to each part of geometric object `obj` and rebuild an object of the
-same kind with the result. Here `f` is supposed to be a function implementing an
-elementary geometric operation such as moving, scaling, etc. the geometric object `obj`.
+same kind with the result. Here `f` is supposed to be a function implementing an elementary
+geometric operation such as moving, scaling, etc. the geometric object `obj`.
 
-If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether to swap
-the first and last end-points of the box.
+If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether to swap the
+first and last end-points of the box.
 
 See also [`TwoDimensional.elements`](@ref) and [`TwoDimensional.VertexBasedObject`](@ref).
 
@@ -75,8 +75,8 @@ shape(obj::ShapeElement) = obj
 """
     TwoDimensional.vertices(obj)
 
-yields the vertices defining the vertex-based graphical object `obj`. The result is a
-tuple or a vector of points.
+yields the vertices defining the vertex-based graphical object `obj`. The result is a tuple
+or a vector of points.
 
 """ vertices
 @public vertices
@@ -92,9 +92,8 @@ function vertices(box::BoundingBox)
     return (Point(xmin, ymin), Point(xmax, ymin), Point(xmax, ymax), Point(xmin, ymax))
 end
 
-# Fast versions of `min` and `max` which return their first argument if any
-# argument is a NaN. The fast version of `minmax` cannot warrant this
-# property.
+# Fast versions of `min` and `max` which return their first argument if any argument is a
+# NaN. The fast version of `minmax` cannot warrant this property.
 fastmin(x::T, y::T) where {T} = (x > y ? y : x)
 fastmax(x::T, y::T) where {T} = (x < y ? y : x)
 fastminmax(x::T, y::T) where {T} = (x > y ? (y,x) : (x,y))
@@ -166,8 +165,8 @@ promote_coord_type(obj::GeometricObjectLike) = obj
     convert_coord_type(T::Type, obj::GeometricObject)
     GeometricObject{T}(obj)
 
-convert the coordinate type of a geometrical object `obj` to `T`. If the coordinate type
-of `obj` is already `T`, `obj` itself is returned.
+convert the coordinate type of a geometrical object `obj` to `T`. If the coordinate type of
+`obj` is already `T`, `obj` itself is returned.
 
 """
 convert_coord_type(::Type{T}, obj::GeometricObject{T}) where {T} = obj
@@ -215,8 +214,7 @@ TypeUtils.adapt_precision(::Type{T}, A::GeometricObject{C}) where {T<:Precision,
 """
     convert_coord_type(T::Type, objs::GeometricObject...) -> objs′
 
-yields the tuple of geometric objects `objs...` converted to the coordinate
-type `T`.
+yields the tuple of geometric objects `objs...` converted to the coordinate type `T`.
 
 """
 convert_coord_type(::Type{T}, objs::GeometricObject{T}...) where {T} = objs
@@ -227,8 +225,8 @@ convert_coord_type(::Type{T}, objs::GeometricObject...) where {T} =
     TwoDimensional.is_nothing(x)
     TwoDimensional.is_nothing(x, y...)
 
-yield whether `x` is `nothing` and, if other arguments `y...` are specified,
-that all other `y...` are `nothing`.
+yield whether `x` is `nothing` and, if other arguments `y...` are specified, that all other
+`y...` are `nothing`.
 
 See also [`TwoDimensional.is_nothing`](@ref).
 
@@ -242,8 +240,8 @@ is_nothing(x::Any) = false
     TwoDimensional.is_something(x)
     TwoDimensional.is_something(x, y...)
 
-yield whether `x` is not `nothing` and, if other arguments `y...` are
-specified, that none of the other `y...` is `nothing`.
+yield whether `x` is not `nothing` and, if other arguments `y...` are specified, that none
+of the other `y...` is `nothing`.
 
 See also [`TwoDimensional.is_nothing`](@ref).
 

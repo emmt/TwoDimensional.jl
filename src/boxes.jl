@@ -4,11 +4,11 @@
     box = BoundingBox{T}(; start=..., stop=...)
     box = BoundingBox{T}(; xmin=..., xmax=..., ymin=..., ymax=...)
 
-construct a rectangular bounding-box with edges aligned with the Cartesian axes
-and given the coordinates of 2 opposite corners, `start` and `stop`, whose
-coordinates, `(xmin,ymin)` and `(xmax,ymax)`, may be specified as points, as
-2-tuples, as 2-dimensional Cartesian indices, or by keywords. Parameter `T` is
-the type used to store coordinates, it may be omitted.
+construct a rectangular bounding-box with edges aligned with the Cartesian axes and given
+the coordinates of 2 opposite corners, `start` and `stop`, whose coordinates, `(xmin,ymin)`
+and `(xmax,ymax)`, may be specified as points, as 2-tuples, as 2-dimensional Cartesian
+indices, or by keywords. Parameter `T` is the type used to store coordinates, it may be
+omitted.
 
 Another possibility is:
 
@@ -16,8 +16,8 @@ Another possibility is:
 
 to build an empty bounding-box for coordinate type `T`.
 
-Bounding-boxes have the following properties reflecting the keywords
-accepted by their constructor:
+Bounding-boxes have the following properties reflecting the keywords accepted by their
+constructor:
 
     box.xmin  -> xmin::T
     box.xmax  -> xmax::T
@@ -26,14 +26,12 @@ accepted by their constructor:
     box.start -> start::Point{T}
     box.stop  -> stop::Point{T}
 
-A bounding-box is assumed to contain all points of coordinates `(x,y)` such
-that `xmin ≤ x ≤ xmax` and `ymin ≤ y ≤ ymax`. If `xmin > xmax` or `ymin >
-ymax`, the bounding-box is considered as **empty**. This can be checked with
-`isempty(box)`.
+A bounding-box is assumed to contain all points of coordinates `(x,y)` such that `xmin ≤ x ≤
+xmax` and `ymin ≤ y ≤ ymax`. If `xmin > xmax` or `ymin > ymax`, the bounding-box is
+considered as **empty**. This can be checked with `isempty(box)`.
 
-Boxes are used to represent grid cells and bounding-boxes of other geometric
-shape. Use [`TwoDimensional.Rectangle`](@ref) if you want to define rectangular
-masks.
+Boxes are used to represent grid cells and bounding-boxes of other geometric shape. Use
+[`TwoDimensional.Rectangle`](@ref) if you want to define rectangular masks.
 
 Bounding-boxes are indexable iterators:
 
@@ -51,8 +49,7 @@ Hence, the parameters of a bounding-box can be retrieved by:
     start, stop = box
     (xmin, ymin), (xmax, ymax) = box
 
-See also [`Point`](@ref), [`Rectangle`](@ref), [`interior`](@ref), and
-[`exterior`](@ref).
+See also [`Point`](@ref), [`Rectangle`](@ref), [`interior`](@ref), and [`exterior`](@ref).
 
 """
 BoundingBox(start::Point{T}, stop::Point{T}) where {T} = BoundingBox{T}(start, stop)
@@ -158,12 +155,10 @@ Base.show(io::IO, box::BoundingBox{T}) where {T} =
 """
     BoundingBox{T}(obj)
 
-yields the bounding-box of the geometric object `obj`. If the coordinate type
-`T` is not provided, [`T = coord_type(obj)`](@ref TwoDimensional.coord_type) is
-assumed.
+yields the bounding-box of the geometric object `obj`. If the coordinate type `T` is not
+provided, [`T = coord_type(obj)`](@ref TwoDimensional.coord_type) is assumed.
 
-This can be used to compute the union or the intersection of the bounding-boxes
-of objects:
+This can be used to compute the union or the intersection of the bounding-boxes of objects:
 
     mapreduce(BoundingBox, ∪, (obj1, obj2, obj3, ...))
     mapreduce(BoundingBox, ∩, [obj1, obj2, obj3, ...])
@@ -197,13 +192,12 @@ BoundingBox(msk::Mask{T}) where {T} =
 """
     BoundingBox(f, A::AbstractMatrix)
 
-yields the minimal bounding-box of the entries of `A` such that `f(A[i,j])` is
-true. This can be used to extract this rectangular region:
+yields the minimal bounding-box of the entries of `A` such that `f(A[i,j])` is true. This
+can be used to extract this rectangular region:
 
     A[BoundingBox(f, A)]
 
-If `A` is a matrix of Booleans, `f` is assumed to be the identity if not
-specified.
+If `A` is a matrix of Booleans, `f` is assumed to be the identity if not specified.
 
 """
 BoundingBox(A::AbstractMatrix{Bool}) = BoundingBox(identity, A)
@@ -217,15 +211,15 @@ function BoundingBox(f::Function, A::AbstractMatrix)
     j0, j1 = get_axis_bounds(J)
     imin = jmin = typemax(Int)
     imax = jmax = typemin(Int)
-    # Assuming column-major order, first start by scanning rows to narrow the
-    # subsequent searches along columns.
+    # Assuming column-major order, first start by scanning rows to narrow the subsequent
+    # searches along columns.
     #
     # 1. Find bottom bound `jmin` by scanning rows from bottom to top.
     flag = false
     @inbounds for j in j0:j1, i in i0:i1
         if f(A[i,j])
-            # This definitively set the value of `jmin` and gives limits for
-            # the other bounds.
+            # This definitively set the value of `jmin` and gives limits for the other
+            # bounds.
             imin = imax = i
             jmin = jmax = j
             flag = true
@@ -233,8 +227,8 @@ function BoundingBox(f::Function, A::AbstractMatrix)
         end
     end
     if flag
-        # 2. Find top bound `jmax` by scanning rows from top to bottom.  No
-        #    needs to go beyond `jmax+1`.
+        # 2. Find top bound `jmax` by scanning rows from top to bottom. No needs to go
+        #    beyond `jmax+1`.
         @inbounds for j in j1:-1:jmax+1, i in i0:i1
             if f(A[i,j])
                 jmax = j
@@ -243,8 +237,8 @@ function BoundingBox(f::Function, A::AbstractMatrix)
                 break
             end
         end
-        # 3. Find leftmost bound `imin` by scanning columns from left to right.
-        #    No needs to go beyond `imin-1`.
+        # 3. Find leftmost bound `imin` by scanning columns from left to right. No needs to
+        #    go beyond `imin-1`.
         @inbounds for i in i0:imin-1, j in jmin:jmax
             if f(A[i,j])
                 imin = i
@@ -252,8 +246,8 @@ function BoundingBox(f::Function, A::AbstractMatrix)
                 break
             end
         end
-        # 4. Find rightmost bound `imax` by scanning columns from right to
-        #    left.  No needs to go beyond `imax+1`.
+        # 4. Find rightmost bound `imax` by scanning columns from right to left. No needs to
+        #    go beyond `imax+1`.
         @inbounds for i in i1:-1:imax+1, j in jmin:jmax
             if f(A[i,j])
                 imax = i
@@ -267,10 +261,9 @@ end
 """
     TwoDimensional.get_axis_bounds(I) = (i0,i1)
 
-yields the bounds `i0` and `i1` of index range `I` as a 2-tuple of `Int`'s and
-such that `i0:i1` represents the same indices as `I` (although not in the same
-order if `step(I) < 0`). If `step(I)` is not equal to ±1, an `ArgumentError`
-exception is thrown.
+yields the bounds `i0` and `i1` of index range `I` as a 2-tuple of `Int`'s and such that
+`i0:i1` represents the same indices as `I` (although not in the same order if `step(I) <
+0`). If `step(I)` is not equal to ±1, an `ArgumentError` exception is thrown.
 
 """ get_axis_bounds
 @public get_axis_bounds
@@ -318,12 +311,12 @@ Base.view(arr::AbstractMatrix, box::BoundingBox) = view(arr, axes(box)...)
 """
     TwoDimensional.grow(box, dx, dy=dx)
 
-yields a new bounding-box object corresponding to the input `box` object with 1st and
-2nd dimensions respectively grown by `dx` and `dy`.
+yields a new bounding-box object corresponding to the input `box` object with 1st and 2nd
+dimensions respectively grown by `dx` and `dy`.
 
-Note that the algebraic (not absolute) values of `dx` and `dy` are applied.
-Hence, if `dx` and `dy` are both negative, the bounding-box is effectively
-shrunk by `abs(dx)` and `abs(dy)`.
+Note that the algebraic (not absolute) values of `dx` and `dy` are applied. Hence, if `dx`
+and `dy` are both negative, the bounding-box is effectively shrunk by `abs(dx)` and
+`abs(dy)`.
 
 See also [`TwoDimensional.shrink`](@ref).
 
@@ -335,12 +328,11 @@ grow(box::BoundingBox{T}, delta::Point{T}) where {T} = BoundingBox(first(box) - 
 """
     TwoDimensional.shrink(box, dx, dy=dx)
 
-yields a new bounding-box object corresponding to the input `box` object with 1st and
-2nd dimensions respectively shrunk by `dx` and `dy`.
+yields a new bounding-box object corresponding to the input `box` object with 1st and 2nd
+dimensions respectively shrunk by `dx` and `dy`.
 
-Note that the algebraic (not absolute) values are applied. Hence, if `dx` and
-`dy` are both negative, the bounding-box is effectively grown by `abs(dx)` and
-`abs(dy)`.
+Note that the algebraic (not absolute) values are applied. Hence, if `dx` and `dy` are both
+negative, the bounding-box is effectively grown by `abs(dx)` and `abs(dy)`.
 
 See also [`TwoDimensional.grow`](@ref).
 
@@ -360,10 +352,9 @@ end
 """
     interior([T,] box)
 
-yields the largest bounding-box with integer valued bounds and which is
-contained by the bounding-box `box`. Optional argument `T` is to specify the
-type of the result or the type of the coordinates of the result which is the
-same as `box` by default.
+yields the largest bounding-box with integer valued bounds and which is contained by the
+bounding-box `box`. Optional argument `T` is to specify the type of the result or the type
+of the coordinates of the result which is the same as `box` by default.
 
 See also [`exterior`](@ref), [`ceil`](@ref ceil(::Point)) and [`floor`](@ref
 floor(::Point)).
@@ -375,10 +366,9 @@ interior(::Type{T}, box::BoundingBox) where {T} = BoundingBox(ceil(T, first(box)
 """
     exterior([T,] box)
 
-yields the smallest bounding-box with integer valued bounds and which contains
-the bounding-box `box`. Optional argument `T` is to specify the type of the
-result or the type of the coordinates of the result which is the same as `box`
-by default.
+yields the smallest bounding-box with integer valued bounds and which contains the
+bounding-box `box`. Optional argument `T` is to specify the type of the result or the type
+of the coordinates of the result which is the same as `box` by default.
 
 See also [`interior`](@ref), [`ceil`](@ref ceil(::Point)) and [`floor`](@ref
 floor(::Point)).

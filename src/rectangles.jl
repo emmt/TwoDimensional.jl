@@ -4,14 +4,13 @@
     rect = Rectangle{T}(; start=..., stop=...)
     rect = Rectangle{T}(; x0=..., x1=..., y0=..., y1=...)
 
-construct a rectangular rectangle with edges aligned with the Cartesian axes
-and given the coordinates of 2 opposite corners, `start` and `stop`, whose
-coordinates, `(x0,y0)` and `(x1,y1)`, may be specified as points, as 2-tuples,
-as 2-dimensional Cartesian indices, or by keywords. Parameter `T` is the type
-used to store coordinates, it may be omitted.
+construct a rectangular rectangle with edges aligned with the Cartesian axes and given the
+coordinates of 2 opposite corners, `start` and `stop`, whose coordinates, `(x0,y0)` and
+`(x1,y1)`, may be specified as points, as 2-tuples, as 2-dimensional Cartesian indices, or
+by keywords. Parameter `T` is the type used to store coordinates, it may be omitted.
 
-Rectangles have the following properties reflecting the keywords accepted by
-their constructor:
+Rectangles have the following properties reflecting the keywords accepted by their
+constructor:
 
     rect.x0  -> min(x0, x1)::T
     rect.x1  -> max(x0, x1)::T
@@ -20,8 +19,8 @@ their constructor:
     rect.start -> start::Point{T}
     rect.stop  -> stop::Point{T}
 
-Note that the coordinates are sorted. A rectangle is never empty and contains
-at least a single point.
+Note that the coordinates are sorted. A rectangle is never empty and contains at least a
+single point.
 
 Rectangles are indexable iterators:
 
@@ -39,8 +38,7 @@ Hence, the parameters of a rectangle can be retrieved by:
     start, stop = rect
     (x0, y0), (x1, y1) = rect
 
-See also [`Point`](@ref), [`BoundingBox`](@ref), [`interior`](@ref), and
-[`exterior`](@ref).
+See also [`Point`](@ref), [`BoundingBox`](@ref), [`interior`](@ref), and [`exterior`](@ref).
 
 """
 Rectangle(start::Point{T}, stop::Point{T}) where {T} = Rectangle{T}(start, stop)
@@ -48,8 +46,8 @@ Rectangle(start::Point, stop::Point) = Rectangle(promote(start, stop)...)
 Rectangle{T}(start::Point, stop::Point) where {T} =
     Rectangle{T}(Point{T}(start), Point{T}(stop))
 
-# Rectangle constructors for `start` and `stop` specified as other
-# point-like objects than points.
+# Rectangle constructors for `start` and `stop` specified as other point-like objects than
+# points.
 for type in (:AbstractPoint, :(NTuple{2,Any}), :(CartesianIndex{2}))
     @eval begin
         # `start` and `stop` provided as 2 arguments.

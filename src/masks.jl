@@ -2,17 +2,17 @@
     TwoDimensional.Mask(elems...)
     TwoDimensional.Mask{T}(elems...)
 
-build a composite mask consisting in the ordered list of mask elements `elems...`.
-Optional type parameter `T` is the coordinate type of the masks elements. All mask
-elements are converted as needed to have this coordinate type. If `T` is not specified, it
-is inferred by promoting the coordinate types of the mask elements.
+build a composite mask consisting in the ordered list of mask elements `elems...`. Optional
+type parameter `T` is the coordinate type of the masks elements. All mask elements are
+converted as needed to have this coordinate type. If `T` is not specified, it is inferred by
+promoting the coordinate types of the mask elements.
 
 A mask can be moved, scaled, rotated, etc., the coordinate type of its elements may be
 converted to another type.
 
 !!! warning
-    Masks with a large number of elements should preferably be created with a vector, not
-    a tuple, of mask elements.
+    Masks with a large number of elements should preferably be created with a vector, not a
+    tuple, of mask elements.
 
 """ Mask
 @public Mask
@@ -43,9 +43,8 @@ end
     msk = MaskElement{T}(shape::ShapeElement; opaque)
 
 builds an elementary mask whose shape is given by the elementary geometric object `shape`
-and with keyword `opaque` set to `true` for an opaque mask (an *obscuration*) and to
-`false` for a transparent mask (an *aperture*). `T` is the coordinate type which may be
-omitted.
+and with keyword `opaque` set to `true` for an opaque mask (an *obscuration*) and to `false`
+for a transparent mask (an *aperture*). `T` is the coordinate type which may be omitted.
 
 To change the opacity (by default the same opacity is kept) and/or the coordinate type:
 
@@ -162,10 +161,9 @@ keywords. A rectangular obscuration is an opaque rectangular mask.
 """
     TwoDimensional.circular_aperture(args...; kwds...)
 
-yields an elementary mask object representing a circular aperture defined by given
-arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref)
-constructor for possible arguments and keywords. A circular aperture is a transparent
-circular mask.
+yields an elementary mask object representing a circular aperture defined by given arguments
+`args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref) constructor for
+possible arguments and keywords. A circular aperture is a transparent circular mask.
 
 """ circular_aperture
 @public circular_aperture
@@ -174,9 +172,8 @@ circular mask.
     TwoDimensional.circular_obscuration(args...; kwds...)
 
 yields an elementary mask object representing a circular obscuration defined by given
-arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref)
-constructor for possible arguments and keywords. A circular obscuration is an opaque
-circular mask.
+arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref) constructor
+for possible arguments and keywords. A circular obscuration is an opaque circular mask.
 
 """ circular_obscuration
 @public circular_obscuration
@@ -185,9 +182,8 @@ circular mask.
     TwoDimensional.polygonal_aperture(args...; kwds...)
 
 yields an elementary mask object representing a polygonal aperture defined by given
-arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref)
-constructor for possible arguments and keywords. A polygonal aperture is a transparent
-polygonal mask.
+arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref) constructor
+for possible arguments and keywords. A polygonal aperture is a transparent polygonal mask.
 
 """ polygonal_aperture
 @public polygonal_aperture
@@ -196,9 +192,8 @@ polygonal mask.
     TwoDimensional.polygonal_obscuration(args...; kwds...)
 
 yields an elementary mask object representing a polygonal obscuration defined by given
-arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref)
-constructor for possible arguments and keywords. A polygonal obscuration is an opaque
-polygonal mask.
+arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref) constructor
+for possible arguments and keywords. A polygonal obscuration is an opaque polygonal mask.
 
 """ polygonal_obscuration
 @public polygonal_obscuration
@@ -217,11 +212,10 @@ end
 """
     TwoDimensional.apply_mask(Aᵢₙ, args...; kwds...) -> Aₒᵤₜ
 
-multiplies the values of the input 2-dimensional array `Aᵢₙ` by a mask defined by
-arguments `args...` and keywords `kwds...` and returns the resulting output array `Aₒᵤₜ`.
-The input array `Aᵢₙ` is left unmodified, method [`TwoDimensional.apply_mask!`](@ref) may
-be used for in-place operation. See [`TwoDimensional.forge_mask`](@ref) for how to define
-a mask.
+multiplies the values of the input 2-dimensional array `Aᵢₙ` by a mask defined by arguments
+`args...` and keywords `kwds...` and returns the resulting output array `Aₒᵤₜ`. The input
+array `Aᵢₙ` is left unmodified, method [`TwoDimensional.apply_mask!`](@ref) may be used for
+in-place operation. See [`TwoDimensional.forge_mask`](@ref) for how to define a mask.
 
 """ apply_mask
 @public apply_mask
@@ -230,8 +224,8 @@ apply_mask(A::AbstractMatrix, args...; kwds...) = apply_mask!(copy(A), args...; 
 """
     TwoDimensional.apply_mask!(A, args...; kwds...) -> A
 
-multiplies in-place the 2-dimensional array `A` by a mask defined by arguments `args...`
-and keywords `kwds...` and returns `A`. See [`TwoDimensional.apply_mask`](@ref) for an
+multiplies in-place the 2-dimensional array `A` by a mask defined by arguments `args...` and
+keywords `kwds...` and returns `A`. See [`TwoDimensional.apply_mask`](@ref) for an
 out-of-place version and for details.
 
 """ apply_mask!
@@ -258,8 +252,8 @@ end
 
 yield a 2-dimensional array with entries set to the transmission by the mask `msk` for an
 array-like `A`. The mask may also be specified by the list `objs...` of elementary mask
-objects. The coordinates of the mask are assumed to be given in fractional Cartesian
-indices for `A`.
+objects. The coordinates of the mask are assumed to be given in fractional Cartesian indices
+for `A`.
 
 """ forge_mask
 @public forge_mask
@@ -293,8 +287,8 @@ forge_mask(::Type{T}, inds::ArrayShape{2}, msk::Mask; kwds...) where {T} =
 
 yield a 2-dimensional array filled with transmission values computed for the mask `msk` at
 coordinates given by `X` and `Y` along the 1st and 2nd dimensions. The mask may also be
-specified by combining elementary mask objects `elems...`. Optional argument `T` is to specify
-the element type of the result.
+specified by combining elementary mask objects `elems...`. Optional argument `T` is to
+specify the element type of the result.
 
 The following *painting* algorithm is used:
 
@@ -309,16 +303,16 @@ The following *painting* algorithm is used:
   to an intermediate value between the opaque and transparent ones and (approximately)
   proportionally to the transparent fraction of the cell area.
 
-Note that the order of the components of the mask is relevant: an aperture component
-drills holes in the previously opaque parts while an obscuration hides previously
-transparent parts.
+Note that the order of the components of the mask is relevant: an aperture component drills
+holes in the previously opaque parts while an obscuration hides previously transparent
+parts.
 
-Keyword `antialiasing` can be set to specify the number of sub-cells (per side) to
-determine the transmission of grid cells partially overlapping the boundary delimiting the
-mask components. By default, `antialiasing = $default_antialiasing`. If `antialiasing ≤
-1`, a 50% transmission is assumed for partially overlapping cells (sharp edges);
-otherwise, overlapping cells are subdivided in `antialiasing × antialiasing` sub-cells to
-estimate their partial transmission.
+Keyword `antialiasing` can be set to specify the number of sub-cells (per side) to determine
+the transmission of grid cells partially overlapping the boundary delimiting the mask
+components. By default, `antialiasing = $default_antialiasing`. If `antialiasing ≤ 1`, a 50%
+transmission is assumed for partially overlapping cells (sharp edges); otherwise,
+overlapping cells are subdivided in `antialiasing × antialiasing` sub-cells to estimate
+their partial transmission.
 
 Keywords `opaque` and `transparent` can be used to specify the values of the the
 respectively opaque and transparent parts of the mask. Values of partially
@@ -326,8 +320,7 @@ opaque/transparent parts will be interpolated between these.
 
 Keyword `multithreading` specifies whether to use multiple threads for the computations.
 
-Example to forge a mask representing the primary mirror of a telescope with its spider
-arms:
+Example to forge a mask representing the primary mirror of a telescope with its spider arms:
 
     using TwoDimensional
     using Unitful: μm, mm, cm, m
@@ -377,9 +370,9 @@ forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) 
     TwoDimensional.forge_mask!(dst, [X, Y,] msk; kwds...) -> dst
     TwoDimensional.forge_mask!(dst, [X, Y,] elems...; kwds...) -> dst
 
-In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the destination
-array `dst` with the mask and returns it. If coordinates `X` and `Y` along the axes of
-`dst` are not specified, `(X, Y) = axes(dst)` is assumed.
+In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the destination array
+`dst` with the mask and returns it. If coordinates `X` and `Y` along the axes of `dst` are
+not specified, `(X, Y) = axes(dst)` is assumed.
 
 """ forge_mask!
 @public forge_mask!
@@ -528,9 +521,9 @@ end
     TwoDimensional.unsafe_coarse_transmission!(dst, X, δx, Y, δy, obj, inside, partial)
 
 updates 2-dimensional array `dst` with a coarse estimation of the transmission due to
-geometrical shape object `obj`. `X` and `Y` give the coordinates of the cells of `dst`
-along its dimensions with respective steps `δx` and `δy`. `inside` is the transmission for
-cells fully inside the boundaries of `obj`, while `partial` is the transmission for cells
+geometrical shape object `obj`. `X` and `Y` give the coordinates of the cells of `dst` along
+its dimensions with respective steps `δx` and `δy`. `inside` is the transmission for cells
+fully inside the boundaries of `obj`, while `partial` is the transmission for cells
 overlapping the boundaries of `obj`. Cells fully outside `obj` are left unchanged.
 
 The function is *unsafe* because it assumes without checking that `dst` is indexed as `X`
@@ -574,14 +567,14 @@ end
     TwoDimensional.unsafe_sampled_transmission!(state, x, sx, y, sy,
                                                 msk, opaque, transparent) -> v
 
-yields the transmission due to the elements in mask `msk` for a rectangular cell centered
-at `(x,y)` by sampling the cell at offsets `sx` and `sy` along its dimensions. The
-returned value `v` is interpolated in the range `[opaque,transparent]` of transmissions
-from the fully opaque to the fully transparent parts of the mask.
+yields the transmission due to the elements in mask `msk` for a rectangular cell centered at
+`(x,y)` by sampling the cell at offsets `sx` and `sy` along its dimensions. The returned
+value `v` is interpolated in the range `[opaque,transparent]` of transmissions from the
+fully opaque to the fully transparent parts of the mask.
 
-Argument `state` is a workspace array used to sample the transmission. The function
-is *unsafe* because it assumes without checking that `state` is indexed as `sx` and `sy`
-along its first and second dimensions respectively.
+Argument `state` is a workspace array used to sample the transmission. The function is
+*unsafe* because it assumes without checking that `state` is indexed as `sx` and `sy` along
+its first and second dimensions respectively.
 
 """
 function unsafe_sampled_transmission!(state::AbstractMatrix{Bool},
@@ -606,12 +599,12 @@ function unsafe_sampled_transmission!(state::AbstractMatrix{Bool},
                                       obj::MaskElement{T},
                                       count::Int) where {T}
     # Operation can be much faster if cell is fully outside object boundaries. For complex
-    # shaped object, it is cheaper to check whether the cell is outside the bounding-box
-    # of the object.
+    # shaped object, it is cheaper to check whether the cell is outside the bounding-box of
+    # the object.
     box = BoundingBox(obj)
     if box.xmax < first(X) || box.xmin > last(X) || box.ymax < first(Y) || box.ymin > last(Y)
         # The cell is outside the bounding-box of the mask element. The mask element has
-        # thus no indicence unless it is the first of the stack.
+        # thus no incidence unless it is the first of the stack.
         if count < zero(count)
             # This is the first mask element applied to this cell.
             if is_opaque(obj)
@@ -644,8 +637,7 @@ function unsafe_sampled_transmission!(state::AbstractMatrix{Bool},
                 for i in I
                     x = X[i]
                     if Overlap(Point(x, y), obj) != OUTSIDE
-                        # Point is considered as being inside boundaries of opaque
-                        # mask.
+                        # Point is considered as being inside boundaries of opaque mask.
                         if state[i,j]
                             # Sub-cell previously counted as transparent.
                             state[i,j] = false
@@ -808,8 +800,8 @@ function Overlap(cell::Rectangle{T}, circle::Circle{T}) where {T}
         return OUTSIDE
     end
     r² = r^2
-    # Most distant point in cell from center of circle is one of the corners. If this
-    # point is inside the circle, then the cell is fully inside the circle.
+    # Most distant point in cell from center of circle is one of the corners. If this point
+    # is inside the circle, then the cell is fully inside the circle.
     x²max = max(x0^2, x1^2)
     y²max = max(y0^2, y1^2)
     if x²max + y²max ≤ r²
@@ -836,8 +828,8 @@ function Overlap(cell::Rectangle{T}, polygon::Polygon{T}) where {T}
     (x0, y0), (x1, y1) = cell # retrieve coordinates of cell vertices
     V = vertices(polygon) # retrieve the list of vertices of the polygon
 
-    # If any polygon edges (strictly) crosses one of the 4 edges of the cell, then there
-    # is some partial overlapping.
+    # If any polygon edges (strictly) crosses one of the 4 edges of the cell, then there is
+    # some partial overlapping.
     A = last(V) # initialize A, the 1st point of edges in cyclic list of points
     @inbounds for B in V # loop over B, the 2nd point of edges
         xmin, xmax = minmax(A.x, B.x)

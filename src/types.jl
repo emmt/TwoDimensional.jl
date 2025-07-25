@@ -1,22 +1,22 @@
 #
 # types.jl --
 #
-# Type definitions and constants for TwoDimensinal package.
+# Type definitions and constants for TwoDimensional package.
 #
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
 #
-# This file is part of the TwoDimensional Julia package licensed under the MIT
-# license (https://github.com/emmt/TwoDimensional.jl).
+# This file is part of the TwoDimensional Julia package licensed under the MIT license
+# (https://github.com/emmt/TwoDimensional.jl).
 #
-# Copyright (c) 2019-2024, Éric Thiébaut.
+# Copyright (c) 2019-2025, Éric Thiébaut.
 #
 
 """
     TwoDimensional.List{T}
 
-is a type alias for indexable ordered lists of object of type `T`. This includes tuples
-and vectors. If `T` is an abstract type, specify `TwoDimensional.List{<:T}` to match
-vectors whose elements have concrete type inherited from `T`.
+is a type alias for indexable ordered lists of object of type `T`. This includes tuples and
+vectors. If `T` is an abstract type, specify `TwoDimensional.List{<:T}` to match vectors
+whose elements have concrete type inherited from `T`.
 
 """ List
 @public List
@@ -28,9 +28,9 @@ const List{T} = Union{Tuple{Vararg{T}},AbstractVector{T}}
 """
     TwoDimensional.GeometricObject{T}
 
-is the super-type of geometric objects whose coordinates are of type `T`. Most
-computations assume that `T` is floating-point (possibly with units). Coordinate type `T`
-of a geometric object `obj` can be retrieved with [`TwoDimensional.coord_type(obj)`](@ref
+is the super-type of geometric objects whose coordinates are of type `T`. Most computations
+assume that `T` is floating-point (possibly with units). Coordinate type `T` of a geometric
+object `obj` can be retrieved with [`TwoDimensional.coord_type(obj)`](@ref
 `TwoDimensional.coord_type).
 
 """ GeometricObject
@@ -40,9 +40,8 @@ abstract type GeometricObject{T} end
 """
     TwoDimensional.GeometricElement{T} <: TwoDimensional.GeometricObject{T}
 
-is the super-type of elementary geometric objects whose coordinates are of type
-`T`. Concrete objects of this type are the building blocks or more complex
-geometric objects.
+is the super-type of elementary geometric objects whose coordinates are of type `T`.
+Concrete objects of this type are the building blocks or more complex geometric objects.
 
 """ GeometricElement
 @public GeometricElement
@@ -51,8 +50,8 @@ abstract type GeometricElement{T} <: GeometricObject{T} end
 """
     TwoDimensional.ShapeElement{T} <: TwoDimensional.GeometricElement{T}
 
-is the super-type of elementary geometric objects whose coordinates are of type
-`T` and which can be used to specify boundaries.
+is the super-type of elementary geometric objects whose coordinates are of type `T` and
+which can be used to specify boundaries.
 
 """ ShapeElement
 @public ShapeElement
@@ -71,9 +70,8 @@ const default_antialiasing = 11
 """
     TwoDimensional.MaskElement(shape::ShapeElement; opaque::Bool)
 
-builds a simple mask whose boundaries are defined by `shape` and which is
-opaque (i.e., an obscuration) if `opaque` is true and transparent (i.e., an
-aperture) otherwise.
+builds a simple mask whose boundaries are defined by `shape` and which is opaque (i.e., an
+obscuration) if `opaque` is true and transparent (i.e., an aperture) otherwise.
 
 """ MaskElement
 @public MaskElement
@@ -91,8 +89,8 @@ end
 """
     AbstractPoint{T} <: TwoDimensional.GeometricElement{T}
 
-is the abstract type of objects with at least 2 properties: `x` and `y`, their
-respective abscissa and ordinate, both of type `T`.
+is the abstract type of objects with at least 2 properties: `x` and `y`, their respective
+abscissa and ordinate, both of type `T`.
 
 See also [`Point`](@ref).
 
@@ -195,11 +193,10 @@ const PointLike = Union{AbstractPoint,
 """
     TwoDimensional.RectangleLike
 
-is the union of types of objects that may be used to specify a rectangle in
-`TwoDimensional` package.
+is the union of types of objects that may be used to specify a rectangle in `TwoDimensional`
+package.
 
-The [`Rectangle`](@ref) constructor can build an instance from any argument of these
-types.
+The [`Rectangle`](@ref) constructor can build an instance from any argument of these types.
 
 """ RectangleLike
 @public RectangleLike

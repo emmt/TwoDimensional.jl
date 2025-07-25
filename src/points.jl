@@ -4,20 +4,18 @@
     pnt = Point{T}(; x=..., y=...)
     pnt = Point{T}(; r=..., θ=...)
 
-construct a point given its Cartesian coordinates `(x,y)` (in the 3 first
-examples) or its polar coordinates (in the last example) with `r` the distance
-to the origin and `θ` the counterclockwise angle relative to `x`-axis.
-Parameter `T` is the type used to store coordinates, it may be omitted.
+construct a point given its Cartesian coordinates `(x,y)` (in the 3 first examples) or its
+polar coordinates (in the last example) with `r` the distance to the origin and `θ` the
+counterclockwise angle relative to `x`-axis. Parameter `T` is the type used to store
+coordinates, it may be omitted.
 
-Note that, in `TwoDimensional`, `x` and `y` respectively correspond to the 1st
-and 2nd dimensions of 2-dimensional arrays.
+Note that, in `TwoDimensional`, `x` and `y` respectively correspond to the 1st and 2nd
+dimensions of 2-dimensional arrays.
 
-A point may be multiplied or divided by a scalar to scale its coordinates. The
-addition (resp. subtraction) of two points adds (resp. subtracts) their
-coordinates.
+A point may be multiplied or divided by a scalar to scale its coordinates. The addition
+(resp. subtraction) of two points adds (resp. subtracts) their coordinates.
 
-Points have the following properties reflecting the keywords accepted by their
-constructor:
+Points have the following properties reflecting the keywords accepted by their constructor:
 
     pnt.x  ->  x::T
     pnt.y  ->  y::T
@@ -37,11 +35,10 @@ The coordinates of `pnt` can thus be retrieved by:
 
     x, y = pnt
 
-the polar coordinates of the point can be retrieved by `hypot(pnt) -> r`,
-`abs(pnt) -> r`, or `norm(pnt) -> r`, and by `atan(pnt) -> θ`.
+the polar coordinates of the point can be retrieved by `hypot(pnt) -> r`, `abs(pnt) -> r`,
+or `norm(pnt) -> r`, and by `atan(pnt) -> θ`.
 
-See also [`AbstractPoint`](@ref), [`Rectangle`](@ref), and
-[`BoundingBox`](@ref).
+See also [`AbstractPoint`](@ref), [`Rectangle`](@ref), and [`BoundingBox`](@ref).
 
 """
 Point(x, y) = Point(promote(x, y))
@@ -116,11 +113,11 @@ Base.show(io::IO, pnt::Point{T}) where {T} =
 
 yields the equivalent point type of `arg`.
 
-If `arg` is a point-like object (or the type of such an object) the result is
-the point type of `arg` when converted to a `Point`.
+If `arg` is a point-like object (or the type of such an object) the result is the point type
+of `arg` when converted to a `Point`.
 
-If `arg` is a tuple of point-like objects, the result is the promoted type of
-the conversion of each `arg` to a `Point`.
+If `arg` is a tuple of point-like objects, the result is the promoted type of the conversion
+of each `arg` to a `Point`.
 
 """ point_type
 @public point_type
@@ -178,9 +175,8 @@ end
 """
     TwoDimensional.get_xy(pnt::PointLike) -> (x::T, y::T)
 
-yields a 2-tuple with the abscissa `x` and ordinate `y` of point-like object
-`pnt`. This is equivalent to, but more economical than,
-`(get_x(pnt),get_y(pnt))`.
+yields a 2-tuple with the abscissa `x` and ordinate `y` of point-like object `pnt`. This is
+equivalent to, but more economical than, `(get_x(pnt),get_y(pnt))`.
 
 See also [`TwoDimensional.get_x`](@ref), [`TwoDimensional.get_y`](@ref) and
 [`TwoDimensional.PointLike`](@ref).

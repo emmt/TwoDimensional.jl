@@ -1,26 +1,24 @@
 """
     AffineTransform(Axx, Axy, Ax, Ayx, Ayy, Ay) -> A
 
-yields a callable object implementing a 2-dimensional affine transform such
-that:
+yields a callable object implementing a 2-dimensional affine transform such that:
 
     A(x, y) -> (Axx*x + Axy*y + Ax, Ayx*x + Ayy*y + Ay)
     A((x, y)) -> (Axx*x + Axy*y + Ax, Ayx*x + Ayy*y + Ay)
     A(pnt::Point) -> Point(A(pnt.x, pnt.y))
-    A(pnt::CartesianIndex{2}) -> Point(A(pnt[1], pnt[2]))
+    A(idx::CartesianIndex{2}) -> Point(A(idx[1], idx[2]))
 
 The constructor optionally takes one or three parameters:
 
     AffineTransform{T}(Axx, Axy, Ax, Ayx, Ayy, Ay)
     AffineTransform{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay)
 
-where `T` is the concrete floating-point type of the coefficients, `R` is the
-type for storing the factors `Axx`, `Axy`, `Ayx`, and `Ayy`, and `S` is the
-type for storing the offsets `Ax` and `Ay`. The bare types of `R` and `S` must
-be `T` but they may have units.
+where `T` is the concrete floating-point type of the coefficients, `R` is the type for
+storing the factors `Axx`, `Axy`, `Ayx`, and `Ayy`, and `S` is the type for storing the
+offsets `Ax` and `Ay`. The bare type of `R` and `S` must be `T` but they may have units.
 
-Changing the floating-point type of an existing 2-dimensional affine transform
-`A` can be done by one of:
+Changing the floating-point type of an existing 2-dimensional affine transform `A` can be
+done by one of:
 
     B = AffineTransform{T}(A)
     B = convert(AffineTransform{T}, A)
@@ -28,10 +26,15 @@ Changing the floating-point type of an existing 2-dimensional affine transform
     B = convert_real_type(T, A)
     B = convert_floating_point_type(T, A)
 
-the 3 last assume `using TypeUtils`. Using `TypeUtils` API, the floating-point
-type `T` can be retrieved by either of `bare_type(A)`, real_type(A)`, or
-`floating_point_type(A)` with `A` a 2-dimensional affine transform instance or
-type.
+the 3 last assume `using TypeUtils`. Using `TypeUtils`
+API, the floating-point type `T` can be retrieved by either of `bare_type(A)`,
+real_type(A)`, or `floating_point_type(A)` with `A` a 2-dimensional affine transform
+instance or type.
+
+If `T` is floating-point, changing the precision of the affine transform `A` while keeping
+their units can also be done by:
+
+    B = adapt_precision(T, A)
 
 Applying the 2-dimensional affine transform `A` can be done by:
 
@@ -103,11 +106,10 @@ end
     AffineTransform{T}() -> Id
     AffineTransform{T,R,S}() -> Id
 
-yields a 2-dimensional affine transform corresponding to the identity (up to
-possible change of type and units). Parameter `T` is the floating-point type of
-the coefficients (`Float64` by default). Parameters `R` and `S` are the types
-of the factors and of the offsets (by default both are assumed to be `T`).
-These are shortcuts to:
+yields a 2-dimensional affine transform corresponding to the identity (up to possible change
+of type and units). Parameter `T` is the floating-point type of the coefficients (`Float64`
+by default). Parameters `R` and `S` are the types of the factors and of the offsets (by
+default both are assumed to be `T`). These are shortcuts to:
 
      AffineTransform(oneunit(R),zero(R),zero(S), zero(R),oneunit(R),zero(S))
 
@@ -143,10 +145,10 @@ Base.float(::Type{T}) where {T<:AffineTransform} = T
 
 """
     TwoDimensional.factors_type(A) -> R
+    TwoDimensional.factors_type(typeof(A)) -> R
 
-yields the type of the factors of the 2-dimensional affine transform `A`. The
-factors of `A` are the coefficients `A.xx`, `A,xy`, `A.yx`, and `A.yy`.
-Argument may also be the type of an affine transform.
+yield the type of the factors of the 2-dimensional affine transform `A`. The factors of `A`
+are the coefficients `A.xx`, `A,xy`, `A.yx`, and `A.yy`.
 
 See also: [`offsets_type`](@ref TwoDimensional.offsets_type).
 
@@ -157,10 +159,10 @@ factors_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = R
 
 """
     TwoDimensional.offsets_type(A) -> R
+    TwoDimensional.offsets_type(typeof(A)) -> R
 
-yields the type of the offsets of the 2-dimensional affine transform `A`. The
-offsets of `A` are the coefficients `A.x` and `A.y`. Argument may also be the
-type of an affine transform.
+yield the type of the offsets of the 2-dimensional affine transform `A`. The offsets of `A`
+are the coefficients `A.x` and `A.y`.
 
 See also: [`factors_type`](@ref TwoDimensional.factors_type).
 
@@ -224,7 +226,7 @@ Base.length(A::AffineTransform) = 6
 Base.eltype(A::AffineTransform) = eltype(typeof(A))
 Base.eltype(::Type{<:AffineTransform{T,R,S}}) where {T,R,S} = R === S ? R : Union{R,S}
 
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
 # Apply the transform to some coordinates (promoted to the same type).
 (A::AffineTransform)(pnt::Union{Point,CartesianIndex{2}}) = Point(A(get_x(pnt), get_y(pnt)))
 (A::AffineTransform)((x, y)::Tuple{Any,Any}) = A(x, y)
@@ -234,7 +236,7 @@ Base.eltype(::Type{<:AffineTransform{T,R,S}}) where {T,R,S} = R === S ? R : Unio
 
 *(A::AffineTransform, pnt::PointLike) = A(pnt)
 
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
 # Combine a translation with an affine transform.
 
 """
@@ -244,9 +246,9 @@ Base.eltype(::Type{<:AffineTransform{T,R,S}}) where {T,R,S} = R === S ? R : Unio
     B = (x,y) + A
     B = pnt + A
 
-perform a left-translation of the 2-dimensional affine transform `A`. Applying
-`B` yields the same result as if coordinates `(x,y)` are added to the output of
-`A`. Here, `pnt = Point(x,y)` or `pnt = CartesianIndex(x,y)`.
+perform a left-translation of the 2-dimensional affine transform `A`. Applying `B` yields
+the same result as if coordinates `(x,y)` are added to the output of `A`. Here, `pnt =
+Point(x,y)` or `pnt = CartesianIndex(x,y)`.
 
     C = translate(A, x, y)
     C = translate(A, (x,y))
@@ -254,9 +256,8 @@ perform a left-translation of the 2-dimensional affine transform `A`. Applying
     C = A + (x,y)
     C = A + pnt
 
-perform a right-translation of the 2-dimensional affine transform `A`. Applying
-`B` yields the same result as if coordinates `(x,y)` are added to the input of
-`A`.
+perform a right-translation of the 2-dimensional affine transform `A`. Applying `B` yields
+the same result as if coordinates `(x,y)` are added to the input of `A`.
 
 See also: [`AffineTransform`](@ref), [`rotate`](@ref), [`scale`](@ref).
 
@@ -300,17 +301,15 @@ scale(ρ, A::AffineTransform) = apply(Fix1(*, ρ), A)
 *(A::AffineTransform, ρ::Number) = scale(A, ρ)
 scale(A::AffineTransform, ρ) = apply(Fix1(*, ρ), identity, A)
 
-# Negating (unary minus) of a transform amounts to negating its output or to
-# left-multiply the transform by -1. Hence, it is sufficient to negate all its
-# coefficients.
+# Negating (unary minus) of a transform amounts to negating its output or to left-multiply
+# the transform by -1. Hence, it is sufficient to negate all its coefficients.
 -(A::AffineTransform) = apply(-, A)
 
 """
     TwoDimensional.apply(f, g=f, A::AffineTransform)
 
-applies functions `f` and `g` respectively to each factors and each offsets of
-the affine tranform `A` and rebuild an affine transform with the resulting
-values.
+applies functions `f` and `g` respectively to each factors and each offsets of the affine
+transform `A` and rebuild an affine transform with the resulting values.
 
 """
 apply(f::Callable, A::AffineTransform) = apply(f, f, A)
@@ -327,9 +326,8 @@ yield 2-dmensional affine transforms `B` and `C` such that:
     B(x,y) = (R∘A)(x,y) = R(A(x,y))
     C(x,y) = (A∘R)(x,y) = A(R(x,y))
 
-where `R` implements rotation by angle `θ` counterclockwise around the origin
-at coordimates `(0,0)`. The rotation angle `θ` is assumed to be in radians if
-it has no units.
+where `R` implements rotation by angle `θ` counterclockwise around the origin at coordinates
+`(0,0)`. The rotation angle `θ` is assumed to be in radians if it has no units.
 
 See also:
 [`AffineTransform`](@ref TwoDimensional.AffineTransform),
@@ -385,13 +383,12 @@ end
 """
     TwoDimensional.compose(A::AffineTransform, B::AffineTransform)
 
-yields the affine transform which combines the two affine transforms `A` and
-`B`, that is the affine transform which applies `B` and then `A`. Composition
-is accessible via: `A*B` or `A∘B` ("`∘`" can be typed by `\\circ<tab>`).
+yields the affine transform which combines the two affine transforms `A` and `B`, that is
+the affine transform which applies `B` and then `A`. Composition is accessible via: `A*B` or
+`A∘B` ("`∘`" can be typed by `\\circ<tab>`).
 
-It is possible to compose more than two affine transforms. For instance,
-`compose(A,B,C)` yields the affine transform which applies `C` then `B`, then
-`A`.
+It is possible to compose more than two affine transforms. For instance, `compose(A,B,C)`
+yields the affine transform which applies `C` then `B`, then `A`.
 
 """ compose
 @public compose
@@ -415,13 +412,12 @@ compose(A::AffineTransform, B::AffineTransform) =
     A/B -> A ∘ inv(B)
     TwoDimensional.rdiv(A::AffineTransform, B::AffineTransform) -> A ∘ inv(B)
 
-yield the *"right division"* of the affine transform `A` by the affine
-transform `B`.
+yield the *"right division"* of the affine transform `A` by the affine transform `B`.
 
-It is an abuse of notation to have `A/B` being a shortcut to `A ∘ inv(B)` but
-this is in-line with the overloading of `*` such that `A * B -> A ∘ B`. This
-function is motivated by the fact that it takes only 29 flops whereas `inv(A) ∘
-B` takes 37 flops (17 flops for `inv` and 20 flops for `∘`).
+It is an abuse of notation to have `A/B` being a shortcut to `A ∘ inv(B)` but this is
+in-line with the overloading of `*` such that `A * B -> A ∘ B`. This function is motivated
+by the fact that it takes only 29 flops whereas `inv(A) ∘ B` takes 37 flops (17 flops for
+`inv` and 20 flops for `∘`).
 
 """ rdiv
 @public rdiv
@@ -443,13 +439,12 @@ end
     A\\B -> inv(A) ∘ B
     TwoDimensional.ldiv(A::AffineTransform, B::AffineTransform) -> inv(A) ∘ B
 
-yield the *"left division"* of the affine transform `A` by the affine
-transform `B`.
+yield the *"left division"* of the affine transform `A` by the affine transform `B`.
 
-It is an abuse of notation to have `A\\B` being a shortcut to `inv(A) ∘ B` but
-this is in-line with the overloading of `*` such that `A * B -> A ∘ B`. This
-function is motivated by the fact that it takes only 29 flops whereas `inv(A) ∘
-B` takes 37 flops (17 flops for `inv` and 20 flops for `∘`).
+It is an abuse of notation to have `A\\B` being a shortcut to `inv(A) ∘ B` but this is
+in-line with the overloading of `*` such that `A * B -> A ∘ B`. This function is motivated
+by the fact that it takes only 29 flops whereas `inv(A) ∘ B` takes 37 flops (17 flops for
+`inv` and 20 flops for `∘`).
 
 """ ldiv
 @public ldiv
@@ -477,8 +472,8 @@ end
     A\b -> c
     TwoDimensional.ldiv(A::AffineTransform, b=(0,0)) -> c
 
-return the 2-tuple `c = (x,y)` such that `A*c = b`. If `b` is a `Point`, `c` is
-returned as a `Point`.
+return the 2-tuple `c = (x,y)` such that `A*c = b`. If `b` is a `Point`, `c` is returned as
+a `Point`.
 
 """
 function ldiv(A::AffineTransform, b::NTuple{2})

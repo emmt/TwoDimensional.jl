@@ -3,12 +3,12 @@
     circ = Circle{T}((x, y), radius)
     circ = Circle{T}(; center=..., radius=...)
 
-construct a circle of given `center` and `radius` or `diameter`. The center may
-be specified by its coordinates `(x,y)` along the Cartesian axes. Parameter `T`
-is the type used to store coordinates, it may be omitted.
+construct a circle of given `center` and `radius` or `diameter`. The center may be specified
+by its coordinates `(x,y)` along the Cartesian axes. Parameter `T` is the type used to store
+coordinates, it may be omitted.
 
-Circles have the following properties reflecting the keywords accepted by their
-constructor (`diameter` is provided for convenience):
+Circles have the following properties reflecting the keywords accepted by their constructor
+(`diameter` is provided for convenience):
 
     circ.center   -> center::Point{T}
     circ.radius   -> radius::T

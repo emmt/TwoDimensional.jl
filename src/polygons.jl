@@ -3,14 +3,14 @@
     poly = Polygon{T}(pnts)
 
 construct a polygon with vertices given by point-like objects `pnts...` or vector or tuple
-of point-like objects `pnts`. Parameter `T` is the type of coordinates, if omitted, a
-common coordinate type is automatically inferred.
+of point-like objects `pnts`. Parameter `T` is the type of coordinates, if omitted, a common
+coordinate type is automatically inferred.
 
 The vertices of a polygon may be stored as a tuple or as a vector. Call `values(poly)` to
 get the object backing the storage of the vertices of the polygon `poly`. The method
 `Tuple(poly)` yields a tuple of the vertices of `poly`. The method `vec(poly)` yields a
-vector of the vertices of the polygon which may be shared with `poly`. Call
-`collect(poly)` to make an independent copy of the vector of vertices.
+vector of the vertices of the polygon which may be shared with `poly`. Call `collect(poly)`
+to make an independent copy of the vector of vertices.
 
 Vertices are directly accessible by indexing the polygon object:
 
@@ -177,9 +177,8 @@ function geometric_properties(poly::Polygon)
     convex = true # polygon is convex?
     singular = false # polygon is singular?
     @inbounds for i in eachindex(poly)
-        # Compute cross-product to determine whether the polygon is convex and
-        # its global direction (to guess where is interior). Determine
-        # bounding-box.
+        # Compute cross-product to determine whether the polygon is convex and its global
+        # direction (to guess where is interior). Determine bounding-box.
         i_prev = ifelse(i > i_first, i - 1, i_last)
         i_next = ifelse(i < i_last, i + 1, i_first)
         s = cross(poly[i] - poly[i_prev], poly[i_next] - poly[i])
@@ -197,9 +196,9 @@ function geometric_properties(poly::Polygon)
         end
         x = poly[i].x
         if x < xmin
-            # Set whether polygon is in direct trigonometric (anti-clockwise)
-            # order according to the sign of the cross product of the two edges
-            # at this extremum vertex.
+            # Set whether polygon is in direct trigonometric (anti-clockwise) order
+            # according to the sign of the cross product of the two edges at this extremum
+            # vertex.
             xmin = x
             direct = this_orient > 0
         end

@@ -1,12 +1,11 @@
-# The code in this file is patterned after C++ code by Dan Sunday and subjects to
-# the following copyright notice.
+# The code in this file is patterned after C++ code by Dan Sunday and subjects to the
+# following copyright notice.
 #
-#     Copyright 2000 softSurfer, 2012 Dan Sunday
-#     This code may be freely used and modified for any purpose
-#     providing that this copyright notice is included with it.
-#     SoftSurfer makes no warranty for this code, and cannot be held
-#     liable for any real or imagined damage resulting from its use.
-#     Users of this code must verify correctness for their application.
+#     Copyright 2000 softSurfer, 2012 Dan Sunday This code may be freely used and modified
+#     for any purpose providing that this copyright notice is included with it. SoftSurfer
+#     makes no warranty for this code, and cannot be held liable for any real or imagined
+#     damage resulting from its use. Users of this code must verify correctness for their
+#     application.
 #
 # Article and original C++ code are available at:
 # https://web.archive.org/web/20130126163405/http://geomalgorithms.com/a03-_inclusion.html
@@ -76,7 +75,7 @@ end
 """
     TwoDimensional.cross3(A::Point, B::Point, C::Point) -> val
 
-yields the cross vectorial product of `AB` by `AC`.
+yields the cross product of vector `AB` by vector `AC`.
 
 The returned value can be used to determine the position of point `C` relatively to the
 infinite line defined by `(A,B)`:
