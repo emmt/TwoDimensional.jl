@@ -252,7 +252,7 @@ for type in VERTEX_BASED_TYPES, func in (:floor, :ceil)
     @eval begin
         Base.$func(::Type{$type}, obj::$type) = $func(obj)
         Base.$func(::Type{$type{T}}, obj::$type) where {T} = $func(T, obj)
-        Base.$func(::Type{T}, obj::$type) where {T} = apply(Fix1($func, T), obj)
+        Base.$func(::Type{T}, obj::$type) where {T<:Number} = apply(Fix1($func, T), obj)
     end
 end
 
