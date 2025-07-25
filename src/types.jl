@@ -14,15 +14,17 @@
 """
     TwoDimensional.List{T}
 
-is a type alias for indexable ordered lists of object of type `T`. This includes tuples and
-vectors. If `T` is an abstract type, specify `TwoDimensional.List{<:T}` to match vectors
-whose elements have concrete type inherited from `T`.
+is a type alias for indexable ordered lists of object of type `T`. This includes non-empty
+tuples and vectors. If `T` is an abstract type, specify `TwoDimensional.List{<:T}` to match
+vectors whose elements have concrete type inherited from `T`.
 
 """ List
 @public List
-const List{T} = Union{Tuple{Vararg{T}},AbstractVector{T}}
+const List{T} = Union{Tuple{T,Vararg{T}},AbstractVector{T}}
 
-# NOTE: `const List{T} = Union{Tuple{Vararg{T}},AbstractVector{<:T}}` cannot be used to
+# NOTE: The restriction to non-empty tuples is to avoid unbounded type parameter `T`.
+#
+# NOTE: `const List{T} = Union{Tuple{T,Vararg{T}},AbstractVector{<:T}}` cannot be used to
 # match vectors whose elements must have a given abstract type `T`.
 
 """

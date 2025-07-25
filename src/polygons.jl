@@ -43,7 +43,7 @@ for type in (:AbstractPoint, :(CartesianIndex{2}), :(NTuple{2,Number}))
     @eval begin
         Polygon(pnts::$type...) = Polygon(pnts)
         Polygon{T}(pnts::$type...) where {T} = Polygon{T}(pnts)
-        function Polygon(pnts::Union{Tuple{$type,Vararg{<:$type}},AbstractVector{<:$type}})
+        function Polygon(pnts::List{<:$type})
             T = coord_type(point_type(pnts))
             return Polygon{T}(pnts)
         end

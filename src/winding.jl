@@ -11,10 +11,10 @@
 # https://web.archive.org/web/20130126163405/http://geomalgorithms.com/a03-_inclusion.html
 
 """
-    TwoDimensional.crossing_number_test(P::Point, V::List{<:Point}) -> bool
+    TwoDimensional.crossing_number_test(P::Point, V) -> bool
 
 yields whether point `P` is inside the polygon defined by vertices `V` according to the
-*crossing number* method by Franklin (2000).
+*crossing number* method by Franklin (2000). `V` is a tuple or a vector of points.
 
 """ crossing_number_test
 @public crossing_number_test
@@ -39,10 +39,11 @@ function crossing_number(P::Point, V::List{<:Point})
 end
 
 """
-    TwoDimensional.winding_number_test(P::Point, V::List{<:Point}) -> bool
+    TwoDimensional.winding_number_test(P::Point, V) -> bool
 
 yields whether point `P` is inside the polygon defined by vertices `V` according to the
-*winding number* method by Dan Sunday ("Inclusion of a Point in a Polygon", 2001).
+*winding number* method by Dan Sunday ("Inclusion of a Point in a Polygon", 2001). `V` is a
+tuple or a vector of points.
 
 """ winding_number_test
 @public winding_number_test
