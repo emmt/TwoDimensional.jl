@@ -318,12 +318,11 @@ yields the Euclidean distance between the 2 points `A` and `B`.
 distance(A::Point, B::Point) = hypot(A - B)
 
 """
-    TwoDimensional.area(obj)
+    area(obj)
 
 yields the area of the geometric object `obj`.
 
-""" area
-@public area
+"""
 area(msk::MaskElement) = area(shape(msk))
 area(pnt::AbstractPoint) = (z = zero(coord_type(pnt)); return z*z) # NOTE coord. may have units
 area(rect::Rectangle) = (rect.x1 - rect.x0)*(rect.y1 - rect.y0)
@@ -355,7 +354,7 @@ function center(poly::Polygon)
 end
 
 """
-    TwoDimensional.radius(obj::GeometricObject)
+    radius(obj::GeometricObject)
 
 yields the radius of the geometric object `obj`. The result is the radius of the [smallest
 circle enclosing the object](https://en.wikipedia.org/wiki/Smallest-circle_problem).
@@ -363,8 +362,7 @@ circle enclosing the object](https://en.wikipedia.org/wiki/Smallest-circle_probl
 For circle-like and point-like objects with integer coordinate type, the radius is also
 integer. For all other geometric objects, the raius is floating-point.
 
-""" radius
-@public radius
+"""
 radius(msk::MaskElement) = radius(shape(msk))
 radius(pnt::AbstractPoint) = zero(coord_type(pnt))
 radius(rect::Rectangle) = half(diameter(rect))
@@ -373,7 +371,7 @@ radius(poly::Polygon) = half(diameter(poly))
 radius(box::BoundingBox) = half(diameter(box))
 
 """
-    TwoDimensional.diameter(obj::GeometricObject)
+    diameter(obj::GeometricObject)
 
 yields the diameter of the geometric object `obj`. The result is the diameter of the
 [smallest circle enclosing the
@@ -382,8 +380,7 @@ object](https://en.wikipedia.org/wiki/Smallest-circle_problem).
 For circle-like and point-like objects with integer coordinate type, the diameter is also
 integer. For all other geometric objects, the radius is floating-point.
 
-""" diameter
-@public diameter
+"""
 diameter(msk::MaskElement) = diameter(shape(msk))
 diameter(pnt::AbstractPoint) = zero(coord_type(pnt))
 diameter(rect::Rectangle) = distance(first(rect), last(rect))

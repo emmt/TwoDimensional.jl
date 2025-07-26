@@ -1,6 +1,6 @@
 """
-    TwoDimensional.Mask(elems...)
-    TwoDimensional.Mask{T}(elems...)
+    Mask(elems...)
+    Mask{T}(elems...)
 
 build a composite mask consisting in the ordered list of mask elements `elems...`. Optional
 type parameter `T` is the coordinate type of the masks elements. All mask elements are
@@ -14,8 +14,7 @@ converted to another type.
     Masks with a large number of elements should preferably be created with a vector, not a
     tuple, of mask elements.
 
-""" Mask
-@public Mask
+"""
 Mask(elems::MaskElement...) = Mask(elems)
 Mask{T}(elems::MaskElement...) where {T} = Mask{T}(elems)
 Mask(elems::List{<:MaskElement}) = Mask{coord_type(elems)}(elems)
@@ -117,27 +116,25 @@ yields whether mask element `msk` is transparent.
 is_transparent(msk::MaskElement) = !is_opaque(msk)
 
 """
-    TwoDimensional.aperture(obj)
+    aperture(obj)
 
 yields a transparent mask element of same shape as `obj`.
 
-""" aperture
-@public aperture
+"""
 aperture(obj::ShapeElement) = MaskElement(obj; opaque=false)
 aperture(obj::MaskElement) = aperture(shape(obj))
 
 """
-    TwoDimensional.obscuration(obj)
+    obscuration(obj)
 
 yields an opaque mask element of same shape as `obj`.
 
-""" obscuration
-@public obscuration
+"""
 obscuration(obj::ShapeElement) = MaskElement(obj; opaque=true)
 obscuration(obj::MaskElement) = obscuration(shape(obj))
 
 """
-    TwoDimensional.rectangular_aperture(args...; kwds...)
+    rectangular_aperture(args...; kwds...)
 
 yields an elementary mask object representing a rectangular aperture defined by given
 arguments `args...` and keywords `kwds...` and whose edges are aligned with the Cartesian
@@ -145,10 +142,9 @@ axes. See [`TwoDimensional.Rectangle`](@ref) constructor for possible arguments 
 keywords. A rectangular aperture is a transparent rectangular mask.
 
 """ rectangular_aperture
-@public rectangular_aperture
 
 """
-    TwoDimensional.rectangular_obscuration(args...; kwds...)
+    rectangular_obscuration(args...; kwds...)
 
 yields an elementary mask object representing a rectangular obscuration defined by given
 arguments `args...` and keywords `kwds...` and whose edges are aligned with the Cartesian
@@ -156,47 +152,42 @@ axes. See [`TwoDimensional.Rectangle`](@ref) constructor for possible arguments 
 keywords. A rectangular obscuration is an opaque rectangular mask.
 
 """ rectangular_obscuration
-@public rectangular_obscuration
 
 """
-    TwoDimensional.circular_aperture(args...; kwds...)
+    circular_aperture(args...; kwds...)
 
 yields an elementary mask object representing a circular aperture defined by given arguments
 `args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref) constructor for
 possible arguments and keywords. A circular aperture is a transparent circular mask.
 
 """ circular_aperture
-@public circular_aperture
 
 """
-    TwoDimensional.circular_obscuration(args...; kwds...)
+    circular_obscuration(args...; kwds...)
 
 yields an elementary mask object representing a circular obscuration defined by given
 arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Circle`](@ref) constructor
 for possible arguments and keywords. A circular obscuration is an opaque circular mask.
 
 """ circular_obscuration
-@public circular_obscuration
 
 """
-    TwoDimensional.polygonal_aperture(args...; kwds...)
+    polygonal_aperture(args...; kwds...)
 
 yields an elementary mask object representing a polygonal aperture defined by given
 arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref) constructor
 for possible arguments and keywords. A polygonal aperture is a transparent polygonal mask.
 
 """ polygonal_aperture
-@public polygonal_aperture
 
 """
-    TwoDimensional.polygonal_obscuration(args...; kwds...)
+    polygonal_obscuration(args...; kwds...)
 
 yields an elementary mask object representing a polygonal obscuration defined by given
 arguments `args...` and keywords `kwds...`. See [`TwoDimensional.Polygon`](@ref) constructor
 for possible arguments and keywords. A polygonal obscuration is an opaque polygonal mask.
 
 """ polygonal_obscuration
-@public polygonal_obscuration
 
 for (type, adj) in ((:Rectangle, :rectangular),
                     (:Circle,    :circular),
@@ -247,23 +238,22 @@ function subrange(n::Int, s::Number)
 end
 
 """
-    TwoDimensional.forge_mask(A::AbstractMatrix, msk; kwds...)
-    TwoDimensional.forge_mask(A::AbstractMatrix, objs...; kwds...)
+    forge_mask(A::AbstractMatrix, msk; kwds...)
+    forge_mask(A::AbstractMatrix, objs...; kwds...)
 
 yield a 2-dimensional array with entries set to the transmission by the mask `msk` for an
 array-like `A`. The mask may also be specified by the list `objs...` of elementary mask
 objects. The coordinates of the mask are assumed to be given in fractional Cartesian indices
 for `A`.
 
-""" forge_mask
-@public forge_mask
+"""
 forge_mask(A::AbstractMatrix, objs::MaskElement...; kwds...) = forge_mask(A, Mask(objs); kwds...)
 forge_mask(A::AbstractMatrix, msk::Mask; kwds...) =
     forge_mask!(similar(A, floating_point_type(eltype(A))), msk; kwds...)
 
 """
-    TwoDimensional.forge_mask(T, inds, msk; kwds...)
-    TwoDimensional.forge_mask(T, inds, objs...; kwds...)
+    forge_mask(T, inds, msk; kwds...)
+    forge_mask(T, inds, objs...; kwds...)
 
 yield a 2-dimensional array with element type `T`, dimensions or indices `inds`, and with
 entries set to the transmission by the mask `msk`. The mask may also be specified by the
@@ -282,8 +272,8 @@ forge_mask(::Type{T}, inds::ArrayShape{2}, msk::Mask; kwds...) where {T} =
     forge_mask(new_array(T, inds), msk; kwds...)
 
 """
-    TwoDimensional.forge_mask([T,] X, Y, msk; kwds...) -> arr
-    TwoDimensional.forge_mask([T,] X, Y, elems...; kwds...) -> arr
+    forge_mask([T,] X, Y, msk; kwds...) -> arr
+    forge_mask([T,] X, Y, elems...; kwds...) -> arr
 
 yield a 2-dimensional array filled with transmission values computed for the mask `msk` at
 coordinates given by `X` and `Y` along the 1st and 2nd dimensions. The mask may also be
@@ -367,15 +357,14 @@ forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) 
     forge_mask!(new_array(T, Base.axes1(X), Base.axes1(Y)), X, Y, msk; kwds...)
 
 """
-    TwoDimensional.forge_mask!(dst, [X, Y,] msk; kwds...) -> dst
-    TwoDimensional.forge_mask!(dst, [X, Y,] elems...; kwds...) -> dst
+    forge_mask!(dst, [X, Y,] msk; kwds...) -> dst
+    forge_mask!(dst, [X, Y,] elems...; kwds...) -> dst
 
-In-place version of [`TwoDimensional.forge_mask`](@ref), it overwrites the destination array
-`dst` with the mask and returns it. If coordinates `X` and `Y` along the axes of `dst` are
-not specified, `(X, Y) = axes(dst)` is assumed.
+In-place version of [`forge_mask`](@ref), it overwrites the destination array `dst` with the
+mask and returns it. If coordinates `X` and `Y` along the axes of `dst` are not specified,
+`(X, Y) = axes(dst)` is assumed.
 
-""" forge_mask!
-@public forge_mask!
+"""
 forge_mask!(A::AbstractMatrix, msk::Mask; kwds...) = forge_mask!(A, axes(A)..., msk; kwds...)
 
 forge_mask!(A::AbstractMatrix, elems::MaskElement...; kwds...) =
