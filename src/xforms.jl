@@ -141,6 +141,16 @@ for (func, type) in (:bare_type => :Real, # NOTE not Union{Real,Complex}
     end
 end
 
+# Accessors.
+factors(A::AffineTransform) = getfield(A, 1)
+offsets(A::AffineTransform) = getfield(A, 2)
+
+Base.:(==)(A::AffineTransform, B::AffineTransform) =
+    offsets(A) == offsets(B) && factors(A) == factors(B)
+
+Base.isequal(A::AffineTransform, B::AffineTransform) =
+    isequal(offsets(A), offsets(B)) && isequal(factors(A), factors(B))
+
 # An affine transform is already of floating-point type.
 Base.float(A::AffineTransform) = A
 Base.float(::Type{T}) where {T<:AffineTransform} = T

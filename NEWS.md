@@ -17,6 +17,8 @@
 
 - Pass code quality tests with [`Aqua.jl`](https://github.com/JuliaTesting/Aqua.jl).
 
+- Testing equality by `==` or `isequal` for affine transforms.
+
 ### Deprecated
 
 - Computing the cross-product of the coordinates of points `a` and `b` by `a*b` is
