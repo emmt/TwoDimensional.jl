@@ -19,6 +19,8 @@
 
 - Testing equality by `==` or `isequal` for affine transforms.
 
+- `A[:]` and `A[i:j]` for affine transform `A`.
+
 ### Deprecated
 
 - Computing the cross-product of the coordinates of points `a` and `b` by `a*b` is
@@ -211,7 +213,7 @@ multi-threaded computations.
 - Non-exported aliases `TwoDimensional.PointLike` and `TwoDimensional.BoundingBoxLike` for
   unions of types that can be used to specify a `Point` or a `BoundingBox`.
 
-- Out of bounds indices in point and bounding-box instances throw `BoundError` (was
+- Out of bounds indices in point and bounding-box instances throw `BoundsError` (was
   `ErrorException`).
 
 - `size(box)` for bounding-box `box` may yield non-zero dimension even though `box` is

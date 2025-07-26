@@ -214,6 +214,9 @@ Base.getproperty(A::AffineTransform, key::Symbol) =
 # Make affine transform objects indexable and iterable.
 Base.Tuple(A::AffineTransform) = (A.xx, A.xy, A.x, A.yx, A.yy, A.y)
 
+Base.getindex(A::AffineTransform, r::AbstractRange{<:Integer}) = Tuple(A)[r]
+Base.getindex(A::AffineTransform, ::Colon) = Tuple(A)
+
 Base.getindex(A::AffineTransform, i::Integer) =
     i == 1 ? A.xx :
     i == 2 ? A.xy :
@@ -234,6 +237,8 @@ Base.IteratorEltype(A::AffineTransform) = IteratorEltype(typeof(A))
 Base.IteratorEltype(::Type{<:AffineTransform}) = HasEltype()
 Base.IteratorSize(A::AffineTransform) = IteratorSize(typeof(A))
 Base.IteratorSize(::Type{<:AffineTransform}) = HasLength()
+Base.firstindex(A::AffineTransform) = 1
+Base.lastindex(A::AffineTransform) = 6
 Base.length(A::AffineTransform) = 6
 Base.eltype(A::AffineTransform) = eltype(typeof(A))
 Base.eltype(::Type{<:AffineTransform{T,R,S}}) where {T,R,S} = R === S ? R : Union{R,S}
