@@ -821,18 +821,53 @@ end
 
     @testset "AffineTransforms" begin
         tol = 1e-14
-        I = AffineTransform()
-        A = AffineTransform(1, 0, -3, 0.1, 1, +2)
-        B = AffineTransform(-0.4,  0.1, -4.2, -0.3,  0.7,  1.1)
-        C = AffineTransform( 2.3, -0.9, -6.1,  0.7, -3.1, -5.2)
+        A_coefs = (1, 0, -4, -1, 3, +2) # NOTE integer coefficients
+        I = @inferred AffineTransform()
+        A = @inferred AffineTransform(A_coefs...)
+        B = @inferred AffineTransform(-0.4,  0.1, -4.2, -0.3,  0.7,  1.1)
+        C = @inferred AffineTransform( 2.3, -0.9, -6.1,  0.7, -3.1, -5.2)
         vectors = ((0.2,1.3), (-1,π), (-sqrt(2),3//4))
         scales = (2, 0.1, φ)
         angles = (-2π/11, π/7, 0.1)
         types = (BigFloat, Float64, Float32, Float16)
 
+        @testset "base methods" begin
+            @test A == A
+            @test isequal(A, A)
+            @test @inferred(Base.IteratorEltype(A)) === Base.HasEltype()
+            @test @inferred(eltype(A)) === Float64
+            @test @inferred(Tuple(A)) === map(Float64, A_coefs)
+            @test @inferred(Base.IteratorSize(A)) === Base.HasLength()
+            @test @inferred(length(A)) === 6
+            @test @inferred(firstindex(A)) === 1
+            @test @inferred(lastindex(A)) === 6
+            Axx, Axy, Ax, Ayx, Ayy, Ay = A
+            @test @inferred(A[1]) === Tuple(A)[1] === A.xx === Axx
+            @test @inferred(A[2]) === Tuple(A)[2] === A.xy === Axy
+            @test @inferred(A[3]) === Tuple(A)[3] === A.x  === Ax
+            @test @inferred(A[4]) === Tuple(A)[4] === A.yx === Ayx
+            @test @inferred(A[5]) === Tuple(A)[5] === A.yy === Ayy
+            @test @inferred(A[6]) === Tuple(A)[6] === A.y  === Ay
+            @test :x  ∈ propertynames(A)
+            @test :xx ∈ propertynames(A)
+            @test :xy ∈ propertynames(A)
+            @test :y  ∈ propertynames(A)
+            @test :yx ∈ propertynames(A)
+            @test :yy ∈ propertynames(A)
+            @test_throws BoundsError A[0]
+            @test_throws BoundsError A[7]
+            @test_throws KeyError A.z
+            @test @inferred(A[:]) === Tuple(A)
+            @test A[2:5] === Tuple(A)[2:5]
+            @test @inferred(collect(A)) == collect(Tuple(A))
+            @test ((c for c in A)...,) === (A...,) === Tuple(A)
+        end
+
         @testset "construction/conversion" begin
             @test @inferred(float(A)) === A
             @test @inferred(float(typeof(A))) === typeof(A)
+            @test A === @inferred AffineTransform(map(Int32, A[1:4])..., map(Int16, A[5:end])...)
+            @test A === @inferred AffineTransform{Float64}(map(Int32, A[1:4])..., map(Int16, A[5:end])...)
             for T1 in types, T2 in types
                 T = promote_type(T1,T2)
                 @test promote_type(AffineTransform{T1,T1,T1}, AffineTransform{T2,T2,T2}) ===
@@ -845,75 +880,35 @@ end
                     @test_throws MethodError T.(A)
                 end
             end
-            @test AffineTransform(A) === A
-            @test AffineTransform{bare_type(A)}(A) === A
-            for G in (I, A, B)
-                for T in types
-                    H = @inferred AffineTransform{T}(G)
-                    @test typeof(H) <: AffineTransform{T}
-                    @test @inferred(float(H)) === H
-                    @test @inferred(float(typeof(H))) === typeof(H)
-                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
-                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
-                    @test bare_type(H) === T
-                    @test real_type(H) === T
-                    @test floating_point_type(H) === T
-                    @test factors_type(H) === T
-                    @test offsets_type(H) === T
-                    @test (H === G) == (bare_type(H) === bare_type(G))
-                    @test Tuple(H) ≈ map(T, Tuple(G))
-                    H = @inferred convert(AffineTransform{T}, G)
-                    @test typeof(H) <: AffineTransform{T}
-                    @test @inferred(float(H)) === H
-                    @test @inferred(float(typeof(H))) === typeof(H)
-                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
-                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
-                    @test bare_type(H) === T
-                    @test real_type(H) === T
-                    @test floating_point_type(H) === T
-                    @test factors_type(H) === T
-                    @test offsets_type(H) === T
-                    @test (H === G) == (bare_type(H) === bare_type(G))
-                    @test Tuple(H) ≈ map(T, Tuple(G))
-                    H = @inferred convert_bare_type(T, G)
-                    @test typeof(H) <: AffineTransform{T}
-                    @test @inferred(float(H)) === H
-                    @test @inferred(float(typeof(H))) === typeof(H)
-                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
-                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
-                    @test bare_type(H) === T
-                    @test real_type(H) === T
-                    @test floating_point_type(H) === T
-                    @test factors_type(H) === T
-                    @test offsets_type(H) === T
-                    @test (H === G) == (bare_type(H) === bare_type(G))
-                    @test Tuple(H) ≈ map(T, Tuple(G))
-                    H = @inferred convert_real_type(T, G)
-                    @test typeof(H) <: AffineTransform{T}
-                    @test @inferred(float(H)) === H
-                    @test @inferred(float(typeof(H))) === typeof(H)
-                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
-                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
-                    @test bare_type(H) === T
-                    @test real_type(H) === T
-                    @test floating_point_type(H) === T
-                    @test factors_type(H) === T
-                    @test offsets_type(H) === T
-                    @test (H === G) == (bare_type(H) === bare_type(G))
-                    @test Tuple(H) ≈ map(T, Tuple(G))
-                    H = @inferred convert_floating_point_type(T, G)
-                    @test typeof(H) <: AffineTransform{T}
-                    @test @inferred(float(H)) === H
-                    @test @inferred(float(typeof(H))) === typeof(H)
-                    @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
-                    @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
-                    @test bare_type(H) === T
-                    @test real_type(H) === T
-                    @test floating_point_type(H) === T
-                    @test factors_type(H) === T
-                    @test offsets_type(H) === T
-                    @test (H === G) == (bare_type(H) === bare_type(G))
-                    @test Tuple(H) ≈ map(T, Tuple(G))
+            for G in (I, A, B), T in types
+                H = @inferred AffineTransform{T}(G)
+                @test typeof(H) <: AffineTransform{T}
+                @test @inferred(float(H)) === H
+                @test @inferred(float(typeof(H))) === typeof(H)
+                @test @inferred(eltype(H)) === Union{offsets_type(H),factors_type(H)}
+                @test @inferred(eltype(typeof(H))) === Union{offsets_type(typeof(H)),factors_type(typeof(H))}
+                @test @inferred(bare_type(H)) === T
+                @test @inferred(real_type(H)) === T
+                @test @inferred(floating_point_type(H)) === T
+                @test @inferred(get_precision(H)) === T
+                @test @inferred(factors_type(H)) === T
+                @test @inferred(offsets_type(H)) === T
+                @test (H === G) == (bare_type(H) === bare_type(G))
+                @test Tuple(H) ≈ map(T, Tuple(G))
+                @test H === @inferred AffineTransform(H)
+                @test H === @inferred AffineTransform{T}(H)
+                if T == BigFloat && bare_type(G) != T
+                    @test H == @inferred convert(AffineTransform{T}, G)
+                    @test H == @inferred convert_bare_type(T, G)
+                    @test H == @inferred convert_real_type(T, G)
+                    @test H == @inferred convert_floating_point_type(T, G)
+                    @test H == @inferred adapt_precision(T, G)
+                else
+                    @test H === @inferred convert(AffineTransform{T}, G)
+                    @test H === @inferred convert_bare_type(T, G)
+                    @test H === @inferred convert_real_type(T, G)
+                    @test H === @inferred convert_floating_point_type(T, G)
+                    @test H === @inferred adapt_precision(T, G)
                 end
             end
         end
@@ -1020,6 +1015,7 @@ end
             end
             for v in vectors
                 @test A - v ≈ A + (-v[1], -v[2])
+                @test v - A ≈ v + (-A)
                 @test A + Point(v) ≈ translate(A, v...)
                 @test Point(v) + A ≈ translate(v..., A)
                 @test A - Point(v) ≈ A - v
