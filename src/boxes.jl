@@ -174,9 +174,9 @@ function BoundingBox(circ::Circle)
     s = Point(r, r)
     return BoundingBox(c - s, c + s)
 end
-function BoundingBox(poly::Polygon)
-    xmin = ymin = typemax(coord_type(poly))
-    xmax = ymax = typemin(coord_type(poly))
+function BoundingBox(poly::Polygon{T}) where {T}
+    xmin = ymin = typemax(T)
+    xmax = ymax = typemin(T)
     @inbounds for i in eachindex(poly)
         x, y = poly[i]
         xmin = min(xmin, x)
@@ -184,10 +184,10 @@ function BoundingBox(poly::Polygon)
         ymin = min(ymin, y)
         ymax = max(ymax, y)
     end
-    return BoundingBox((xmin, ymin), (xmax, ymax))
+    return BoundingBox{T}((xmin, ymin), (xmax, ymax))
 end
 BoundingBox(msk::Mask{T}) where {T} =
-    mapreduce(BoundingBox, ∪, elements(msk); init=BoundingBox{T}())
+    mapreduce(BoundingBox{T}, ∪, elements(msk); init=BoundingBox{T}())::BoundingBox{T}
 
 """
     BoundingBox(f, A::AbstractMatrix)
