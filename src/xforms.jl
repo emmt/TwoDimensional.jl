@@ -83,7 +83,7 @@ end
 
 function AffineTransform(Axx::R, Axy::R, Ax::S,
                          Ayx::R, Ayy::R, Ay::S) where {R,S}
-    T = float(promote_type(real_type(R), real_type(S)))
+    T = floating_point_type(R, S)
     return AffineTransform{T}(Axx,Axy,Ax, Ayx,Ayy,Ay)
 end
 
@@ -96,9 +96,9 @@ end
 
 function AffineTransform{T}(Axx::R, Axy::R, Ax::S,
                             Ayx::R, Ayy::R, Ay::S) where {T<:AbstractFloat,R,S}
-    Rc = convert_real_type(T, R)
-    Sc = convert_real_type(T, S)
-    return AffineTransform{T,Rc,Sc}(Axx,Axy,Ax, Ayx,Ayy,Ay)
+    R′ = convert_real_type(T, R)
+    S′ = convert_real_type(T, S)
+    return AffineTransform{T,R′,S′}(Axx,Axy,Ax, Ayx,Ayy,Ay)
 end
 
 """
@@ -155,6 +155,11 @@ Base.isequal(A::AffineTransform, B::AffineTransform) =
 Base.float(A::AffineTransform) = A
 Base.float(::Type{T}) where {T<:AffineTransform} = T
 
+TypeUtils.get_precision(::Type{<:AffineTransform{T}}) where {T<:Precision} = T
+TypeUtils.adapt_precision(::Type{T}, A::AffineTransform{T}) where {T<:Precision} = A
+TypeUtils.adapt_precision(::Type{T}, A::AffineTransform) where {T<:Precision} =
+    AffineTransform{T}(A)
+
 """
     TwoDimensional.factors_type(A) -> R
     TwoDimensional.factors_type(typeof(A)) -> R
@@ -183,11 +188,6 @@ See also: [`factors_type`](@ref TwoDimensional.factors_type).
 offsets_type(A::AffineTransform) = offsets_type(typeof(A))
 offsets_type(::Type{AffineTransform{T,R,S}}) where {T,R,S} = S
 
-TypeUtils.get_precision(::Type{<:AffineTransform{T}}) where {T<:Precision} = T
-TypeUtils.adapt_precision(::Type{T}, A::AffineTransform{T}) where {T<:Precision} = A
-TypeUtils.adapt_precision(::Type{T}, A::AffineTransform) where {T<:Precision} =
-    AffineTransform{T}(A)
-
 Base.convert(::Type{T}, A::T) where {T<:AffineTransform} = A
 Base.convert(::Type{T}, A::AffineTransform) where {T<:AffineTransform} = T(A)
 
@@ -204,12 +204,12 @@ end
 
 Base.propertynames(::AffineTransform) = (:xx, :xy, :x, :yx, :yy, :y)
 Base.getproperty(A::AffineTransform, key::Symbol) =
-    key === :xx ? getfield(A, 1)[1] :
-    key === :xy ? getfield(A, 1)[2] :
-    key === :yx ? getfield(A, 1)[3] :
-    key === :yy ? getfield(A, 1)[4] :
-    key === :x  ? getfield(A, 2)[1] :
-    key === :y  ? getfield(A, 2)[2] : throw(KeyError(key))
+    key === :xx ? factors(A)[1] :
+    key === :xy ? factors(A)[2] :
+    key === :yx ? factors(A)[3] :
+    key === :yy ? factors(A)[4] :
+    key === :x  ? offsets(A)[1] :
+    key === :y  ? offsets(A)[2] : throw(KeyError(key))
 
 # Make affine transform objects indexable and iterable.
 Base.Tuple(A::AffineTransform) = (A.xx, A.xy, A.x, A.yx, A.yy, A.y)
