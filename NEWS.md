@@ -1,6 +1,6 @@
 # User visible changes in the `TwoDimensional` package
 
-## Unreleased
+## Version 0.5.1 [2025-07-26]
 
 ### Added
 
