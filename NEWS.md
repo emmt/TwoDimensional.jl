@@ -1,5 +1,17 @@
 # User visible changes in the `TwoDimensional` package
 
+## Unreleased
+
+## Added
+
+- If `start` and `stop` are two `Point`s, then `start:stop` is a shortcut for
+  `BoundingBox(start, stop)`.
+
+## Fixed
+
+- `TWoDimensional` works with Julia 1.12.
+
+
 ## Version 0.5.1 [2025-07-26]
 
 ### Added

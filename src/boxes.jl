@@ -8,7 +8,11 @@ construct a rectangular bounding-box with edges aligned with the Cartesian axes 
 the coordinates of 2 opposite corners, `start` and `stop`, whose coordinates, `(xmin,ymin)`
 and `(xmax,ymax)`, may be specified as points, as 2-tuples, as 2-dimensional Cartesian
 indices, or by keywords. Parameter `T` is the type used to store coordinates, it may be
-omitted.
+omitted. If `start` and `stop` are two `Point`s, then:
+
+    box = start:stop
+
+is a shortcut for `box = BoundingBox(start, stop)`.
 
 Another possibility is:
 
@@ -56,6 +60,8 @@ BoundingBox(start::Point{T}, stop::Point{T}) where {T} = BoundingBox{T}(start, s
 BoundingBox(start::Point, stop::Point) = BoundingBox(promote(start, stop)...)
 BoundingBox{T}(start::Point, stop::Point) where {T} =
     BoundingBox{T}(Point{T}(start), Point{T}(stop))
+
+Base.:(:)(start::Point, stop::Point) = BoundingBox(start, stop)
 
 # Bounding-box constructors for `start` and `stop` specified as other
 # point-like objects than points.
@@ -166,7 +172,7 @@ This can be used to compute the union or the intersection of the bounding-boxes 
 """
 BoundingBox{T}(obj::GeometricObjectLike) where {T} = convert(BoundingBox{T}, BoundingBox(obj))
 BoundingBox(obj::MaskElement) = BoundingBox(shape(obj))
-BoundingBox(pnt::Point) = BoundingBox(pnt, pnt)
+BoundingBox(pnt::Point) = pnt:pnt
 BoundingBox(rect::Rectangle) = BoundingBox(first(rect), last(rect))
 function BoundingBox(circ::Circle)
     c = center(circ)
@@ -184,7 +190,7 @@ function BoundingBox(poly::Polygon{T}) where {T}
         ymin = min(ymin, y)
         ymax = max(ymax, y)
     end
-    return BoundingBox{T}((xmin, ymin), (xmax, ymax))
+    return Point(xmin, ymin):Point(xmax, ymax)
 end
 BoundingBox(msk::Mask{T}) where {T} =
     mapreduce(BoundingBox{T}, ∪, elements(msk); init=BoundingBox{T}())::BoundingBox{T}

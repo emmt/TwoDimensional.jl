@@ -527,7 +527,9 @@ end
             @test box === @inferred BoundingBox{T}((start, stop))
             @test box === @inferred BoundingBox{T}(; xmin = start[1], ymin = start[2], xmax = stop[1], ymax = stop[2])
             @test box === @inferred BoundingBox{T}(; start = start, stop = stop)
+            @test box === @inferred Point{T}(start):Point{T}(stop)
             if start isa Point && stop isa Point
+                @test @inferred(start:stop) === BoundingBox(start, stop)
                 @test box === @inferred BoundingBox(Point{T}(start), Point{T}(stop))
                 @test box === @inferred BoundingBox(; start = Point{T}(start), stop = Point{T}(stop))
             elseif start isa CartesianIndex && stop isa CartesianIndex
