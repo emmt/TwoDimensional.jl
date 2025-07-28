@@ -90,12 +90,14 @@ Base.issubset(A::BoundingBox, B::BoundingBox) =
                  (A.ymin ≥ B.ymin)&(A.ymax ≤ B.ymax)))
 
 # Operator ∪, union of bounding-boxes.
-Base.union(A::BoundingBox, B::BoundingBox) =
+Base.union(A::BoundingBox, B::BoundingBox) = union(promote(A, B)...)
+Base.union(A::T, B::T) where {T<:BoundingBox} =
     BoundingBox(xmin = min(A.xmin, B.xmin), xmax = max(A.xmax, B.xmax),
                 ymin = min(A.ymin, B.ymin), ymax = max(A.ymax, B.ymax))
 
 # Operator ∩, intersection of bounding-boxes.
-Base.intersect(A::BoundingBox, B::BoundingBox) =
+Base.intersect(A::BoundingBox, B::BoundingBox) = intersect(promote(A, B)...)
+Base.intersect(A::T, B::T) where {T<:BoundingBox} =
     BoundingBox(xmin = max(A.xmin, B.xmin), xmax = min(A.xmax, B.xmax),
                 ymin = max(A.ymin, B.ymin), ymax = min(A.ymax, B.ymax))
 

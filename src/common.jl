@@ -3,17 +3,11 @@
 # `AbstractVector`s, may base functions have to be extended.
 for type in (:Point, :Rectangle, :BoundingBox, :Polygon, :Mask)
     @eval begin
-        @inline indices(A::$type) = indices(values(A))
         @inline Base.values(A::$type) = getfield(A, 1)
-        Base.length(A::$type) = length(values(A))
         Base.size(A::$type) = (length(A),)
         Base.axes(A::$type) = (indices(A),)
-        Base.firstindex(A::$type) = firstindex(values(A))
-        Base.lastindex(A::$type) = lastindex(values(A))
         Base.eachindex(A::$type) = indices(A)
         Base.keys(A::$type) = indices(A)
-        #Base.first(A::$type) = first(values(A))
-        #Base.last(A::$type) = last(values(A))
         Base.ndims(A::$type) = ndims(typeof(A))
         Base.ndims(::Type{<:$type}) = 1
         Base.eltype(A::$type) = eltype(typeof(A))
@@ -40,15 +34,24 @@ for type in (:Point, :Rectangle, :BoundingBox, :Polygon, :Mask)
     if type ∈ (:Point, :Rectangle, :BoundingBox)
         # These objects store their "values" as a 2-tuple.
         @eval begin
-            @propagate_inbounds Base.getindex(A::$type, i::Integer) =
-                getindex(values(A), i)
+            @inline indices(A::$type) = Base.OneTo(2)
+            Base.length(A::$type) = 2
+            Base.firstindex(A::$type) = 1
+            Base.lastindex(A::$type) = 2
+            Base.first(A::$type) = values(A)[1]
+            Base.last(A::$type) = values(A)[2]
+            @inline Base.getindex(A::$type, i::Integer) = getindex(values(A), i)
             @inline Base.iterate(A::$type, i::Int = 1) =
-                i == 1 ? (values(A)[1], 2) :
-                i == 2 ? (values(A)[2], 3) : nothing
+                i == 1 ? (first(A), 2) :
+                i == 2 ? ( last(A), 3) : nothing
         end
     else
         # Geometric objects that store their values as a tuple or as a vector.
         @eval begin
+            @inline indices(A::$type) = indices(values(A))
+            Base.length(A::$type) = length(values(A))
+            Base.firstindex(A::$type) = firstindex(values(A))
+            Base.lastindex(A::$type) = lastindex(values(A))
             @propagate_inbounds Base.getindex(A::$type{<:Any,<:Tuple}, i::Integer) =
                 getindex(values(A), i)
             @inline function Base.getindex(A::$type{<:Any,<:AbstractVector}, i::Integer)
