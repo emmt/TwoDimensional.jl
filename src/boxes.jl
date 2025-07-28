@@ -291,29 +291,19 @@ Base.typemax(::Type{BoundingBox{T}}) where {T<:Real} =
                 ymin = typemin(T), ymax = typemax(T))
 
 # Conversion of bounding-boxes to Cartesian indices.
-Base.CartesianIndices(box::BoundingBox) = CartesianIndices(axes(box))
+Base.CartesianIndices(box::BoundingBox) = CartesianIndices(as_array_axes(box))
 
 Base.isempty(box::BoundingBox) = (box.xmin > box.xmax)|(box.ymin > box.ymax)
 
-Base.size(box::BoundingBox) = map(length, axes(box))
-Base.size(box::BoundingBox, d::Integer) = length(axes(box, d))
+TypeUtils.as_array_axes(box::BoundingBox) = as_array_axes(BoundingBox{Int}(box))
+TypeUtils.as_array_axes(box::BoundingBox{Int}) = (box.xmin:box.xmax, box.ymin:box.ymax)
 
-Base.axes(box::BoundingBox{<:Integer}) = (UnitRange{Int}(box.xmin, box.xmax),
-                                          UnitRange{Int}(box.ymin, box.ymax))
-Base.axes(box::BoundingBox{<:Integer}, d::Integer) =
-    d == 1 ? UnitRange{Int}(box.xmin, box.xmax) :
-    d == 2 ? UnitRange{Int}(box.ymin, box.ymax) :
-    d > 2  ? UnitRange{Int}(1, 1) : error("invalid dimension index")
-
-Base.axes(box::BoundingBox) = throw_axes_restricted_box_with_integer_coordinates()
-Base.axes(box::BoundingBox, d::Integer) = throw_axes_restricted_box_with_integer_coordinates()
-@noinline throw_axes_restricted_box_with_integer_coordinates() = throw(ArgumentError(
-    "`axes(box)` is restricted to bounding-boxes with integer coordinates"))
+TypeUtils.as_array_size(box::BoundingBox) = map(length, as_array_axes(box))
 
 # Use bounding-boxes to extract a sub-array or a view.
-Base.view(arr::AbstractMatrix, box::BoundingBox) = view(arr, axes(box)...)
+Base.view(arr::AbstractMatrix, box::BoundingBox) = view(arr, as_array_axes(box)...)
 @inline Base.to_indices(A, inds, box::BoundingBox) =
-    A isa AbstractMatrix ? Base.to_indices(A, inds, axes(box)) :
+    A isa AbstractMatrix ? Base.to_indices(A, inds, as_array_axes(box)) :
     throw(DimensionMismatch("`A` must be a matrix"))
 
 """

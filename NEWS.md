@@ -1,5 +1,18 @@
 # User visible changes in the `TwoDimensional` package
 
+## Unreleased
+
+This version makes geometric objects more consistent with a more predictable behavior. As a
+result, there are a few breaking changes.
+
+## Breaking changes
+
+- For a bounding-box `box`, Base functions `size(box)` and `axes(box)` now yield the size
+  and axes of `box` as a 2-element vector (the `start` and `stop` points of `box`). Call
+  [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) methods `as_array_size(box)` and
+  `as_array_axes(box)` to convert `box` to 2-dimensional array size or axes.
+
+
 ## Version 0.5.2 [2025-07-28]
 
 ## Added
