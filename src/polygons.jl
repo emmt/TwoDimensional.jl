@@ -69,14 +69,14 @@ Polygon(box::BoundingBox) =
 # Convert/copy constructors.
 Polygon(poly::Polygon) = poly
 Polygon{T}(poly::Polygon{T}) where {T} = poly
-Polygon{T}(poly::Polygon) where {T} = Polygon(map(convert_coord_type(T), elements(poly)))
+Polygon{T}(poly::Polygon) where {T} = Polygon(map(convert_coord_type(T), values(poly)))
 Base.convert(::Type{T}, poly::T) where {T<:Polygon} = poly
 Base.convert(::Type{T}, obj::PolygonLike) where {T<:Polygon} = T(obj)
 
 # Properties of polygons.
 Base.propertynames(::Polygon) = (:vertices,)
 Base.getproperty(poly::Polygon, key::Symbol) =
-    key === :vertices ? elements(poly) : throw(KeyError(key))
+    key === :vertices ? values(poly) : throw(KeyError(key))
 
 function Base.show(io::IO, poly::Polygon{T,V}) where {T,V}
     print(io, "Polygon{", T, ",", V, "}((")
@@ -97,21 +97,21 @@ yields a vector of the vertices of the polygon `poly`.
 Call `collect(poly)` to make an independent copy of the vector of vertices.
 
 """
-Base.vec(poly::Polygon{<:Any,<:AbstractVector}) = elements(poly)
+Base.vec(poly::Polygon{<:Any,<:AbstractVector}) = values(poly)
 Base.vec(poly::Polygon) = Vector(poly)
 
-Base.Vector(poly::Polygon{T,<:Vector}) where {T} = elements(poly)
-Base.Vector{Point{T}}(poly::Polygon{T,Vector{Point{T}}}) where {T} = elements(poly)
+Base.Vector(poly::Polygon{T,<:Vector}) where {T} = values(poly)
+Base.Vector{Point{T}}(poly::Polygon{T,Vector{Point{T}}}) where {T} = values(poly)
 Base.Vector(poly::Polygon{T,<:Any}) where {T} = Vector{Point{T}}(poly)
 function Base.Vector{Point{T}}(poly::Polygon) where {T}
     v = Vector{Point{T}}(undef, length(poly))
-    @inbounds for (i, x) in enumerate(elements(poly))
+    @inbounds for (i, x) in enumerate(values(poly))
         v[i] = x
     end
     return v
 end
 
-Base.collect(poly::Polygon{<:Any,<:Vector}) = copy(elements(poly))
+Base.collect(poly::Polygon{<:Any,<:Vector}) = copy(values(poly))
 Base.collect(poly::Polygon) = Vector(poly)
 
 """

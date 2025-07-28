@@ -96,13 +96,9 @@ elements, the `Base.getindex` method to directly index among these elements, and
 
 """ elements
 @public elements
-elements(pnt::Point) = getfield(pnt, 1)
-elements(rect::Rectangle) = getfield(rect, 1)
-elements(poly::Polygon) = getfield(poly, 1)
+elements(A::Union{Point,Rectangle,BoundingBox,Polygon,Mask}) = values(A)
 elements(circ::Circle) = (center(circ), radius(circ))
-elements(box::BoundingBox) = getfield(box, 1)
-elements(elem::MaskElement) = elements(shape(elem))
-elements(msk::Mask) = getfield(msk, 1)
+#FIXME elements(elem::MaskElement) = elements(shape(elem))
 
 # Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
 Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = elements(obj)
@@ -128,12 +124,12 @@ See also [`TwoDimensional.elements`](@ref) and [`TwoDimensional.VertexBasedObjec
 @public apply
 apply(f, pnt::Point) = Point(f(pnt[1]), f(pnt[2]))
 apply(f, rect::Rectangle) = Rectangle(f(rect[1]), f(rect[2]))
-apply(f, poly::Polygon) = Polygon(map(f, elements(poly)))
+apply(f, poly::Polygon) = Polygon(map(f, values(poly)))
 apply(f, box::BoundingBox; swap::Bool = false) = BoundingBox(f(box[swap ? 2 : 1]),
                                                              f(box[swap ? 1 : 2]))
-apply(f, msk::Mask) = Mask(map(f, elements(msk)))
 apply(f, elem::MaskElement; opaque::Bool=elem.opaque) =
     MaskElement(f(shape(elem)); opaque = opaque)
+apply(f, msk::Mask) = Mask(map(f, values(msk)))
 
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
@@ -162,7 +158,7 @@ tuple or a vector of points.
 """ vertices
 @public vertices
 vertices(msk::Union{RectangularMask,PolygonalMask}) = vertices(shape(msk))
-vertices(poly::Polygon) = elements(poly)
+vertices(poly::Polygon) = values(poly)
 vertices(pnt::Point) = (pnt,)
 function vertices(rect::Rectangle)
     (x0, y0), (x1, y1) = rect
@@ -268,12 +264,11 @@ convert_coord_type(::Type{T}, ::Type{<:Polygon}) where {T} = Polygon{T,Vector{Po
 convert_coord_type(::Type{T}, ::Type{Polygon{T,V}}) where {T,V} = Polygon{T,V}
 
 convert_coord_type(::Type{T}, msk::Mask{T}) where {T} = msk
-convert_coord_type(::Type{T}, msk::Mask) where {T} = Mask{T}(elements(msk))
+convert_coord_type(::Type{T}, msk::Mask) where {T} = Mask{T}(values(msk))
 
 GeometricObject(obj::GeometricObject) = obj
 GeometricObject{T}(obj::GeometricObject{T}) where {T} = obj
 GeometricObject{T}(obj::GeometricObject) where {T} = convert_coord_type(T, obj)
-
 
 Base.float(obj::GeometricObject{T}) where {T} = convert_coord_type(float(T), obj)
 Base.float(::Type{G}) where {T,G<:GeometricObject{T}} = convert_coord_type(float(T), G)

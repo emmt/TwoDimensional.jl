@@ -89,7 +89,7 @@ Rectangle{T}(obj::RectangularObject) where {T} = Rectangle{T}(first(obj), last(o
 # Convert/copy constructors.
 Rectangle(rect::Rectangle) = rect
 Rectangle{T}(rect::Rectangle{T}) where {T} = rect
-Rectangle{T}(rect::Rectangle) where {T} = Rectangle{T}(Tuple(rect)...)
+Rectangle{T}(rect::Rectangle) where {T} = Rectangle{T}(values(rect)...)
 Base.convert(::Type{T}, rect::T) where {T<:Rectangle} = rect
 Base.convert(::Type{T}, obj::RectangleLike) where {T<:Rectangle} = T(obj)
 

@@ -178,7 +178,7 @@ function BoundingBox(poly::Polygon{T}) where {T}
     return Point(xmin, ymin):Point(xmax, ymax)
 end
 BoundingBox(msk::Mask{T}) where {T} =
-    mapreduce(BoundingBox, ∪, elements(msk); init=BoundingBox{T}())::BoundingBox{T}
+    mapreduce(BoundingBox, ∪, values(msk); init=BoundingBox{T}())::BoundingBox{T}
 
 """
     BoundingBox(f, A::AbstractMatrix)

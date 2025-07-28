@@ -31,7 +31,7 @@ Base.isapprox(a::Rectangle, b::Rectangle; kwds...) =
 Base.isapprox(a::Circle, b::Circle; kwds...) =
     isapprox(radius(a), radius(b); kwds...) && isapprox(center(a), center(b); kwds...)
 Base.isapprox(a::Polygon, b::Polygon; kwds...) =
-    elements(a) === elements(b) || isapprox(elements(a), elements(b); kwds...)
+    values(a) === values(b) || isapprox(values(a), values(b); kwds...)
 Base.isapprox(a::BoundingBox, b::BoundingBox; kwds...) =
     isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
 
@@ -51,7 +51,7 @@ Base.in(pnt::Point, poly::Polygon) =
     # FIXME: Converting to the same coordinate type has some cost...
     in(promote_coord_type(pnt, poly)...)
 Base.in(pnt::Point{T}, poly::Polygon{T}) where {T} =
-    winding_number_test(pnt, elements(poly))
+    winding_number_test(pnt, values(poly))
 
 # Extend ⊆ operator.
 Base.issubset(obj::GeometricObject, msk::MaskElement) = obj ⊆ shape(msk)
@@ -266,7 +266,7 @@ end
 # `min()`, `max()`, and `minmax()` for points work as for Cartesian indices.
 Base.min(a::Point{T}, b::Point{T}) where {T} = Point{T}(min(a.x, b.x), min(a.y, b.y))
 Base.max(a::Point{T}, b::Point{T}) where {T} = Point{T}(max(a.x, b.x), max(a.y, b.y))
-Base.minmax(a::Point{T}, b::Point{T}) where {T} = elements(Rectangle(a, b))
+Base.minmax(a::Point{T}, b::Point{T}) where {T} = values(Rectangle(a, b))
 for func in (:min, :max, :minmax)
     @eval begin
         Base.$func(a::Point, b::Point) = $func(promote_coord_type(a, b)...)
