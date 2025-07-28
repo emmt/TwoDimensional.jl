@@ -1,15 +1,19 @@
 # User visible changes in the `TwoDimensional` package
 
-## Unreleased
+## Version 0.5.2 [2025-07-28]
 
 ## Added
 
 - If `start` and `stop` are two `Point`s, then `start:stop` is a shortcut for
   `BoundingBox(start, stop)`.
 
+- Extend `isequal` for geometric objects.
+
 ## Fixed
 
-- `TWoDimensional` works with Julia 1.12.
+- `TwoDimensional` works with Julia 1.12.
+
+- Add type assertions to fix inferred type for `BoundingBox(A)` of a mask `A`.
 
 
 ## Version 0.5.1 [2025-07-26]
