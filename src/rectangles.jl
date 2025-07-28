@@ -93,22 +93,6 @@ Rectangle{T}(rect::Rectangle) where {T} = Rectangle{T}(Tuple(rect)...)
 Base.convert(::Type{T}, rect::T) where {T<:Rectangle} = rect
 Base.convert(::Type{T}, obj::RectangleLike) where {T<:Rectangle} = T(obj)
 
-# Make rectangles indexable iterators.
-Base.length(        rect::Rectangle) = 2
-Base.firstindex(    rect::Rectangle) = 1
-Base.lastindex(     rect::Rectangle) = 2
-Base.first(         rect::Rectangle) = rect[1]
-Base.last(          rect::Rectangle) = rect[2]
-Base.eltype(        rect::Rectangle) = eltype(typeof(rect))
-Base.IteratorSize(  rect::Rectangle) = IteratorSize(typeof(rect))
-Base.IteratorEltype(rect::Rectangle) = IteratorEltype(typeof(rect))
-Base.eltype(        ::Type{<:Rectangle{T}}) where {T} = Point{T}
-Base.IteratorSize(  ::Type{<:Rectangle}) = HasLength()
-Base.IteratorEltype(::Type{<:Rectangle}) = HasEltype()
-@inline Base.iterate(rect::Rectangle, i::Int = 1) =
-    i == 1 ? (first(rect), 2) :
-    i == 2 ? (last( rect), 3) : nothing
-
 # Properties of rectangles.
 Base.propertynames(::Rectangle) = (:start, :stop, :x0, :x1, :y0, :y1,)
 Base.getproperty(rect::Rectangle, key::Symbol) =

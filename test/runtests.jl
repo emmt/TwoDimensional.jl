@@ -147,7 +147,7 @@ end
         @test Set(Base.propertynames(pnt)) == Set((:x, :y))
         @test firstindex(pnt) === 1
         @test lastindex(pnt) === 2
-        @test Base.IteratorSize(pnt) === Base.IteratorSize(typeof(pnt)) === Base.HasLength()
+        @test Base.IteratorSize(pnt) === Base.IteratorSize(typeof(pnt)) === Base.HasShape{1}()
         @test Base.IteratorEltype(pnt) === Base.IteratorEltype(typeof(pnt)) === Base.HasEltype()
         x, y = pnt
         r, θ = hypot(x, y), atan(y, x)
@@ -235,7 +235,7 @@ end
         @test Set(Base.propertynames(rec)) == Set((:x0, :x1, :y0, :y1, :start, :stop))
         @test firstindex(rec) === 1
         @test lastindex(rec) === 2
-        @test Base.IteratorSize(rec) === Base.IteratorSize(typeof(rec)) === Base.HasLength()
+        @test Base.IteratorSize(rec) === Base.IteratorSize(typeof(rec)) === Base.HasShape{1}()
         @test Base.IteratorEltype(rec) === Base.IteratorEltype(typeof(rec)) === Base.HasEltype()
         (x0, y0), (x1, y1) = (rec.x0, rec.y0), (rec.x1, rec.y1)
         @test x0 ≤ x1 && y0 ≤ y1
@@ -412,7 +412,7 @@ end
         @test keys(poly) === eachindex(poly)
         @test (values(poly) === vec(poly)) == isa(values(poly), AbstractVector)
         @test (values(poly) === Tuple(poly)) == isa(values(poly), Tuple)
-        @test Base.IteratorSize(poly) === Base.IteratorSize(typeof(poly)) === Base.HasLength()
+        @test Base.IteratorSize(poly) === Base.IteratorSize(typeof(poly)) === Base.HasShape{1}()
         @test Base.IteratorEltype(poly) === Base.IteratorEltype(typeof(poly)) === Base.HasEltype()
         @test_throws BoundsError poly[firstindex(poly) - 1]
         @test_throws BoundsError poly[lastindex(poly) + 1]
@@ -497,7 +497,7 @@ end
         @test Set(Base.propertynames(box)) == Set((:xmin, :xmax, :ymin, :ymax, :start, :stop))
         @test firstindex(box) === 1
         @test lastindex(box) === 2
-        @test Base.IteratorSize(box) === Base.IteratorSize(typeof(box)) === Base.HasLength()
+        @test Base.IteratorSize(box) === Base.IteratorSize(typeof(box)) === Base.HasShape{1}()
         @test Base.IteratorEltype(box) === Base.IteratorEltype(typeof(box)) === Base.HasEltype()
         (xmin, ymin), (xmax, ymax) = (box.xmin, box.ymin), (box.xmax, box.ymax)
         @test false === isempty(BoundingBox((xmin, ymin), (xmax, ymax)))

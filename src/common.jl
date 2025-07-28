@@ -1,3 +1,83 @@
+# Implement abstract vector API and iterator API for geometric objects that are defined by a
+# collection (vector or tuple) of elements of same type. Since geometric objects are not
+# `AbstractVector`s, may base functions have to be extended.
+for type in (:Point, :Rectangle, :BoundingBox, :Polygon, :Mask)
+    @eval begin
+        @inline indices(A::$type) = indices(values(A))
+        @inline Base.values(A::$type) = getfield(A, 1)
+        Base.length(A::$type) = length(values(A))
+        Base.size(A::$type) = (length(A),)
+        Base.axes(A::$type) = (indices(A),)
+        Base.firstindex(A::$type) = firstindex(values(A))
+        Base.lastindex(A::$type) = lastindex(values(A))
+        Base.eachindex(A::$type) = indices(A)
+        Base.keys(A::$type) = indices(A)
+        #Base.first(A::$type) = first(values(A))
+        #Base.last(A::$type) = last(values(A))
+        Base.ndims(A::$type) = ndims(typeof(A))
+        Base.ndims(::Type{<:$type}) = 1
+        Base.eltype(A::$type) = eltype(typeof(A))
+        Base.IteratorSize(A::$type) = IteratorSize(typeof(A))
+        Base.IteratorEltype(A::$type) = IteratorEltype(typeof(A))
+        Base.IteratorSize(::Type{<:$type}) = HasShape{1}()
+        Base.IteratorEltype(::Type{<:$type}) = HasEltype()
+        Base.getindex(A::$type, ::Colon) = values(A)[:]
+        Base.getindex(A::$type, r::AbstractRange{<:Integer}) = values(A)[r]
+        @inline function Base.checkbounds(::Type{Bool}, A::$type, i::Integer)
+            vals = values(A)
+            return firstindex(vals) ≤ as(Int, i) ≤ lastindex(vals)
+        end
+        @inline function Base.checkbounds(::Type{Bool}, A::$type,
+                                          r::AbstractUnitRange{<:Integer})
+            i = as(Int, first(r))
+            j = as(Int, last(r))
+            vals = values(A)
+            return (i ≤ j) && (firstindex(vals) ≤ i) && (j ≤ lastindex(vals))
+        end
+    end
+
+    # Make object iterable and indexable.
+    if type ∈ (:Point, :Rectangle, :BoundingBox)
+        # These objects store their "values" as a 2-tuple.
+        @eval begin
+            @propagate_inbounds Base.getindex(A::$type, i::Integer) =
+                getindex(values(A), i)
+            @inline Base.iterate(A::$type, i::Int = 1) =
+                i == 1 ? (values(A)[1], 2) :
+                i == 2 ? (values(A)[2], 3) : nothing
+        end
+    else
+        # Geometric objects that store their values as a tuple or as a vector.
+        @eval begin
+            @propagate_inbounds Base.getindex(A::$type{<:Any,<:Tuple}, i::Integer) =
+                getindex(values(A), i)
+            @inline function Base.getindex(A::$type{<:Any,<:AbstractVector}, i::Integer)
+                i = as(Int, i)
+                @boundscheck checkbounds(Bool, A, i) || throw(BoundsError(A, i))
+                return @inbounds getindex(values(A), i)
+            end
+            @inline function Base.setindex!(A::$type{<:Any,<:AbstractVector}, x, i::Integer)
+                i = as(Int, i)
+                @boundscheck checkbounds(Bool, A, i) || throw(BoundsError(A, i))
+                @inbounds setindex!(values(A), x, i)
+                return A
+            end
+            @inline function Base.iterate(A::$type, i::Int=firstindex(A))
+                return checkbounds(Bool, A, i) ? ((@inbounds A[i]), i + 1) : nothing
+            end
+        end
+    end
+end
+Base.eltype(::Type{<:Point{T}}) where {T} = T
+Base.eltype(::Type{<:Rectangle{T}}) where {T} = Point{T}
+Base.eltype(::Type{<:BoundingBox{T}}) where {T} = Point{T}
+Base.eltype(::Type{<:Polygon{T}}) where {T} = Point{T}
+
+# `indices(A)` yields a unit range of valid linear indices for `A` unifying base functions
+# `keys` and `eachindex`.
+@inline indices(A::AbstractVector) = Base.axes1(A)
+@inline indices(A::Tuple) = keys(A)
+
 """
     TwoDimensional.elements(obj::GeometricElement)
 
@@ -26,9 +106,6 @@ elements(msk::Mask) = getfield(msk, 1)
 
 # Extend methods `Base.Tuple` and `Base.getindex` for some geometric objects.
 Base.Tuple(obj::Union{Point,Rectangle,Circle,BoundingBox}) = elements(obj)
-@inline @propagate_inbounds Base.getindex(obj::Union{Point,Rectangle,BoundingBox}, i::Integer) =
-    getindex(elements(obj), as(Int, i))
-
 Base.Tuple(obj::Polygon) = Tuple(elements(obj))
 Base.Tuple(obj::Mask) = Tuple(elements(obj))
 

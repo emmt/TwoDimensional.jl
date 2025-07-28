@@ -81,22 +81,6 @@ Base.eltype(::AbstractPoint{T}) where {T} = T
 Base.eltype(::Type{<:AbstractPoint{T}}) where {T} = T
 Base.CartesianIndex(pnt::AbstractPoint{<:Integer}) = CartesianIndex(get_xy(pnt)...)
 
-# Make points indexable iterators.
-Base.length(        pnt::Point) = 2
-Base.firstindex(    pnt::Point) = 1
-Base.lastindex(     pnt::Point) = 2
-Base.first(         pnt::Point) = pnt[1]
-Base.last(          pnt::Point) = pnt[2]
-Base.eltype(        pnt::Point) = eltype(typeof(pnt))
-Base.IteratorSize(  pnt::Point) = IteratorSize(typeof(pnt))
-Base.IteratorEltype(pnt::Point) = IteratorEltype(typeof(pnt))
-Base.eltype(        ::Type{<:Point{T}}) where {T} = T
-Base.IteratorSize(  ::Type{<:Point}) = HasLength()
-Base.IteratorEltype(::Type{<:Point}) = HasEltype()
-@inline Base.iterate(pnt::Point, i::Int = 1) =
-    i == 1 ? (first(pnt), 2) :
-    i == 2 ? (last( pnt), 3) : nothing
-
 # Properties of points.
 Base.propertynames(::Point) = (:x, :y)
 Base.getproperty(pnt::Point, key::Symbol) =

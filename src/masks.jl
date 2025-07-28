@@ -22,22 +22,6 @@ Mask{T}(elems::List{<:MaskElement}) where {T} =
     Mask{T}(map(Fix1(convert_coord_type, T), elems))
 Mask{T}(elems::List{<:MaskElement{T}}) where {T} = Mask{T,eltype(elems)}(elems)
 
-# Extend abstract array API for masks.
-Base.values(msk::Mask) = elements(msk)
-Base.length(msk::Mask) = length(elements(msk))
-Base.size(msk::Mask) = (length(msk),)
-Base.axes(msk::Mask) = (Base.OneTo(length(msk)),)
-Base.IndexStyle(::Type{<:Mask}) = IndexLinear()
-@inline function Base.getindex(A::Mask, i::Int)
-    @boundscheck checkbounds(A, i)
-    return @inbounds getindex(elements(A), i)
-end
-@inline function Base.setindex!(A::Mask, x, i::Int)
-    @boundscheck checkbounds(A, i)
-    @inbounds setindex!(elements(A), x, i)
-    return A
-end
-
 """
     msk = MaskElement{T}(shape::ShapeElement; opaque)
 

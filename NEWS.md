@@ -12,6 +12,14 @@ result, there are a few breaking changes.
   [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) methods `as_array_size(box)` and
   `as_array_axes(box)` to convert `box` to 2-dimensional array size or axes.
 
+## Changed
+
+- All geometric objects but `MaskElement`s are iterable.
+
+- Geometric objects that are collections of elements of the same type implement the abstract
+  vector API although they are not `AbstractVector`s. These include `Point`s, `Rectangle`s,
+  `BoundingBox`es, `Polygon`s, and `Mask`s.
+
 
 ## Version 0.5.2 [2025-07-28]
 

@@ -73,38 +73,6 @@ Polygon{T}(poly::Polygon) where {T} = Polygon(map(convert_coord_type(T), element
 Base.convert(::Type{T}, poly::T) where {T<:Polygon} = poly
 Base.convert(::Type{T}, obj::PolygonLike) where {T<:Polygon} = T(obj)
 
-# Make rectangles indexable iterators.
-Base.length(        poly::Polygon) = length(elements(poly))
-Base.size(          poly::Polygon{<:Any,<:AbstractVector}) = size(elements(poly))
-Base.axes(          poly::Polygon{<:Any,<:AbstractVector}) = axes(elements(poly))
-Base.size(          poly::Polygon{<:Any,<:Tuple}) = (length(poly),)
-Base.axes(          poly::Polygon{<:Any,<:Tuple}) = (Base.OneTo(length(poly)),)
-Base.firstindex(    poly::Polygon) = firstindex(elements(poly))
-Base.lastindex(     poly::Polygon) = lastindex(elements(poly))
-Base.eachindex(     poly::Polygon) = keys(poly)
-Base.keys(          poly::Polygon) = eachindex(elements(poly))
-Base.values(        poly::Polygon) = elements(poly)
-Base.first(         poly::Polygon) = poly[firstindex(poly)]
-Base.last(          poly::Polygon) = poly[lastindex(poly)]
-Base.eltype(        poly::Polygon) = eltype(typeof(poly))
-Base.IteratorSize(  poly::Polygon) = IteratorSize(typeof(poly))
-Base.IteratorEltype(poly::Polygon) = IteratorEltype(typeof(poly))
-Base.eltype(        ::Type{<:Polygon{T}}) where {T} = Point{T}
-Base.IteratorSize(  ::Type{<:Polygon}) = HasLength()
-Base.IteratorEltype(::Type{<:Polygon}) = HasEltype()
-@inline Base.getindex(A::Polygon{<:Any,<:Tuple}, i::Integer) = getindex(elements(A), i)
-@inline function Base.getindex(A::Polygon{<:Any,<:AbstractVector}, i::Integer)
-    i = as(Int, i)
-    @boundscheck checkbounds(elements(A), i)
-    return @inbounds getindex(elements(A), i)
-end
-@inline function Base.setindex!(A::Polygon{<:Any,<:AbstractVector}, x, i::Integer)
-    i = as(Int, i)
-    @boundscheck checkbounds(elements(A), i)
-    @inbounds setindex!(elements(A), x, i)
-    return A
-end
-
 # Properties of polygons.
 Base.propertynames(::Polygon) = (:vertices,)
 Base.getproperty(poly::Polygon, key::Symbol) =
