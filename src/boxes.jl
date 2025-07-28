@@ -123,7 +123,7 @@ BoundingBox(box::BoundingBox) = box
 BoundingBox{T}(box::BoundingBox{T}) where {T} = box
 BoundingBox{T}(box::BoundingBox) where {T} = BoundingBox{T}(Tuple(box)...)
 Base.convert(::Type{T}, box::T) where {T<:BoundingBox} = box
-Base.convert(::Type{T}, obj::BoundingBoxLike) where {T<:BoundingBox} = T(obj)
+Base.convert(::Type{T}, obj::BoundingBoxLike) where {T<:BoundingBox} = T(obj)::T
 
 # Make bounding-boxes indexable iterators.
 Base.length(        box::BoundingBox) = 2
@@ -170,6 +170,7 @@ This can be used to compute the union or the intersection of the bounding-boxes 
     mapreduce(BoundingBox, ∩, [obj1, obj2, obj3, ...])
 
 """
+BoundingBox{T}(obj::GeometricObjectLike{T}) where {T} = BoundingBox(obj)
 BoundingBox{T}(obj::GeometricObjectLike) where {T} = convert(BoundingBox{T}, BoundingBox(obj))
 BoundingBox(obj::MaskElement) = BoundingBox(shape(obj))
 BoundingBox(pnt::Point) = pnt:pnt
@@ -193,7 +194,7 @@ function BoundingBox(poly::Polygon{T}) where {T}
     return Point(xmin, ymin):Point(xmax, ymax)
 end
 BoundingBox(msk::Mask{T}) where {T} =
-    mapreduce(BoundingBox{T}, ∪, elements(msk); init=BoundingBox{T}())::BoundingBox{T}
+    mapreduce(BoundingBox, ∪, elements(msk); init=BoundingBox{T}())::BoundingBox{T}
 
 """
     BoundingBox(f, A::AbstractMatrix)
