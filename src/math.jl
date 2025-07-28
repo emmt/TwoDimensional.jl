@@ -1,19 +1,26 @@
 # Check for equality.
-==(a::Point, b::Point) =
-    (a.x == b.x) & (a.y == b.y)
-==(a::Rectangle, b::Rectangle) =
-    (first(a) == first(b)) & (last(a) == last(b))
-==(a::Circle, b::Circle) =
-    radius(a) == radius(b) && center(a) == center(b)
-==(a::BoundingBox, b::BoundingBox) =
-    isempty(a) ? isempty(b) : ((first(a) == first(b)) & (last(a) == last(b)))
-==(a::Polygon, b::Polygon) = begin
-    a === b && return true
-    eachindex(b) == eachindex(a) || return false
-    @inbounds for i in eachindex(a)
-        a[i] == b[i] || return false
+for op in (:(==), :(isequal))
+    @eval begin
+        Base.$op(A::Point, B::Point) =
+            $op(A.x, B.x) & $op(A.y, B.y)
+        Base.$op(A::Rectangle, B::Rectangle) =
+            $op(first(A), first(B)) & $op(last(A) == last(B))
+        Base.$op(A::Circle, B::Circle) =
+            $op(radius(A), radius(B)) && $op(center(A), center(B))
+        function Base.$op(A::BoundingBox, B::BoundingBox)
+            ta = isempty(A)
+            tb = isempty(B)
+            return (ta == tb) && (ta || ($op(first(A), first(B)) && $op(last(A), last(B))))
+        end
+        function Base.$op(A::Polygon, B::Polygon)
+            A === B && return true
+            (I = eachindex(A)) == eachindex(B) || return false
+            @inbounds for i in I
+                $op(A[i], B[i]) || return false
+            end
+            return true
+        end
     end
-    return true
 end
 
 # Check for approximate equality.
