@@ -9,8 +9,8 @@ without ambiguities. For example, for a point `pnt`:
 
 both hold.
 
-Geometrical objects that have homogeneous elements (see
-[`TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.Tuple` method to return these
+Geometric objects that have homogeneous elements (see
+[`TwoDimensional.VertexBasedObject`](@ref)) extend the `Base.values` method to return these
 elements, the `Base.getindex` method to directly index among these elements, and the
 [`TwoDimensional.apply`](@ref) method.
 
@@ -121,12 +121,12 @@ Base.show(io::IO, ::MIME"text/plain", obj::GeometricObject) = show(io, obj)
 """
     coord_type(A) -> T
 
-yields the coordinate type of a geometrical object or of its type. With several arguments:
+yields the coordinate type of a geometric object or of its type. With several arguments:
 
     coord_type(A...) -> T
 
-or if single argument a tuple or a vector of geometrical objects, the promoted coordinate
-type is returned.
+or if single argument a tuple or a vector of geometric objects, the promoted coordinate type
+is returned.
 
 """
 coord_type(::GeometricObjectLike{T}) where {T} = T
@@ -166,7 +166,7 @@ promote_coord_type(obj::GeometricObjectLike) = obj
     convert_coord_type(T::Type, obj::GeometricObject)
     GeometricObject{T}(obj)
 
-convert the coordinate type of a geometrical object `obj` to `T`. If the coordinate type of
+convert the coordinate type of a geometric object `obj` to `T`. If the coordinate type of
 `obj` is already `T`, `obj` itself is returned.
 
 """

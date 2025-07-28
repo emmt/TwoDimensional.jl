@@ -56,7 +56,7 @@ const BoundingBox2D{T} = BoundingBox{T}
     TwoDimensional.MaskElement2D{T,S}
 
 is an alias for [`TwoDimensional.MaskElement{T,S}`](@ref TwoDimensional.MaskElement). `T` is
-the coordinate type, `S` is the type of the elementary geometrical object defining the shape
+the coordinate type, `S` is the type of the elementary geometric object defining the shape
 of the mask.
 
 """ MaskElement2D

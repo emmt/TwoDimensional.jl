@@ -246,8 +246,8 @@ rounded to the nearest integral values of type `T` with rounding-mode `r`.
 Default type `T` is `eltype(B)` and default rounding-mode `r` is
 `RoundingNearest`.
 
-[`center(B)`](@ref center) yields the `Point` whose coordinates are the
-geometrical center of the bounding-box `B`.
+[`center(B)`](@ref center) yields the `Point` whose coordinates are the geometric center of
+the bounding-box `B`.
 
 [`area(B)`](@ref area) yields the area of a bounding-box `B`.
 

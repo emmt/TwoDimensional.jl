@@ -510,7 +510,7 @@ end
     TwoDimensional.unsafe_coarse_transmission!(dst, X, δx, Y, δy, obj, inside, partial)
 
 updates 2-dimensional array `dst` with a coarse estimation of the transmission due to
-geometrical shape object `obj`. `X` and `Y` give the coordinates of the cells of `dst` along
+geometric shape object `obj`. `X` and `Y` give the coordinates of the cells of `dst` along
 its dimensions with respective steps `δx` and `δy`. `inside` is the transmission for cells
 fully inside the boundaries of `obj`, while `partial` is the transmission for cells
 overlapping the boundaries of `obj`. Cells fully outside `obj` are left unchanged.
