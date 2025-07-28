@@ -28,6 +28,11 @@ result, there are a few breaking changes.
   vector API although they are not `AbstractVector`s. These include `Point`s, `Rectangle`s,
   `BoundingBox`es, `Polygon`s, and `Mask`s.
 
+## Added
+
+- In `TwoDimensional.apply(f, obj)`, if `obj` is a mask element, keyword `opaque` can be
+  used to specify a different opacity than `obj.opaque`.
+
 
 ## Version 0.5.2 [2025-07-28]
 

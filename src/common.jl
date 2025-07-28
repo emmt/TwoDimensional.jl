@@ -119,6 +119,9 @@ geometric operation such as moving, scaling, etc. the geometric object `obj`.
 If `obj` is a bounding-box, keyword, `swap` (default `false`) specifies whether to swap the
 first and last end-points of the box.
 
+If `obj` is a mask element, keyword `opaque` can be used to specify a different opacity than
+`obj.opaque`.
+
 See also [`TwoDimensional.elements`](@ref) and [`TwoDimensional.VertexBasedObject`](@ref).
 
 """ apply
@@ -128,8 +131,9 @@ apply(f, rect::Rectangle) = Rectangle(f(rect[1]), f(rect[2]))
 apply(f, poly::Polygon) = Polygon(map(f, elements(poly)))
 apply(f, box::BoundingBox; swap::Bool = false) = BoundingBox(f(box[swap ? 2 : 1]),
                                                              f(box[swap ? 1 : 2]))
-apply(f, elem::MaskElement) = MaskElement(f(shape(elem)); opaque = is_opaque(elem))
 apply(f, msk::Mask) = Mask(map(f, elements(msk)))
+apply(f, elem::MaskElement; opaque::Bool=elem.opaque) =
+    MaskElement(f(shape(elem)); opaque = opaque)
 
 # Swap two elements.
 swap((x, y)::NTuple{2,Any}) = (y, x)
