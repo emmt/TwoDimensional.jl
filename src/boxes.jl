@@ -154,8 +154,8 @@ This can be used to compute the union or the intersection of the bounding-boxes 
     mapreduce(BoundingBox, ∩, [obj1, obj2, obj3, ...])
 
 """
-BoundingBox{T}(obj::GeometricObjectLike{T}) where {T} = BoundingBox(obj)
-BoundingBox{T}(obj::GeometricObjectLike) where {T} = convert(BoundingBox{T}, BoundingBox(obj))
+BoundingBox{T}(obj::GeometricObject{T}) where {T} = BoundingBox(obj)
+BoundingBox{T}(obj::GeometricObject) where {T} = convert(BoundingBox{T}, BoundingBox(obj))
 BoundingBox(obj::MaskElement) = BoundingBox(shape(obj))
 BoundingBox(pnt::Point) = pnt:pnt
 BoundingBox(rect::Rectangle) = BoundingBox(first(rect), last(rect))

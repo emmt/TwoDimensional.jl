@@ -7,6 +7,14 @@ result, there are a few breaking changes.
 
 ## Breaking changes
 
+- A `Mask` object is no longer an `AbstractVector` but implements the abstract vector API.
+  This is motivated by the fact that operators like `+`, `-`, `*`, `/`, or `\` have a
+  different behavior if one of the operand is a mask compared to the behavior for ordinary
+  vectors.
+
+- Non-exported public alias `TwoDimensional.GeometricObjectLike{T}` has been removed, simply
+  use `TwoDimensional.GeometricObject{T}` instead.
+
 - For a bounding-box `box`, Base functions `size(box)` and `axes(box)` now yield the size
   and axes of `box` as a 2-element vector (the `start` and `stop` points of `box`). Call
   [`TypeUtils`](https://github.com/emmt/TypeUtils.jl) methods `as_array_size(box)` and

@@ -79,7 +79,7 @@ struct MaskElement{T,S} <: ShapeElement{T}
     MaskElement(obj::S; opaque::Bool) where {T,S<:ShapeElement{T}} = new{T,S}(obj, opaque)
 end
 
-struct Mask{T,E<:MaskElement{T},L} <: AbstractVector{E}
+struct Mask{T,E<:MaskElement{T},L} <: GeometricObject{T}
     elements::L
     # The following inner constructors are provided to restrict the possible types for the
     # mask elements. An empty tuple is acceptable as type parameter `E` is given.
@@ -167,16 +167,6 @@ const VertexBasedObject{T} = Union{Point{T},
                                    BoundingBox{T}}
 
 const VERTEX_BASED_TYPES = (:Point, :Rectangle, :Polygon, :BoundingBox)
-
-"""
-    TwoDimensional.GeometricObjectLike{T}
-
-is the union of types of objects that behaves like a geometric object with coordinate type
-`T` and which can be scaled, rotated, moved, etc.
-
-""" GeometricObjectLike
-@public GeometricObjectLike
-const GeometricObjectLike{T} = Union{GeometricObject{T},Mask{T}}
 
 """
     TwoDimensional.PointLike

@@ -152,8 +152,8 @@ shape(obj::ShapeElement) = obj
 """
     TwoDimensional.vertices(obj)
 
-yields the vertices defining the vertex-based graphical object `obj`. The result is a tuple
-or a vector of points.
+yields the vertices defining the vertex-based geometric object `obj`. The result is a
+tuple or a vector of points.
 
 """ vertices
 @public vertices
@@ -206,9 +206,9 @@ or if single argument a tuple or a vector of geometric objects, the promoted coo
 is returned.
 
 """
-coord_type(::GeometricObjectLike{T}) where {T} = T
-coord_type(::Type{<:GeometricObjectLike{T}}) where {T} = T
-coord_type(::Type{<:GeometricObjectLike}) = Any
+coord_type(::GeometricObject{T}) where {T} = T
+coord_type(::Type{<:GeometricObject{T}}) where {T} = T
+coord_type(::Type{<:GeometricObject}) = Any
 
 # Methods for zero or more than one argument.
 coord_type() = Union{}
@@ -220,9 +220,9 @@ coord_type(A::Tuple) = to_same_concrete_type(map(coord_type, A)...)
 coord_type(A::AbstractVector) = mapreduce(coord_type, to_same_concrete_type, A; init=coord_type())
 
 # Optimizations for multiple homogeneous objects/types.
-coord_type(A::Vararg{GeometricObjectLike{T}}) where {T} = T
-coord_type(A::Tuple{GeometricObjectLike{T},Vararg{GeometricObjectLike{T}}}) where {T} = T
-coord_type(A::AbstractVector{<:GeometricObjectLike{T}}) where {T} = T
+coord_type(A::Vararg{GeometricObject{T}}) where {T} = T
+coord_type(A::Tuple{GeometricObject{T},Vararg{GeometricObject{T}}}) where {T} = T
+coord_type(A::AbstractVector{<:GeometricObject{T}}) where {T} = T
 
 # Fallbacks for any objects and for errors.
 coord_type(A::Any) = coord_type(typeof(A))
@@ -235,8 +235,8 @@ coord_type(A::Any) = coord_type(typeof(A))
 converts all arguments `objs...` to a common coordinate type and return them as a tuple.
 
 """
-promote_coord_type(obj::GeometricObjectLike) = obj
-@inline promote_coord_type(objs::GeometricObjectLike...) =
+promote_coord_type(obj::GeometricObject) = obj
+@inline promote_coord_type(objs::GeometricObject...) =
     convert_coord_type(coord_type(objs), objs...)
 
 """
