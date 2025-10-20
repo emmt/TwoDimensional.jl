@@ -283,11 +283,12 @@ function Base.clamp(pnt::Point{T}, box::BoundingBox{T}) where {T}
     return Point{T}(x, y)
 end
 
-# Mathematic functions for points.
+# Mathematic functions for points. `hypot` is like `abs` or `norm` but avoiding overflows.
 Base.hypot(pnt::Point) = hypot(pnt.x, pnt.y)
-Base.abs(pnt::Point) = hypot(pnt)
+Base.abs(pnt::Point) = norm(pnt)
 Base.abs2(pnt::Point) = abs2(pnt.x) + abs2(pnt.y)
-LinearAlgebra.norm(pnt::Point) = abs(pnt)
+LinearAlgebra.norm(pnt::Point) = LinearAlgebra.norm2(pnt)
+LinearAlgebra.norm2(pnt::Point) = sqrt(abs2(pnt))
 Base.Math.atan(pnt::Point) = atan(pnt.y, pnt.x)
 
 """
