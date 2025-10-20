@@ -7,6 +7,7 @@ using Test, LinearAlgebra, TypeUtils
 import Base.MathConstants: φ
 
 using Unitful
+using Unitful: m, cm, mm, μm, °
 
 struct NamedPoint{T} <: AbstractPoint{T}
     name::String
@@ -1073,6 +1074,38 @@ end
                 @test occursin(r"\bAffineTransform(2D)?\b", string(M))
             end
         end
+    end
+
+    @testset "Masks" begin
+        # Build a mask as in the docstring example.
+        center = Point(0mm,0mm) # central position
+        outer_radius = 1.8m
+        inner_radius = outer_radius/3
+        spider_thickness = 2.3cm # thickness of spider arms
+        grid_step = 2.0mm # grid sampling step
+        spider_length = 2*(outer_radius + grid_step) # length of spider arms
+        voff = Point(spider_thickness, spider_length)
+        hoff = Point(spider_length, spider_thickness)
+        mask = @inferred Mask(
+            circular_aperture(center, outer_radius), # aperture
+            circular_obscuration(center, inner_radius), # central obscuration
+            rectangular_obscuration(center - voff/2, center + voff/2),
+            rectangular_obscuration(center - hoff/2, center + hoff/2))
+        @test mask isa Mask
+        @test length(mask) == 4
+        box = @inferred BoundingBox(mask)
+        off = Point(-5mm, 4mm)
+        @test BoundingBox(mask + off) ≈ box + off
+        margin = 5 # margin in pixels
+        xmin = floor(Int, (center.x - outer_radius)/grid_step) - margin
+        ymin = floor(Int, (center.y - outer_radius)/grid_step) - margin
+        xmax = ceil(Int, (center.x + outer_radius)/grid_step) + margin
+        ymax = ceil(Int, (center.y + outer_radius)/grid_step) + margin
+        X = (xmin:xmax)*grid_step # coordinates along 1st dimension
+        Y = (ymin:ymax)*grid_step # coordinates along 2nd dimension
+        pixels = @inferred forge_mask(X, Y, mask)
+        @test pixels isa Matrix
+        @test pixels == forge_mask(X, Y, mask...)
     end
 end
 
