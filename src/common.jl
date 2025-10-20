@@ -1,6 +1,6 @@
 # Implement abstract vector API and iterator API for geometric objects that are defined by a
 # collection (vector or tuple) of elements of same type. Since geometric objects are not
-# `AbstractVector`s, may base functions have to be extended.
+# `AbstractVector`s, many base functions have to be extended.
 for type in (:Point, :Rectangle, :BoundingBox, :Polygon, :Mask)
     @eval begin
         @inline Base.values(A::$type) = getfield(A, 1)
@@ -52,17 +52,23 @@ for type in (:Point, :Rectangle, :BoundingBox, :Polygon, :Mask)
             Base.length(A::$type) = length(values(A))
             Base.firstindex(A::$type) = firstindex(values(A))
             Base.lastindex(A::$type) = lastindex(values(A))
-            @propagate_inbounds Base.getindex(A::$type{<:Any,<:Tuple}, i::Integer) =
-                getindex(values(A), i)
-            @inline function Base.getindex(A::$type{<:Any,<:AbstractVector}, i::Integer)
+            @inline function Base.getindex(A::$type, i::Integer)
                 i = as(Int, i)
-                @boundscheck checkbounds(Bool, A, i) || throw(BoundsError(A, i))
-                return @inbounds getindex(values(A), i)
+                vals = values(A)
+                if vals isa Tuple
+                    return vals[i]
+                else
+                    @boundscheck checkbounds(Bool, A, i) || throw(BoundsError(A, i))
+                    return @inbounds vals[i]
+                end
             end
-            @inline function Base.setindex!(A::$type{<:Any,<:AbstractVector}, x, i::Integer)
+            @inline function Base.setindex!(A::$type, x, i::Integer)
+                vals = values(A)
+                vals isa Tuple && throw(ArgumentError(
+                    "attempt to set entry in tuple of elements"))
                 i = as(Int, i)
                 @boundscheck checkbounds(Bool, A, i) || throw(BoundsError(A, i))
-                @inbounds setindex!(values(A), x, i)
+                @inbounds setindex!(vals, x, i)
                 return A
             end
             @inline function Base.iterate(A::$type, i::Int=firstindex(A))
