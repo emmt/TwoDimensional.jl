@@ -181,10 +181,9 @@ objects of such type to retrieve their abscissa and ordinate.
 """ PointLike
 @public PointLike
 const PointLike = Union{AbstractPoint,
-                        NTuple{2,Number}, # NOTE: Purposely more restrictive
-                                          #       than when calling explicitly
-                                          #       the constructor to avoid
-                                          #       ambiguities.
+                        NTuple{2,Number}, # NOTE: Purposely more restrictive than when
+                                          #       explicitly calling the constructor to
+                                          #       avoid ambiguities.
                         CartesianIndex{2}}
 
 """
