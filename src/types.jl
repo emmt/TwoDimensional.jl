@@ -11,6 +11,9 @@
 # Copyright (c) 2019-2025, Éric Thiébaut.
 #
 
+# Singleton used to represent an unspecified parameter.
+struct Unspecified end
+
 # `List{T}` is a type alias for indexable ordered lists of object of type `T`. This includes
 # non-empty tuples and vectors. If `T` is an abstract type, specify
 # `TwoDimensional.List{<:T}` to match vectors whose elements have concrete type inherited
@@ -249,6 +252,8 @@ const BoundingBoxLike = Union{BoundingBox,
                               CartesianIndices{2}}
 
 struct AffineTransform{T<:AbstractFloat,R,S} <: Function
+    # `factors` and `offsets` are stored in different n-tuples because they may have
+    # different units.
     factors::NTuple{4,R}
     offsets::NTuple{2,S}
     function AffineTransform{T,R,S}(Axx, Axy, Ax, Ayx, Ayy, Ay) where {T<:AbstractFloat,R,S}

@@ -24,16 +24,83 @@ for op in (:(==), :(isequal))
 end
 
 # Check for approximate equality.
-Base.isapprox(a::Point, b::Point; kwds...) =
-    isapprox(a.x, b.x; kwds...) && isapprox(a.y, b.y; kwds...)
-Base.isapprox(a::Rectangle, b::Rectangle; kwds...) =
-    isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
-Base.isapprox(a::Circle, b::Circle; kwds...) =
-    isapprox(radius(a), radius(b); kwds...) && isapprox(center(a), center(b); kwds...)
-Base.isapprox(a::Polygon, b::Polygon; kwds...) =
-    values(a) === values(b) || isapprox(values(a), values(b); kwds...)
-Base.isapprox(a::BoundingBox, b::BoundingBox; kwds...) =
-    isapprox(first(a), first(b); kwds...) && isapprox(last(a), last(b); kwds...)
+Base.isapprox(A::Point, B::Point; kwds...) = itr_isapprox(values(A), values(B); kwds...)
+Base.isapprox(A::Rectangle, B::Rectangle; kwds...) =
+    isapprox(first(A), first(B); kwds...) && isapprox(last(A), last(B); kwds...)
+Base.isapprox(A::Circle, B::Circle; kwds...) =
+    isapprox(radius(A), radius(B); kwds...) && isapprox(center(A), center(B); kwds...)
+Base.isapprox(A::Polygon, B::Polygon; kwds...) =
+    values(A) === values(B) || itr_isapprox(values(A), values(B); kwds...)
+function Base.isapprox(A::BoundingBox, B::BoundingBox; kwds...)
+    isemptyA = isempty(A)
+    isemptyB = isempty(B)
+    return (isemptyA == isemptyB) && (isemptyA || (isapprox(first(A), first(B); kwds...) &&
+                                                   isapprox(last(A), last(B); kwds...)))
+end
+
+isspecified(x::Unspecified) = false
+isspecified(x::Any) = true
+isunspecified(x) = !isspecified(x)
+
+# Like `Base.isapprox` but treats n-tuples (or more generally iterators) as vectors. An
+# added complexity is that the type for `atol` is not known in advance (e.g. if arguments
+# have units). Things are easier for `rtol` which must be dimensionless.
+#
+# The formula in `generic.jl` is:
+#
+#     d = norm(x - y)
+#     iszero(rtol) ? d ≤ atol : d ≤ max(atol, rtol*max(norm(x), norm(y)))
+#
+# The default value of `atol` is 0 (of the correct type), the default value of `rtol` is
+# `0` if `atol > zero(atol)` holds and `sqrt(eps(T))` otherwise, with `T` the least
+# numerical precision of `xz` and `y`.
+function itr_isapprox(x, y;
+                      atol::Union{Unspecified,Number} = Unspecified(),
+                      rtol::Union{Unspecified,Real} = Unspecified(),
+                      nans::Bool = false,
+                      norm::Function = norm)
+    n = length(x)
+    n == length(y) || return false
+    n == 0 && return true
+    d = norm(Iterators.map(-, x, y))
+    iszero(d) && return true
+    if isunspecified(atol)
+        # Now we known the type and units of `atol` and can provide a default value.
+        atol = zero(d)
+    end
+    if isunspecified(rtol)
+        rtol = default_rtol(x, y, atol)
+    end
+    if isfinite(d)
+        # Avoid computing the norms of `x` and `y` if `rtol` is zero.
+        if rtol > zero(rtol)
+            return d ≤ max(atol, rtol*max(norm(x), norm(y)))
+        else
+            return d ≤ atol
+        end
+    else
+        # Fall back to a component-wise approximate comparison.
+        return mapreduce((a, b) -> compat_isapprox(
+            a, b; rtol=rtol, atol=atol, nans=nans, norm=norm), &, x, y)
+    end
+end
+
+if VERSION ≥ v"1.6.0"
+    compat_isapprox(x, y; norm=norm, kwds...) = isapprox(x, y; norm=norm, kwds...)
+else
+    compat_isapprox(x, y; norm=norm, kwds...) = isapprox(x, y; kwds...)
+end
+
+function default_rtol(x, y, atol)
+    T = least_precision(get_precision(x), get_precision(y))
+    return atol > zero(atol) ? zero(T) : sqrt(eps(T))
+end
+
+least_precision(::Type{AbstractFloat}, ::Type{AbstractFloat}) = Float64
+least_precision(::Type{AbstractFloat}, ::Type{T}) where {T<:AbstractFloat} = T
+least_precision(::Type{T}, ::Type{AbstractFloat}) where {T<:AbstractFloat} = T
+least_precision(::Type{S}, ::Type{T}) where {S<:AbstractFloat,T<:AbstractFloat} =
+    sizeof(S) ≤ sizeof(T) ? S : T
 
 # Extend ∈ operator for points.
 Base.in(pnt::AbstractPoint, msk::MaskElement) = pnt ∈ shape(msk)

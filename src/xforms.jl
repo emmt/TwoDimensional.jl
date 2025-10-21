@@ -151,6 +151,10 @@ Base.:(==)(A::AffineTransform, B::AffineTransform) =
 Base.isequal(A::AffineTransform, B::AffineTransform) =
     isequal(offsets(A), offsets(B)) && isequal(factors(A), factors(B))
 
+Base.isapprox(A::AffineTransform, B::AffineTransform; kwds...) =
+    A === B || (itr_isapprox(offsets(A), offsets(B); kwds...)
+                && itr_isapprox(factors(A), factors(B); kwds...))
+
 # An affine transform is already of floating-point type.
 Base.float(A::AffineTransform) = A
 Base.float(::Type{T}) where {T<:AffineTransform} = T

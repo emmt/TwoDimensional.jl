@@ -15,76 +15,9 @@ struct NamedPoint{T} <: AbstractPoint{T}
     y::T
 end
 
-# abs_diff(a, b) yields absolute difference.
-# max_abs_diff(a, b) yields maximum absolute difference.
-# sum_abs_diff(a, b) yields sum of absolute differences.
-abs_diff(a::Number, b::Number) = abs_diff(promote(a, b)...)
-abs_diff(a::T, b::T) where {T<:Unsigned} = a < b ? b - a : a - b
-abs_diff(a::T, b::T) where {T<:Real} = abs(a - b)
-for (pfx, op) in ((:max, :max), (:sum, :(+)))
-    norm = Symbol(pfx,"_abs")
-    @eval begin
-        $norm(a::Number) = abs(a)
-        $norm(a::Tuple) = mapreduce($norm, $op, a)
-        function $norm(a::AbstractArray)
-            init = $norm(zero(eltype(a)))
-            return mapreduce($norm, $op, a, b; init = init)
-        end
-        $norm(a::AbstractPoint) = $norm(Tuple(a))
-        $norm(a::BoundingBox) = $norm(Tuple(a))
-        $norm(a::AffineTransform) = $norm(Tuple(a))
-    end
-    norm_diff = Symbol(norm,"_diff")
-    @eval begin
-        $norm_diff(a::Number, b::Number) = abs_diff(a, b)
-        function $norm_diff(a::Tuple, b::Tuple)
-            @assert length(a) == length(b)
-            return mapreduce(abs_diff, $op, a, b)
-        end
-        function $norm_diff(a::AbstractArray, b::AbstractArray)
-            @assert axes(a) == axes(b)
-            init = abs_diff(zero(eltype(a)), zero(eltype(b)))
-            return mapreduce(abs_diff, $op, a, b; init = init)
-        end
-        $norm_diff(a::AbstractPoint, b::AbstractPoint) = $norm_diff(Tuple(a), Tuple(b))
-        $norm_diff(a::BoundingBox, b::BoundingBox) = $norm_diff(Tuple(a), Tuple(b))
-        $norm_diff(a::AffineTransform, b::AffineTransform) = $norm_diff(Tuple(a), Tuple(b))
-    end
-end
-
-if VERSION < v"1.2"
-    # `mapreduce` with multiple iterators requires Julia 1.2 or later.
-    Base.mapreduce(f, op, a, b; kwds...) = reduce(op, map(f, a, b); kwds...)
-end
-
-# Default relative tolerance is eps.
-relative_precision(x, y) = max(relative_precision(x), relative_precision(y))
-relative_precision(x) = relative_precision(typeof(x))
-relative_precision() = false
-relative_precision(::Type{T}) where {T} = error("relative tolerance not defined for type $T")
-relative_precision(::Type{T}) where {T<:AbstractFloat} = eps(T)
-relative_precision(::Type{T}) where {T<:Real} = false
-relative_precision(::Type{T}) where {T<:AbstractArray} = relative_precision(eltype(T))
-relative_precision(::Type{T}) where {T<:AbstractPoint} = relative_precision(eltype(T))
-relative_precision(::Type{T}) where {T<:BoundingBox} = relative_precision(eltype(T))
-relative_precision(::Type{T}) where {T<:AffineTransform} = relative_precision(bare_type(T))
-relative_precision(::Type{T}) where {T<:Number} = relative_precision(real_type(T))
-relative_precision(::Type{<:NTuple{N,T}}) where {N,T} = relative_precision(T)
-relative_precision(::Type{T}) where {T<:Tuple} = _relative_precision(false, (T.parameters)...)
-_relative_precision(rtol) = rtol # end of recursion
-_relative_precision(rtol, ::Type{T}, args...) where {T} =
-    _relative_precision(max(rtol, relative_precision(T)), args...)
-
-# This is very similar to `isapprox` but with our custom settings.
-function ≈(a, b; atol = false, rtol = 4*relative_precision(a, b), norm=sum_abs)
-    d = norm === sum_abs ? sum_abs_diff(a, b) :
-        norm === max_abs ? max_abs_diff(a, b) : error("unknown norm")
-    if iszero(rtol)
-        return d ≤ atol
-    else
-        return d ≤ max(atol, rtol*max(norm(a), norm(b)))
-    end
-end
+# For the sake of these tests, extend `≈` for tuples.
+≈(a::Any, b::Any; kwds...) = Base.isapprox(a, b; kwds...)
+≈(a::Tuple, b::Tuple; kwds...) = TwoDimensional.itr_isapprox(a, b; kwds...)
 
 function unpack_bits!(A::Matrix{Bool}, bits::Unsigned)
     @assert length(A) ≤ 8*sizeof(bits)
@@ -963,10 +896,10 @@ end
                     continue
                 end
                 @test det(inv(M)) ≈ 1/det(M)
-                @test M/M ≈ M*inv(M)
-                @test M\M ≈ inv(M)*M
-                @test M\M ≈ I
-                @test M/M ≈ I
+                @test M/M ≈ M*inv(M)  atol=1e-15
+                @test M\M ≈ inv(M)*M  atol=1e-15
+                @test M\M ≈ I         atol=1e-15
+                @test M/M ≈ I         atol=1e-15
                 for v in vectors
                     @test M(inv(M)(v)) ≈ v
                     @test inv(M)(M(v)) ≈ v

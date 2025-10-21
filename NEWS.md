@@ -33,6 +33,12 @@ result, there are a few breaking changes.
 - In `TwoDimensional.apply(f, obj)`, if `obj` is a mask element, keyword `opaque` can be
   used to specify a different opacity than `obj.opaque`.
 
+- If `A` is a geometric object that is a collection of elements of the same type, then
+  `map(f, A)` maps function `f` to all elements of `A` to form a similar geometric object.
+
+- `isapprox(A, B; kwds...)` and `A ≈ B` is implemented for geometric objects of affine
+  transforms `A` and `B`.
+
 
 ## Version 0.5.2 [2025-07-28]
 
