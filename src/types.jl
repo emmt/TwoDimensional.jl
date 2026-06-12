@@ -14,17 +14,8 @@
 # Singleton used to represent an unspecified parameter.
 struct Unspecified end
 
-# `List{T}` is a type alias for indexable ordered lists of object of type `T`. This includes
-# non-empty tuples and vectors. If `T` is an abstract type, specify
-# `TwoDimensional.List{<:T}` to match vectors whose elements have concrete type inherited
-# from `T`.
-#
-# NOTE: The restriction to non-empty tuples is to avoid unbounded type parameter `T`.
-#
-# NOTE: `const List{T} = Union{Tuple{T,Vararg{T}},AbstractVector{<:T}}` cannot be used to
-# match vectors whose elements must have a given abstract type `T`.
-#
-const List{T} = Union{Tuple{T,Vararg{T}},AbstractVector{T}}
+# Non-empty tuple of objects of type `T`.
+const Some{T} = Tuple{T,Vararg{T}}
 
 """
     TwoDimensional.GeometricObject{T}
@@ -229,9 +220,9 @@ objects of such type to retrieve their abscissa and ordinate.
 
 """ PolygonLike
 @public PolygonLike
-const PolygonLike = Union{List{<:AbstractPoint},
-                          List{<:NTuple{2,Number}},
-                          List{<:CartesianIndex{2}}}
+const PolygonLike = Union{Some{AbstractPoint}, AbstractVector{<:AbstractPoint},
+                          Some{NTuple{2,Number}}, AbstractVector{<:NTuple{2,Number}},
+                          Some{CartesianIndex{2}}, AbstractVector{CartesianIndex{2}}}
 
 """
     TwoDimensional.BoundingBoxLike

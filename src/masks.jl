@@ -17,10 +17,12 @@ converted to another type.
 """
 Mask(elems::MaskElement...) = Mask(elems)
 Mask{T}(elems::MaskElement...) where {T} = Mask{T}(elems)
-Mask(elems::List{<:MaskElement}) = Mask{coord_type(elems)}(elems)
-Mask{T}(elems::List{<:MaskElement}) where {T} =
+Mask(elems::Union{Some{MaskElement},AbstractVector{<:MaskElement}}) =
+    Mask{coord_type(elems)}(elems)
+Mask{T}(elems::Union{Some{MaskElement},AbstractVector{<:MaskElement}}) where {T} =
     Mask{T}(map(Fix1(convert_coord_type, T), elems))
-Mask{T}(elems::List{<:MaskElement{T}}) where {T} = Mask{T,eltype(elems)}(elems)
+Mask{T}(elems::Union{Some{MaskElement{T}},AbstractVector{<:MaskElement{T}}}) where {T} =
+    Mask{T,eltype(elems)}(elems)
 
 """
     msk = MaskElement{T}(shape::ShapeElement; opaque)
@@ -321,24 +323,32 @@ Example to forge a mask representing the primary mirror of a telescope with its 
         rectangular_obscuration(center - hoff/2, center + hoff/2))
 
 """
-forge_mask(X::AbstractVector, Y::AbstractVector, elems::MaskElement...; kwds...) =
-    forge_mask(X, Y, Mask(elems); kwds...)
-forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, elems::MaskElement...; kwds...) where {T} =
-    forge_mask(T, X, Y, Mask(elems); kwds...)
-
-forge_mask(X::AbstractVector, Y::AbstractVector, elems::List{<:MaskElement}; kwds...) =
-    forge_mask(X, Y, Mask(elems); kwds...)
-forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, elems::List{<:MaskElement}; kwds...) where {T} =
-    forge_mask(T, X, Y, Mask(elems); kwds...)
-
-forge_mask(X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) =
-    forge_mask(floating_point_type(promote_type(eltype(X), eltype(Y), coord_type(msk))),
-               X, Y, msk; kwds...)
-forge_mask(X::AbstractVector{T}, Y::AbstractVector{T}, msk::Mask{T}; kwds...) where {T} =
+function forge_mask(X::AbstractVector, Y::AbstractVector, elems::MaskElement...; kwds...)
+    return forge_mask(X, Y, elems; kwds...)
+end
+function forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector,
+                    elems::MaskElement...; kwds...) where {T}
+    return forge_mask(T, X, Y, elems; kwds...)
+end
+function forge_mask(X::AbstractVector, Y::AbstractVector,
+                    elems::Union{Some{MaskElement},AbstractVector{<:MaskElement}}; kwds...)
+    return forge_mask(X, Y, Mask(elems); kwds...)
+end
+function forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector,
+                    elems::Union{Some{MaskElement},AbstractVector{<:MaskElement}};
+                    kwds...) where {T}
+    return forge_mask(T, X, Y, Mask(elems); kwds...)
+end
+function forge_mask(X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...)
+    T = floating_point_type(promote_type(eltype(X), eltype(Y), coord_type(msk)))
+    return forge_mask(T, X, Y, msk; kwds...)
+end
+function forge_mask(X::AbstractVector{T}, Y::AbstractVector{T}, msk::Mask{T}; kwds...) where {T}
     forge_mask(floating_point_type(T), X, Y, msk; kwds...)
-
-forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) where {T} =
-    forge_mask!(new_array(T, Base.axes1(X), Base.axes1(Y)), X, Y, msk; kwds...)
+end
+function forge_mask(::Type{T}, X::AbstractVector, Y::AbstractVector, msk::Mask; kwds...) where {T}
+    return forge_mask!(new_array(T, Base.axes1(X), Base.axes1(Y)), X, Y, msk; kwds...)
+end
 
 """
     forge_mask!(dst, [X, Y,] msk; kwds...) -> dst
@@ -349,24 +359,26 @@ mask and returns it. If coordinates `X` and `Y` along the axes of `dst` are not 
 `(X, Y) = axes(dst)` is assumed.
 
 """
-forge_mask!(A::AbstractMatrix, msk::Mask; kwds...) = forge_mask!(A, axes(A)..., msk; kwds...)
-
-forge_mask!(A::AbstractMatrix, elems::MaskElement...; kwds...) =
-    forge_mask!(A, Mask(elems); kwds...)
-
-forge_mask!(A::AbstractMatrix, elems::List{<:MaskElement}; kwds...) =
-    forge_mask!(A, Mask(elems); kwds...)
-
+function forge_mask!(A::AbstractMatrix, msk::Mask; kwds...)
+    return forge_mask!(A, axes(A)..., msk; kwds...)
+end
+function forge_mask!(A::AbstractMatrix, elems::MaskElement...; kwds...)
+    return forge_mask!(A, elems; kwds...)
+end
+function forge_mask!(A::AbstractMatrix,
+                     elems::Union{Some{MaskElement},AbstractVector{<:MaskElement}};
+                     kwds...)
+    return forge_mask!(A, Mask(elems); kwds...)
+end
 function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
                      elems::MaskElement...; kwds...)
-    return forge_mask!(dst, X, Y, Mask(elems); kwds...)
+    return forge_mask!(dst, X, Y, elems; kwds...)
 end
-
 function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
-                     elems::List{<:MaskElement}; kwds...)
+                     elems::Union{Some{MaskElement},AbstractVector{<:MaskElement}};
+                     kwds...)
     return forge_mask!(dst, X, Y, Mask(elems); kwds...)
 end
-
 function forge_mask!(dst::AbstractMatrix, X::AbstractVector, Y::AbstractVector,
                      msk::Mask;
                      antialiasing::Integer = default_antialiasing,
