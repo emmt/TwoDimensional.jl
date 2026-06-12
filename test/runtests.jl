@@ -243,7 +243,7 @@ end
         r_flt = @inferred Rectangle{Float32}(start,stop)
         @test @inferred(get_precision(r_int)) === AbstractFloat
         @test @inferred(get_precision(r_flt)) === Float32
-        @test @inferred(adapt_precision(Float32, r_int)) === r_flt
+        @test @inferred(convert_coord_type(Float32, r_int)) === r_flt
         @test @inferred(adapt_precision(Float32, r_flt)) === r_flt
         @test @inferred(adapt_precision(Float64, r_flt)) === Rectangle{Float64}(start,stop)
         # Functions specific to rectangles.
@@ -316,7 +316,7 @@ end
         c_flt = @inferred Circle{Float32}(c_int.center, c_int.radius)
         @test @inferred(get_precision(c_int)) === AbstractFloat
         @test @inferred(get_precision(c_flt)) === Float32
-        @test @inferred(adapt_precision(Float32, c_int)) === c_flt
+        @test @inferred(convert_coord_type(Float32, c_int)) === c_flt
         @test @inferred(adapt_precision(Float32, c_flt)) === c_flt
         @test @inferred(adapt_precision(Float64, c_flt)) === Circle{Float64}(c_int.center, c_int.radius)
         # Functions specific to circles.
@@ -407,7 +407,7 @@ end
         p_flt = @inferred Polygon{Float32}(p_int.vertices)
         @test @inferred(get_precision(p_int)) === AbstractFloat
         @test @inferred(get_precision(p_flt)) === Float32
-        @test @inferred(adapt_precision(Float32, p_int)) === p_flt
+        @test @inferred(convert_coord_type(Float32, p_int)) === p_flt
         @test @inferred(adapt_precision(Float32, p_flt)) === p_flt
         @test @inferred(adapt_precision(Float64, p_flt)) === Polygon{Float64}(p_int.vertices)
     end
@@ -505,7 +505,7 @@ end
         b_flt = @inferred BoundingBox{Float32}(b_int.start, b_int.stop)
         @test @inferred(get_precision(b_int)) === AbstractFloat
         @test @inferred(get_precision(b_flt)) === Float32
-        @test @inferred(adapt_precision(Float32, b_int)) === b_flt
+        @test @inferred(convert_coord_type(Float32, b_int)) === b_flt
         @test @inferred(adapt_precision(Float32, b_flt)) === b_flt
         @test @inferred(adapt_precision(Float64, b_flt)) === BoundingBox{Float64}(b_int.start, b_int.stop)
         # Functions specific to bounding-boxes.

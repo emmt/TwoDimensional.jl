@@ -39,6 +39,9 @@ result, there are a few breaking changes.
 - `isapprox(A, B; kwds...)` and `A ≈ B` is implemented for geometric objects of affine
   transforms `A` and `B`.
 
+## Fixed
+
+- Compatibility with `TypeUtils` 1 and 2.
 
 ## Version 0.5.2 [2025-07-28]
 
