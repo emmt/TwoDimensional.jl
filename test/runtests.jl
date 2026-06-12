@@ -1038,7 +1038,10 @@ end
         Y = (ymin:ymax)*grid_step # coordinates along 2nd dimension
         pixels = @inferred forge_mask(X, Y, mask)
         @test pixels isa Matrix
-        @test pixels == forge_mask(X, Y, mask...)
+        if VERSION ≥ v"1.10"
+            # This test triggers "illegal instruction" for old Julia versions.
+            @test pixels == forge_mask(X, Y, mask...)
+        end
     end
 end
 
