@@ -18,9 +18,10 @@ yields whether point `P` is inside the polygon defined by vertices `V` according
 
 """ crossing_number_test
 @public crossing_number_test
-crossing_number_test(P::Point, V::List{<:Point}) = isodd(crossing_number(P, V))
+crossing_number_test(P::Point, V::Union{Some{Point},AbstractVector{<:Point}}) =
+    isodd(crossing_number(P, V))
 
-function crossing_number(P::Point, V::List{<:Point})
+function crossing_number(P::Point, V::Union{Some{Point},AbstractVector{<:Point}})
     cn = 0 # initialize crossing number counter
     A = last(V) # initialize A, the 1st point of edges in cyclic list of points
     @inbounds for B in V # loop over B, the 2nd point of edges
@@ -47,9 +48,10 @@ tuple or a vector of points.
 
 """ winding_number_test
 @public winding_number_test
-winding_number_test(P::Point, V::List{<:Point}) = !iszero(winding_number(P, V))
+winding_number_test(P::Point, V::Union{Some{Point},AbstractVector{<:Point}}) =
+    !iszero(winding_number(P, V))
 
-function winding_number(P::Point, V::List{<:Point})
+function winding_number(P::Point, V::Union{Some{Point},AbstractVector{<:Point}})
     wn = 0 # initialize winding number counter
     A = last(V) # initialize A, the 1st point of edges in cyclic list of points
     @inbounds for B in V # loop over B, the 2nd point of edges
