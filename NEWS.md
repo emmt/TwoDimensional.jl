@@ -1,6 +1,6 @@
 # User visible changes in the `TwoDimensional` package
 
-## Version 0.6.0 (2026-06-11)
+## Version 0.6.0 (2026-06-13)
 
 This version makes geometric objects more consistent with a more predictable behavior. As a
 result, there are a few breaking changes.
