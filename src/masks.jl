@@ -2,7 +2,7 @@
     Mask(elems...)
     Mask{T}(elems...)
 
-build a composite mask consisting in the ordered list of mask elements `elems...`. Optional
+Build a composite mask consisting in the ordered list of mask elements `elems...`. Optional
 type parameter `T` is the coordinate type of the masks elements. All mask elements are
 converted as needed to have this coordinate type. If `T` is not specified, it is inferred by
 promoting the coordinate types of the mask elements.

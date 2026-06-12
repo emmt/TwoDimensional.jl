@@ -1,22 +1,24 @@
+- Implement fractional opacity. `𝟙` and `𝟘` can be used for fully opaque/transparent
+  objects.
+
+- In Julia `generic.jl` fix `isapprox` for arrays to not compute the norms of `x` and `y` if
+  `rtol > zero(rtol)` doesn't hold.
+
 - Use `IntervalSets` for bounding-boxes.
 
-- Add masks.
+- Implement `Ellipse` and/or `TransformedCircle` to be able to apply an affine transform to
+  circles (and ellipses).
 
-- Implement `Ellipse` and/or `TransformedCircle` to be able to apply an affine
-  transform to circles (and ellipses).
-
-- Optimization: Add a special argument in `Rectangle` constructor to skip
-  re-ordering coordinates.
+- Optimization: Add a special argument in `Rectangle` constructor or use a private
+  constructor to skip re-ordering coordinates.
 
 - Unify a bit more the API for rectangles and bounding-boxes.
 
-- In current code, points can only be `INSIDE` or `OUTSIDE` a polygon. Fix this
-  so that a point may `OVERLAP` to boundaries of a polygon. Also check that the
-  algorithm for a rectangular cell overlapping a polygon is correct for a cell
-  having zero width or height.
+- In current code, points can only be `INSIDE` or `OUTSIDE` a polygon. Fix this so that a
+  point may `OVERLAP` to boundaries of a polygon. Also check that the algorithm for a
+  rectangular cell overlapping a polygon is correct for a cell having zero width or height.
 
-- Implement [Welzl's
-  algorithm](https://en.wikipedia.org/wiki/Smallest-circle_problem) for
+- Implement [Welzl's algorithm](https://en.wikipedia.org/wiki/Smallest-circle_problem) for
   determining the diameter of a polygon.
 
 - Extending `convert` for other purpose of type conversion is potentially
